@@ -1,0 +1,3 @@
+recursive-include easydjango *
+exclude .git .svn
+include LICENSE README.md
