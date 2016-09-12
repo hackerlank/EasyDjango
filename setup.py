@@ -19,7 +19,13 @@ for line in codecs.open(os.path.join('easydjango', '__init__.py'), 'r', encoding
 with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as fd:
     long_description = fd.read()
 
-entry_points = {u'console_scripts': [u'easydjango = easydjango.cli:main']}
+entry_points = {'console_scripts': [
+    'easydjango-ctl = easydjango.scripts:control',
+    'easydjango-celery = easydjango.scripts:celery',
+    'easydjango-manage = easydjango.scripts:manage',
+    'easydjango-uwsgi = easydjango.scripts:uwsgi',
+    'easydjango-gunicorn = easydjango.scripts:gunicorn',
+                                     ]}
 
 setup(
     name='easydjango',
@@ -35,7 +41,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     test_suite='easydjango.tests',
-    install_requires=[],
+    install_requires=['django', 'celery', 'gunicorn', ],
     setup_requires=[],
     classifiers=['Development Status :: 3 - Alpha', 'Operating System :: MacOS :: MacOS X',
                  'Operating System :: Microsoft :: Windows', 'Operating System :: POSIX :: BSD',
