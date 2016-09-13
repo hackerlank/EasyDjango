@@ -21,6 +21,12 @@ class EasyDjangoValue(object):
         raise NotImplementedError
 
 
+class RawValue(EasyDjangoValue):
+
+    def get_value(self, merger):
+        return self.value
+
+
 class Path(EasyDjangoValue):
 
     def get_value(self, merger):

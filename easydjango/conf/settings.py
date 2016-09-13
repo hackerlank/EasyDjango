@@ -7,8 +7,6 @@ settings from different sources. This file must be importable while Django is no
 """
 from __future__ import unicode_literals, absolute_import
 
-import os
-
 from easydjango.scripts import get_merger_from_env
 
 merger = get_merger_from_env()

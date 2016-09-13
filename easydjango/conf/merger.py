@@ -13,7 +13,7 @@ from distutils.version import LooseVersion
 from django import get_version
 
 from easydjango.conf.fields import ConfigField
-from easydjango.conf.providers import ConfigProvider
+from easydjango.conf.providers import ConfigProvider, PythonConfigFieldsProvider
 from easydjango.conf.py_values import ExpandIterable, EasyDjangoValue
 
 try:
@@ -33,16 +33,17 @@ class SettingMerger(object):
     """Load different settings modules and config files and merge them.
     """
 
-    def __init__(self, project_name, settings_list, providers):
-        self.settings_list = settings_list
+    def __init__(self, project_name, fields_provider, providers, read_only=False):
+        self.fields_provider = fields_provider or PythonConfigFieldsProvider(None)
         self.providers = providers
         self.project_name = project_name
+        self.read_only = read_only
         self.__formatter = string.Formatter()
         self.settings = {}
         self.raw_settings = OrderedDict()
         self.raw_settings['PROJECT_NAME'] = OrderedDict()
         self.raw_settings['PROJECT_NAME'][None] = project_name
-        # raw_settings[setting_name] = [(source, value), (source, value), ...]
+        # raw_settings[setting_name][str(provider) or None] = raw_value
         self.__working_stack = set()
 
     def process(self):
@@ -50,7 +51,7 @@ class SettingMerger(object):
         self.load_settings()
 
     def load_raw_settings(self):
-        for field in self.settings_list:
+        for field in self.fields_provider.get_config_fields():
             assert isinstance(field, ConfigField)
             self.raw_settings.setdefault(field.setting_name, OrderedDict())
             self.raw_settings[field.setting_name][None] = field.value
@@ -71,11 +72,13 @@ class SettingMerger(object):
         if setting_name in self.settings:
             return self.settings[setting_name]
         elif setting_name in self.__working_stack:
-            raise ValueError('Unresolvable cycling values:' + ', '.join(self.__working_stack))
+            raise ValueError('Invalid cyclic dependency between ' + ', '.join(self.__working_stack))
         elif setting_name not in self.raw_settings:
             raise ValueError('Invaid setting reference: %s' % setting_name)
         self.__working_stack.add(setting_name)
-        raw_value = self.raw_settings[setting_name][-1][1]
+        raw_value = None
+        for raw_value in self.raw_settings[setting_name].values():
+            pass
         value = self.analyze_raw_value(raw_value)
         self.settings[setting_name] = value
         self.__working_stack.remove(setting_name)

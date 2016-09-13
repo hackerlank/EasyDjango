@@ -83,3 +83,29 @@ class ConfigField(object):
 
     def __str__(self):
         return self.name
+
+
+class CharConfigField(ConfigField):
+    def __init__(self, name, setting_name, allow_none=True, **kwargs):
+        from_str = str_or_none if allow_none else str
+        super(CharConfigField, self).__init__(name, setting_name, from_str=from_str, to_str=str_or_blank, **kwargs)
+
+
+class IntegerConfigField(ConfigField):
+    def __init__(self, name, setting_name, allow_none=True, **kwargs):
+        if allow_none:
+            def from_str(value):
+                return int(value) if value else None
+        else:
+            def from_str(value):
+                return int(value) if value else 0
+        super(IntegerConfigField, self).__init__(name, setting_name, from_str=from_str, to_str=str_or_blank, **kwargs)
+
+
+class ListConfigField(ConfigField):
+    def __init__(self, name, setting_name, **kwargs):
+        def to_str(value):
+            if value:
+                return ','.join(value)
+            return ''
+        super(ListConfigField, self).__init__(name, setting_name, from_str=strip_split, to_str=to_str, **kwargs)

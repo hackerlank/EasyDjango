@@ -14,7 +14,8 @@ import os
 import sys
 
 from easydjango.conf.merger import SettingMerger
-from easydjango.conf.providers import PythonModuleProvider, PythonFileProvider, IniConfigProvider
+from easydjango.conf.providers import PythonModuleProvider, PythonFileProvider, IniConfigProvider, \
+    PythonConfigFieldsProvider
 from easydjango.utils import import_module
 
 __author__ = 'Matthieu Gallet'
@@ -37,13 +38,8 @@ def __set_default_option(options, name):
 def get_merger_from_env():
     easydjango_environment = os.environ['EASYDJANGO_ENVIRONMENT']
 
-    project_name, mapping, providers_str = easydjango_environment.partition(';')
-    try:
-        module_name, sep, attribute = mapping.partition(':')
-        module = import_module(module_name)
-        settings_list = getattr(module, attribute)
-    except ImportError:
-        settings_list = []
+    project_name, mapping, providers_str = easydjango_environment.split(';')
+    field_provider = PythonConfigFieldsProvider(mapping)
     providers = []
     for provider_str in providers_str.split(','):
         kind, sep, value = provider_str.partition('://')
@@ -53,7 +49,7 @@ def get_merger_from_env():
             providers.append(PythonFileProvider(value))
         elif kind == 'ini':
             providers.append(IniConfigProvider(value))
-    return SettingMerger(project_name, settings_list, providers)
+    return SettingMerger(project_name, field_provider, providers)
 
 
 def set_env():
@@ -85,29 +81,29 @@ def set_env():
         project_name = __get_extra_option('dfproject', 'easydjango', '--dfproject')
     project_name = project_name.replace('-', '_')
 
-    prefix = sys.prefix
+    prefix = os.path.abspath(sys.prefix)
     if prefix == '/usr':
         prefix = ''
 
     providers_str = ['pymodule://easydjango.conf.defaults']
     if project_name != 'easydjango':
-        providers_str.append('py://%s.defaults' % project_name)
+        providers_str.append('pymodule://%s.defaults' % project_name)
         mapping = '%s.iniconf:INI_MAPPING' % project_name
     else:
-        mapping = 'easydjango.conf.iniconf:INI_MAPPING'
+        mapping = 'easydjango.conf.mapping:INI_MAPPING'
 
-    ini_filenames = glob.glob('%s/etc/%s/*.ini' % (prefix, project_name))
+    default_ini_filename = '%s/etc/%s/*.ini' % (prefix, project_name)
+    ini_filenames = [default_ini_filename] + glob.glob(default_ini_filename)
     ini_filenames.sort()
     providers_str += ['ini://%s' % x for x in ini_filenames]
-    py_filenamess = glob.glob('%s/etc/%s/*.py' % (prefix, project_name))
-    py_filenamess.sort()
-    providers_str += ['pyfile://%s' % x for x in py_filenamess]
 
-    if os.path.isfile('local_config.ini'):
-        providers_str.append(os.path.abspath('local_config.ini'))
-    if os.path.isfile('local_config.py'):
-        providers_str.append(os.path.abspath('local_config.py'))
+    default_py_filename = '%s/etc/%s/*.py' % (prefix, project_name)
+    py_filenames = [default_py_filename] + glob.glob(default_py_filename)
+    py_filenames.sort()
+    providers_str += ['pyfile://%s' % x for x in py_filenames]
 
+    providers_str.append('ini://%s' % os.path.abspath('local_config.ini'))
+    providers_str.append('pyfile://%s' % os.path.abspath('local_config.py'))
     os.environ.setdefault('EASYDJANGO_ENVIRONMENT', '%s;%s;%s' % (project_name, mapping, ','.join(providers_str)))
     return project_name
 

@@ -31,13 +31,3 @@ EasyDjango
   * using reverse proxies
   * logs
   * easy initial conf
-
-
-Setting(
-    name='',
-    ini_name='',
-    help='',
-    default='',
-    from_str='',
-    to_str='',
-)
