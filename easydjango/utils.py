@@ -1,11 +1,33 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import os
+
 import pkg_resources
 import sys
 from django.utils import six
 
 __author__ = 'Matthieu Gallet'
+
+
+def is_package_present(package_name):
+    try:
+        __import__(package_name)
+        return True
+    except ImportError:
+        return False
+
+
+def ensure_dir(path, parent=True):
+    """Ensure that the given directory exists
+
+    :param path: the path to check
+    :param parent: only ensure the existence of the parent directory
+
+    """
+    dirname = os.path.dirname(path) if parent else path
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
 
 
 def walk(module_name, dirname, topdown=True):

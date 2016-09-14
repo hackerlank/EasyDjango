@@ -6,6 +6,7 @@ import codecs
 import os.path
 import re
 
+import sys
 from setuptools import setup, find_packages
 
 # avoid a from easydjango import __version__ as version (that compiles easydjango.__init__
@@ -14,18 +15,28 @@ version = None
 for line in codecs.open(os.path.join('easydjango', '__init__.py'), 'r', encoding='utf-8'):
     matcher = re.match(r"""^__version__\s*=\s*['"](.*)['"]\s*$""", line)
     version = version or matcher and matcher.group(1)
+python_version = (sys.version_info[0], sys.version_info[1])
 
 # get README content from README.md file
 with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as fd:
     long_description = fd.read()
 
+
+extras_requirements = {}
+install_requirements = ['django', 'celery', 'gunicorn', 'django-debug-toolbar', ]
+if python_version < (3, 3):
+    install_requirements.append('funcsigs')
+
 entry_points = {'console_scripts': [
     'easydjango-ctl = easydjango.scripts:control',
     'easydjango-celery = easydjango.scripts:celery',
-    'easydjango-manage = easydjango.scripts:manage',
+    'easydjango-django = easydjango.scripts:django',
     'easydjango-uwsgi = easydjango.scripts:uwsgi',
     'easydjango-gunicorn = easydjango.scripts:gunicorn',
                                      ]}
+extras_requirements['deb'] = ['stdeb>=0.8.5']
+extras_requirements['npm'] = ['django-npm']
+extras_requirements['pipeline'] = ['django-pipeline']
 
 setup(
     name='easydjango',
@@ -41,7 +52,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
     test_suite='easydjango.tests',
-    install_requires=['django', 'celery', 'gunicorn', 'django-debug-toolbar', ],
+    install_requires=install_requirements,
+    extras_require=extras_requirements,
     setup_requires=[],
     classifiers=['Development Status :: 3 - Alpha', 'Operating System :: MacOS :: MacOS X',
                  'Operating System :: Microsoft :: Windows', 'Operating System :: POSIX :: BSD',

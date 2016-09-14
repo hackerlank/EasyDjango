@@ -4,34 +4,20 @@ from __future__ import unicode_literals, print_function, absolute_import
 import os
 
 from easydjango.conf.config_values import Path, AutocreateDirectory, SettingReference, ExpandIterable
+from easydjango.utils import is_package_present
 
 __author__ = 'Matthieu Gallet'
 
 # ######################################################################################################################
 #
-# detect if ws4redis and django_redis are available
+# detect if some external packages are available, to automatically customize some settings
 #
 # ######################################################################################################################
-try:
-    import ws4redis
-    USE_WS4REDIS = True
-except ImportError:
-    ws4redis = None
-    USE_WS4REDIS = False
-try:
-    # noinspection PyUnresolvedReferences
-    import dango_redis
-    USE_DJANGO_REDIS = True
-except ImportError:
-    django_redis = None
-    USE_DJANGO_REDIS = False
-try:
-    import celery
-    USE_CELERY = True
-except ImportError:
-    celery = False
-    USE_CELERY = False
-
+USE_WS4REDIS = is_package_present('ws4redis')
+USE_DJANGO_REDIS = is_package_present('dango_redis')
+USE_CELERY = is_package_present('celery')
+USE_SCSS = is_package_present('scss')
+USE_PIPELINE = is_package_present('pipeline')
 # ######################################################################################################################
 #
 # settings that can be kept as-is
@@ -50,7 +36,7 @@ if USE_DJANGO_REDIS:
         }
     }
 else:
-    CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'unique-snowflake'}, }
+    CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'unique-snowflake'},}
 CSRF_COOKIE_DOMAIN = '.{SERVER_FQDN}'
 DATABASES = {'default': {
     'ENGINE': '{DATABASE_ENGINE}', 'NAME': '{DATABASE_NAME}', 'USER': '{DATABASE_USER}',
@@ -77,6 +63,8 @@ INSTALLED_APPS = [
 ]
 if USE_WS4REDIS:
     INSTALLED_APPS.append('ws4redis')
+if USE_PIPELINE:
+    INSTALLED_APPS.append('pipeline')
 LOGGING = {}  # TODO
 MANAGERS = SettingReference('ADMINS')
 MEDIA_ROOT = AutocreateDirectory('{LOCAL_PATH}/media')
@@ -124,16 +112,30 @@ USE_L10N = True
 USE_THOUSAND_SEPARATOR = True
 USE_TZ = True
 USE_X_FORWARDED_HOST = True  # X-Forwarded-Host
+WSGI_APPLICATION = 'easydjango.wsgi.application'
+
+# django.contrib.auth
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
+
+# django.contrib.sessions
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
+
+# django.contrib.sites
 SITE_ID = 1
+
+# django.contrib.staticfiles
 STATIC_ROOT = AutocreateDirectory('{LOCAL_PATH}/static')
 STATIC_URL = '/static/'
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-STATICFILES_FINDERS = ('django.contrib.staticfiles.finders.FileSystemFinder',
-                       'django.contrib.staticfiles.finders.AppDirectoriesFinder')
-WSGI_APPLICATION = 'easydjango.wsgi.application'
+if USE_PIPELINE:
+    STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
+else:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STATICFILES_FINDERS = ['django.contrib.staticfiles.finders.FileSystemFinder',
+                       'django.contrib.staticfiles.finders.AppDirectoriesFinder']
+if USE_PIPELINE:
+    STATICFILES_FINDERS.append('pipeline.finders.PipelineFinder')
+
 # celery
 BROKER_URL = '{CELERY_PROTOCOL}://{CELERY_SERVER}:{CELERY_PORT}/{CELERY_DB}'
 CELERY_TIMEZONE = '{TIME_ZONE}'
@@ -142,6 +144,10 @@ CELERY_ACCEPT_CONTENT = ['json', 'yaml', 'msgpack']
 CELERY_APP = 'easydjango'
 CELERY_CREATE_DIRS = True
 CELERY_TASK_SERIALIZER = 'json'
+# django-npm
+NPM_EXECUTABLE_PATH = 'npm'
+NPM_ROOT_PATH = AutocreateDirectory('{LOCAL_PATH}/npm')
+NPM_STATIC_FILES_PREFIX = 'vendor'
 # easydjango
 DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
 USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
@@ -152,6 +158,55 @@ WS4REDIS_CONNECTION = {'host': '{WS4REDIS_SERVER}', 'port': SettingReference('WS
                        'db': SettingReference('WS4REDIS_DB'), 'password': '{WS4REDIS_PASSWORD}'}
 WS4REDIS_PREFIX = 'ws'
 WS4REDIS_SUBSCRIBER = 'myapp.redis_store.RedisSubscriber'
+# django-pipeline
+PIPELINE_CSS = {
+    'bootstrap3': {
+        'source_filenames': ['vendor/bootstrap3/dist/css/bootstrap.min.css',
+                             'vendor/bootstrap3/dist/css/bootstrap-theme.min.css',
+                             'vendor/font-awesome/css/font-awesome.min.css',
+                             'css/easydjango-bootstrap3.css', ExpandIterable('EASYDJANGO_CSS')],
+        'output_filename': 'css/bootstrap3-all.css', 'extra_context': {'media': 'all'},
+    },
+    'metro-ui': {
+        'source_filenames': ['vendor/metro-ui/build/css/metro.min.css',
+                             'vendor/metro-ui/build/css/metro-icons.min.css',
+                             'vendor/metro-ui/build/css/metro-responsive.min.css',
+                             'vendor/font-awesome/css/font-awesome.min.css',
+                             'css/easydjango-metro-ui.css', ExpandIterable('EASYDJANGO_CSS')],
+        'output_filename': 'css/metro-ui-all.css', 'extra_context': {'media': 'all'},
+    },
+}
+PIPELINE_JS = {
+    'bootstrap3': {
+        'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/bootstrap3/dist/js/bootstrap.min.js',
+                             'js/easydjango.js', 'js/easydjango-bootstrap3.js', ExpandIterable('EASYDJANGO_JS')],
+        'output_filename': 'js/bootstrap3.js',
+    },
+    'metro-ui': {
+        'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/metro-ui/build/js/metro.min.js',
+                             'js/easydjango.js', 'js/easydjango-metro-ui.js', ExpandIterable('EASYDJANGO_JS')],
+        'output_filename': 'js/metro-ui.js',
+    },
+    'ie9': {
+        'source_filenames': ['vendor/html5shiv/dist/html5shiv.min.js', 'vendor/respond.js/dest/respond.min.js', ],
+        'output_filename': 'js/ie9.js',
+    }
+}
+PIPELINE_ENABLED = True
+PIPELINE = {
+    'PIPELINE_ENABLED': SettingReference('PIPELINE_ENABLED'),
+    'JAVASCRIPT': SettingReference('PIPELINE_JS'),
+    'STYLESHEETS': SettingReference('PIPELINE_CSS'),
+    'CSS_COMPRESSOR': SettingReference('PIPELINE_CSS_COMPRESSOR'),
+    'JS_COMPRESSOR': SettingReference('PIPELINE_JS_COMPRESSOR'),
+}
+PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
+# 'pipeline.compressors.slimit.SlimItCompressor'
+PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
+if USE_SCSS:
+    PIPELINE_COMPILERS = (
+        'djangofloor.middleware.PyScssCompiler',
+    )
 
 # ######################################################################################################################
 #
@@ -159,16 +214,22 @@ WS4REDIS_SUBSCRIBER = 'myapp.redis_store.RedisSubscriber'
 # of course, you can define or override any setting
 #
 # ######################################################################################################################
-
+# easydjango
 EASYDJANGO_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
 EASYDJANGO_INDEX = 'easydjango.views.index'
 EASYDJANGO_INSTALLED_APPS = []
 EASYDJANGO_MIDDLEWARE_CLASSES = []
 EASYDJANGO_REMOTE_USER_HEADER = None  # Remote-User
 EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
+EASYDJANGO_CSS = []
+EASYDJANGO_JS = []
+# django-npm
+NPM_FILE_PATTERNS = {
+    'metro-ui': ['build/*'], 'bootstrap3': ['dist/*'], 'font-awesome': ['dist/*', 'css/*', 'fonts/*'],
+    'html5shiv': ['dist/*'], 'respond.js': ['dest/*'], 'jquery': ['dist/*'],
+}
 # ws4redis
 WS4REDIS_EXPIRE = 7200
-
 # ######################################################################################################################
 #
 # settings that should be customized for each deployment
@@ -197,6 +258,7 @@ SECRET_KEY = 'secret_key'
 SECURE_HSTS_SECONDS = 0
 TIME_ZONE = 'Europe/Paris'
 # easydjango
+LISTEN_ADDRESS = 'localhost:9000'
 LOCAL_PATH = './django_data'
 __split_path = __file__.split(os.path.sep)
 if 'lib' in __split_path:

@@ -12,9 +12,9 @@ from distutils.version import LooseVersion
 
 from django import get_version
 
+from easydjango.conf.config_values import ExpandIterable, EasyDjangoValue
 from easydjango.conf.fields import ConfigField
 from easydjango.conf.providers import ConfigProvider, PythonConfigFieldsProvider
-from easydjango.conf.config_values import ExpandIterable, EasyDjangoValue
 
 try:
     # noinspection PyCompatibility
@@ -22,7 +22,6 @@ try:
 except ImportError:
     # noinspection PyUnresolvedReferences,PyCompatibility
     from ConfigParser import ConfigParser
-import os
 import string
 from django.utils import six
 
@@ -33,11 +32,10 @@ class SettingMerger(object):
     """Load different settings modules and config files and merge them.
     """
 
-    def __init__(self, project_name, fields_provider, providers, read_only=False):
+    def __init__(self, project_name, fields_provider, providers):
         self.fields_provider = fields_provider or PythonConfigFieldsProvider(None)
         self.providers = providers
         self.project_name = project_name
-        self.read_only = read_only
         self.__formatter = string.Formatter()
         self.settings = {}
         self.raw_settings = OrderedDict()
@@ -74,7 +72,7 @@ class SettingMerger(object):
         elif setting_name in self.__working_stack:
             raise ValueError('Invalid cyclic dependency between ' + ', '.join(self.__working_stack))
         elif setting_name not in self.raw_settings:
-            raise ValueError('Invaid setting reference: %s' % setting_name)
+            raise ValueError('Invalid setting reference: %s' % setting_name)
         self.__working_stack.add(setting_name)
         raw_value = None
         for raw_value in self.raw_settings[setting_name].values():
@@ -154,19 +152,3 @@ class SettingMerger(object):
                 for key in 'TEMPLATE_DIRS', 'TEMPLATE_CONTEXT_PROCESSORS', 'TEMPLATE_LOADERS':
                     if key in self.settings:
                         del self.settings[key]
-
-    @staticmethod
-    def ensure_dir(path_, parent_=True):
-        """Ensure that the given directory exists
-
-        :param path_: the path to check
-        :param parent_: only ensure the existence of the parent directory
-
-        """
-        dirname_ = os.path.dirname(path_) if parent_ else path_
-        if not os.path.isdir(dirname_):
-            try:
-                os.makedirs(dirname_)
-                print('Directory %s created.' % dirname_)
-            except IOError:
-                print('Unable to create directory %s.' % dirname_)

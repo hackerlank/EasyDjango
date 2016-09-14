@@ -1,6 +1,9 @@
 EasyDjango
 ==========
 
+  * npm
+  
+
   * extensible config system
 
   * create favicon
@@ -11,8 +14,7 @@ EasyDjango
   * minification
   * HTTP2
   * websockets: django-websocket-redis
-  * npm
-  * templates for Bootstrap 3/4, MaterialDesign, Metro, Admin
+  * templates for Bootstrap 3/4, Metro, Admin, Font Awesome
   * REST API: Django REST Framework
    
   * websockets behavior:

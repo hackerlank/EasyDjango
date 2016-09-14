@@ -44,6 +44,7 @@ def get_merger_from_env():
         ./local_config.ini (overrides {root}/etc/{project_name}/*.py)
         ./local_config.py (overrides ./local_config.ini)
     """
+
     project_name = os.environ['EASYDJANGO_PROJECT_NAME']
     project_name = project_name.replace('-', '_')
 
@@ -51,27 +52,24 @@ def get_merger_from_env():
     if prefix == '/usr':
         prefix = ''
 
-    config_providers = [PythonModuleProvider('easydjango.conf.defaults')]
-
-    if project_name != 'easydjango':
-        config_providers.append(PythonModuleProvider('%s.defaults' % project_name))
-        mapping = '%s.iniconf:INI_MAPPING' % project_name
-    else:
-        mapping = 'easydjango.conf.mapping:INI_MAPPING'
-    fields_provider = PythonConfigFieldsProvider(mapping)
-
     def search_providers(suffix, cls):
         default_ini_filename = '%s/etc/%s/*.%s' % (prefix, project_name, suffix)
         ini_filenames = [default_ini_filename] + glob.glob(default_ini_filename)
         ini_filenames.sort()
         return [cls(x) for x in ini_filenames]
 
+    config_providers = [PythonModuleProvider('easydjango.conf.defaults')]
+    if project_name != 'easydjango':
+        config_providers.append(PythonModuleProvider('%s.defaults' % project_name))
+        mapping = '%s.iniconf:INI_MAPPING' % project_name
+    else:
+        mapping = 'easydjango.conf.mapping:INI_MAPPING'
     config_providers += search_providers('ini', IniConfigProvider)
     config_providers += search_providers('py', PythonFileProvider)
-
     config_providers += [IniConfigProvider(os.path.abspath('local_config.ini'))]
     config_providers += [PythonFileProvider(os.path.abspath('local_config.py'))]
 
+    fields_provider = PythonConfigFieldsProvider(mapping)
     return SettingMerger(project_name, fields_provider, config_providers)
 
 
@@ -114,7 +112,7 @@ def control():
     """
 
 
-def manage():
+def django():
     """
     Main function, calling Django code for management commands. Retrieve some default values from Django settings.
     """
@@ -124,7 +122,7 @@ def manage():
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
     options, extra_args = parser.parse_known_args()
     if len(extra_args) == 1 and extra_args[0] == 'runserver':
-        sys.argv += [settings.BIND_ADDRESS]
+        sys.argv += [settings.LISTEN_ADDRESS]
     return execute_from_command_line(sys.argv)
 
 
@@ -138,19 +136,10 @@ def gunicorn():
     set_env()
     from django.conf import settings
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
-    parser.add_argument('-b', '--bind', action='store', default=settings.BIND_ADDRESS, help=settings.BIND_ADDRESS_HELP)
-    # parser.add_argument('--forwarded-allow-ips', action='store', default=','.join(settings.REVERSE_PROXY_IPS))
-    parser.add_argument('--debug', action='store_true', default=False)
-    parser.add_argument('-t', '--timeout', action='store', default=str(settings.REVERSE_PROXY_TIMEOUT),
-                        help=settings.REVERSE_PROXY_TIMEOUT_HELP)
-    parser.add_argument('--proxy-allow-from', action='store', default=','.join(settings.REVERSE_PROXY_IPS),
-                        help='Front-end\'s IPs from which allowed accept proxy requests (comma separate)')
+    parser.add_argument('-b', '--bind', action='store', default=settings.LISTEN_ADDRESS)
     options, extra_args = parser.parse_known_args()
     sys.argv[1:] = extra_args
     __set_default_option(options, 'bind')
-    # __set_default_option(options, 'forwarded_allow_ips')
-    __set_default_option(options, 'timeout')
-    __set_default_option(options, 'proxy_allow_from')
     application = 'djangofloor.wsgi_http:application'
     if application not in sys.argv:
         sys.argv.append(application)
