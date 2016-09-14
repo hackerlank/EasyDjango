@@ -41,7 +41,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     test_suite='easydjango.tests',
-    install_requires=['django', 'celery', 'gunicorn', ],
+    install_requires=['django', 'celery', 'gunicorn', 'django-debug-toolbar', ],
     setup_requires=[],
     classifiers=['Development Status :: 3 - Alpha', 'Operating System :: MacOS :: MacOS X',
                  'Operating System :: Microsoft :: Windows', 'Operating System :: POSIX :: BSD',

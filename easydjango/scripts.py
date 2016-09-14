@@ -7,16 +7,15 @@ Define "main" functions for your scripts using the Django `manage.py` system or 
 from __future__ import unicode_literals, absolute_import, print_function
 
 import glob
-from argparse import ArgumentParser
-import subprocess
-import re
 import os
+import re
+import subprocess
 import sys
+from argparse import ArgumentParser
 
 from easydjango.conf.merger import SettingMerger
 from easydjango.conf.providers import PythonModuleProvider, PythonFileProvider, IniConfigProvider, \
     PythonConfigFieldsProvider
-from easydjango.utils import import_module
 
 __author__ = 'Matthieu Gallet'
 

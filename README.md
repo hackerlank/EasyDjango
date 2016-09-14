@@ -1,6 +1,7 @@
 EasyDjango
 ==========
 
+  * extensible config system
 
   * create favicon
   * language
@@ -11,7 +12,7 @@ EasyDjango
   * HTTP2
   * websockets: django-websocket-redis
   * npm
-  * templates for Bootstrap 3/4, MaterialDesign, Metro
+  * templates for Bootstrap 3/4, MaterialDesign, Metro, Admin
   * REST API: Django REST Framework
    
   * websockets behavior:
@@ -31,3 +32,8 @@ EasyDjango
   * using reverse proxies
   * logs
   * easy initial conf
+
+python3-redis - Persistent key-value database with network interface (Python 3 library)
+python3-django-websocket-redis - Websockets for Django applications using Redis (Python3 version)
+python3-aioredis - asyncio (PEP 3156) Redis support
+python3-hiredis - redis protocol reader for Python using hiredis

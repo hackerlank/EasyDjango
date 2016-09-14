@@ -109,3 +109,16 @@ class ListConfigField(ConfigField):
                 return ','.join(value)
             return ''
         super(ListConfigField, self).__init__(name, setting_name, from_str=strip_split, to_str=to_str, **kwargs)
+
+
+class BooleanConfigField(ConfigField):
+    def __init__(self, name, setting_name, allow_none=False, **kwargs):
+        if allow_none:
+            def from_str(value):
+                if not value:
+                    return None
+                return text_type(value).lower() in {'1', 'ok', 'yes', 'true', 'on'}
+        else:
+            def from_str(value):
+                return text_type(value).lower() in {'1', 'ok', 'yes', 'true', 'on'}
+        super(BooleanConfigField, self).__init__(name, setting_name, from_str=from_str, to_str=str_or_blank, **kwargs)
