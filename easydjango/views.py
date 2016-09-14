@@ -3,4 +3,5 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 __author__ = 'Matthieu Gallet'
 
-urlpatterns = []
+def index(request):
+    pass

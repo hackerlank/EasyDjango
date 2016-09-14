@@ -35,38 +35,54 @@ def __set_default_option(options, name):
 
 
 def get_merger_from_env():
-    easydjango_environment = os.environ['EASYDJANGO_ENVIRONMENT']
-
-    project_name, mapping, providers_str = easydjango_environment.split(';')
-    field_provider = PythonConfigFieldsProvider(mapping)
-    providers = []
-    for provider_str in providers_str.split(','):
-        kind, sep, value = provider_str.partition('://')
-        if kind == 'pymodule':
-            providers.append(PythonModuleProvider(value))
-        elif kind == 'pyfile':
-            providers.append(PythonFileProvider(value))
-        elif kind == 'ini':
-            providers.append(IniConfigProvider(value))
-    return SettingMerger(project_name, field_provider, providers)
-
-
-def set_env():
-    """Set the environment variable `EASYDJANGO_ENVIRONMENT` with the project name and all settings
-    The value looks like "project_name:settings1,settings2,settings3"
-
-    1) determine the project name
-
-        if the script is {xxx}-[gunicorn|manage][.py], then the project_name is assumed to be {xxx}
-        if option --dfproject {xxx} is available, then the project_name is assumed to be {xxx}
-
-    2) determine all available settings in this order:
+    """ Should be used after set_env()
+       determine all available settings in this order:
         easydjango.defaults
         {project_name}.defaults (overrides easydjango.defaults)
         {root}/etc/{project_name}/*.ini (overrides {project_name}.settings)
         {root}/etc/{project_name}/*.py (overrides {root}/etc/{project_name}/*.ini)
         ./local_config.ini (overrides {root}/etc/{project_name}/*.py)
         ./local_config.py (overrides ./local_config.ini)
+    """
+    project_name = os.environ['EASYDJANGO_PROJECT_NAME']
+    project_name = project_name.replace('-', '_')
+
+    prefix = os.path.abspath(sys.prefix)
+    if prefix == '/usr':
+        prefix = ''
+
+    config_providers = [PythonModuleProvider('easydjango.conf.defaults')]
+
+    if project_name != 'easydjango':
+        config_providers.append(PythonModuleProvider('%s.defaults' % project_name))
+        mapping = '%s.iniconf:INI_MAPPING' % project_name
+    else:
+        mapping = 'easydjango.conf.mapping:INI_MAPPING'
+    fields_provider = PythonConfigFieldsProvider(mapping)
+
+    def search_providers(suffix, cls):
+        default_ini_filename = '%s/etc/%s/*.%s' % (prefix, project_name, suffix)
+        ini_filenames = [default_ini_filename] + glob.glob(default_ini_filename)
+        ini_filenames.sort()
+        return [cls(x) for x in ini_filenames]
+
+    config_providers += search_providers('ini', IniConfigProvider)
+    config_providers += search_providers('py', PythonFileProvider)
+
+    config_providers += [IniConfigProvider(os.path.abspath('local_config.ini'))]
+    config_providers += [PythonFileProvider(os.path.abspath('local_config.py'))]
+
+    return SettingMerger(project_name, fields_provider, config_providers)
+
+
+def set_env():
+    """Set the environment variable `EASYDJANGO_PROJECT_NAME` with the project name and all settings
+    The value looks like "project_name:settings1,settings2,settings3"
+
+    determine the project name
+
+        if the script is {xxx}-[gunicorn|manage][.py], then the project_name is assumed to be {xxx}
+        if option --dfproject {xxx} is available, then the project_name is assumed to be {xxx}
 
     """
     # django settings
@@ -78,32 +94,7 @@ def set_env():
         project_name = script_re.group(1)
     else:
         project_name = __get_extra_option('dfproject', 'easydjango', '--dfproject')
-    project_name = project_name.replace('-', '_')
-
-    prefix = os.path.abspath(sys.prefix)
-    if prefix == '/usr':
-        prefix = ''
-
-    providers_str = ['pymodule://easydjango.conf.defaults']
-    if project_name != 'easydjango':
-        providers_str.append('pymodule://%s.defaults' % project_name)
-        mapping = '%s.iniconf:INI_MAPPING' % project_name
-    else:
-        mapping = 'easydjango.conf.mapping:INI_MAPPING'
-
-    default_ini_filename = '%s/etc/%s/*.ini' % (prefix, project_name)
-    ini_filenames = [default_ini_filename] + glob.glob(default_ini_filename)
-    ini_filenames.sort()
-    providers_str += ['ini://%s' % x for x in ini_filenames]
-
-    default_py_filename = '%s/etc/%s/*.py' % (prefix, project_name)
-    py_filenames = [default_py_filename] + glob.glob(default_py_filename)
-    py_filenames.sort()
-    providers_str += ['pyfile://%s' % x for x in py_filenames]
-
-    providers_str.append('ini://%s' % os.path.abspath('local_config.ini'))
-    providers_str.append('pyfile://%s' % os.path.abspath('local_config.py'))
-    os.environ.setdefault('EASYDJANGO_ENVIRONMENT', '%s;%s;%s' % (project_name, mapping, ','.join(providers_str)))
+    os.environ.setdefault('EASYDJANGO_PROJECT_NAME', project_name)
     return project_name
 
 

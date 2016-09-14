@@ -14,7 +14,7 @@ from django import get_version
 
 from easydjango.conf.fields import ConfigField
 from easydjango.conf.providers import ConfigProvider, PythonConfigFieldsProvider
-from easydjango.conf.py_values import ExpandIterable, EasyDjangoValue
+from easydjango.conf.config_values import ExpandIterable, EasyDjangoValue
 
 try:
     # noinspection PyCompatibility

@@ -39,22 +39,11 @@ class Path(EasyDjangoValue):
 class AutocreateDirectory(Path):
     """Represent a directory that must be created on startup
     """
-    def get_value(self, merger):
-        obj = merger.analyze_raw_value(self.value)
-        if not merger.read_only:
-            merger.ensure_dir(obj, parent_=False)
-        return obj
 
 
 class AutocreateFile(Path):
     """Represent a file, whose parent directory should be created on startup
     """
-
-    def get_value(self, merger):
-        obj = merger.analyze_raw_value(self.value)
-        if not merger.read_only:
-            merger.ensure_dir(obj, parent_=True)
-        return obj
 
 
 class SettingReference(EasyDjangoValue):

@@ -3,9 +3,15 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 import os
 
-from easydjango.conf.py_values import Path, AutocreateDirectory, SettingReference, ExpandIterable
+from easydjango.conf.config_values import Path, AutocreateDirectory, SettingReference, ExpandIterable
 
 __author__ = 'Matthieu Gallet'
+
+# ######################################################################################################################
+#
+# detect if ws4redis and django_redis are available
+#
+# ######################################################################################################################
 try:
     import ws4redis
     USE_WS4REDIS = True
@@ -19,9 +25,18 @@ try:
 except ImportError:
     django_redis = None
     USE_DJANGO_REDIS = False
+try:
+    import celery
+    USE_CELERY = True
+except ImportError:
+    celery = False
+    USE_CELERY = False
+
 # ######################################################################################################################
+#
 # settings that can be kept as-is
 # of course, you can override them in your default settings
+#
 # ######################################################################################################################
 ADMINS = (('admin', '{ADMIN_EMAIL}',),)
 ALLOWED_HOSTS = ['{SERVER_FQDN}']
@@ -42,7 +57,6 @@ DATABASES = {'default': {
     'OPTIONS': SettingReference('DATABASE_OPTIONS'),
     'PASSWORD': '{DATABASE_PASSWORD}', 'HOST': '{DATABASE_HOST}', 'PORT': '{DATABASE_PORT}'},
 }
-DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
 DEBUG = False
 # you should create a "local_config.py" with "DEBUG = True" at the root of your project
 DEFAULT_FROM_EMAIL = 'webmaster@{SERVER_FQDN}'
@@ -60,7 +74,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'debug_toolbar',
     'easydjango',
-]  # TODO
+]
 if USE_WS4REDIS:
     INSTALLED_APPS.append('ws4redis')
 LOGGING = {}  # TODO
@@ -80,18 +94,18 @@ MIDDLEWARE_CLASSES = (
 )
 
 ROOT_URLCONF = 'easydjango.root_urls'
+SERVER_EMAIL = 'root@{SERVER_FQDN}'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # X-Forwarded-Proto
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates', 'APP_DIRS': True,
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': SettingReference('TEMPLATE_DIRS'),
         'OPTIONS': {'context_processors': SettingReference('TEMPLATE_CONTEXT_PROCESSORS'),
                     'loaders': SettingReference('TEMPLATE_LOADERS')},
     },
 ]
-SERVER_EMAIL = 'root@{SERVER_FQDN}'
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # X-Forwarded-Proto
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
 TEMPLATE_DIRS = ()
 TEMPLATE_CONTEXT_PROCESSORS = ['django.contrib.auth.context_processors.auth',
                                'django.template.context_processors.debug',
@@ -109,10 +123,7 @@ USE_I18N = True
 USE_L10N = True
 USE_THOUSAND_SEPARATOR = True
 USE_TZ = True
-USE_X_FORWARDED_FOR = True  # X-Forwarded-For
 USE_X_FORWARDED_HOST = True  # X-Forwarded-Host
-USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
-WSGI_APPLICATION = 'easydjango.wsgi.application'
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
@@ -122,31 +133,47 @@ STATIC_URL = '/static/'
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 STATICFILES_FINDERS = ('django.contrib.staticfiles.finders.FileSystemFinder',
                        'django.contrib.staticfiles.finders.AppDirectoriesFinder')
+WSGI_APPLICATION = 'easydjango.wsgi.application'
+# celery
+BROKER_URL = '{CELERY_PROTOCOL}://{CELERY_SERVER}:{CELERY_PORT}/{CELERY_DB}'
+CELERY_TIMEZONE = '{TIME_ZONE}'
+CELERY_RESULT_EXCHANGE = '{PROJECT_NAME}_results'
+CELERY_ACCEPT_CONTENT = ['json', 'yaml', 'msgpack']
+CELERY_APP = 'easydjango'
+CELERY_CREATE_DIRS = True
+CELERY_TASK_SERIALIZER = 'json'
+# easydjango
+DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
+USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
+USE_X_FORWARDED_FOR = True  # X-Forwarded-For
+# ws4redis
 WEBSOCKET_URL = '/ws/'
-WS4REDIS_CONNECTION = {
-    'host': '{WS4REDIS_SERVER}',
-    'port': SettingReference('WS4REDIS_PORT'),
-    'db': SettingReference('WS4REDIS_DB'),
-    'password': '{WS4REDIS_PASSWORD}',
-}
+WS4REDIS_CONNECTION = {'host': '{WS4REDIS_SERVER}', 'port': SettingReference('WS4REDIS_PORT'),
+                       'db': SettingReference('WS4REDIS_DB'), 'password': '{WS4REDIS_PASSWORD}'}
 WS4REDIS_PREFIX = 'ws'
 WS4REDIS_SUBSCRIBER = 'myapp.redis_store.RedisSubscriber'
 
 # ######################################################################################################################
+#
 # settings that should be customized for each project
 # of course, you can define or override any setting
+#
 # ######################################################################################################################
 
-EASYDJANGO_URL_CONF = '{PROJECT_NAME}.urls'
+EASYDJANGO_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
 EASYDJANGO_INDEX = 'easydjango.views.index'
 EASYDJANGO_INSTALLED_APPS = []
 EASYDJANGO_MIDDLEWARE_CLASSES = []
 EASYDJANGO_REMOTE_USER_HEADER = None  # Remote-User
 EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
+# ws4redis
 WS4REDIS_EXPIRE = 7200
+
 # ######################################################################################################################
+#
 # settings that should be customized for each deployment
 # {PROJECT_NAME}.iniconf:INI_MAPPING should be a list of ConfigField, allowing to define these settings in a .ini file
+#
 # ######################################################################################################################
 ADMIN_EMAIL = 'admin@{SERVER_FQDN}'
 DATABASE_ENGINE = 'django.db.backends.sqlite3'
@@ -166,24 +193,31 @@ EMAIL_USE_SSL = False
 EMAIL_SSL_CERTFILE = None
 EMAIL_SSL_KEYFILE = None
 LANGUAGE_CODE = 'fr-fr'
+SECRET_KEY = 'secret_key'
+SECURE_HSTS_SECONDS = 0
+TIME_ZONE = 'Europe/Paris'
+# easydjango
 LOCAL_PATH = './django_data'
-
 __split_path = __file__.split(os.path.sep)
 if 'lib' in __split_path:
     prefix = os.path.join(*__split_path[:__split_path.index('lib')])
     LOCAL_PATH = AutocreateDirectory('/%s/var/{PROJECT_NAME}' % prefix)
-SECRET_KEY = 'secret_key'
-SECURE_HSTS_SECONDS = 0
 SERVER_FQDN = 'localhost'
-TIME_ZONE = 'Europe/Paris'
 
-WS4REDIS_SERVER = 'localhost'
-WS4REDIS_PORT = 6379
-WS4REDIS_DB = 11
-WS4REDIS_PASSWORD = ''
-
+# django_redis
 CACHE_REDIS_PROTOCOL = 'redis'
 CACHE_REDIS_SERVER = 'localhost'
 CACHE_REDIS_PORT = 6379
 CACHE_REDIS_DB = 10
 CACHE_REDIS_PASSWORD = ''
+# ws4redis
+WS4REDIS_SERVER = 'localhost'
+WS4REDIS_PORT = 6379
+WS4REDIS_DB = 11
+WS4REDIS_PASSWORD = ''
+# celery
+CELERY_PROTOCOL = 'redis'
+CELERY_DB = 13
+CELERY_SERVER = 'localhost'
+CELERY_PORT = 6379
+CELERY_PASSWORD = ''
