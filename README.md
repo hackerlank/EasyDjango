@@ -11,7 +11,7 @@ EasyDjango
   * images @2x retina
   * language
   * cache (server/client-side): new decorator?
-  * push notifications
+  * push notifications https://developer.mozilla.org/fr/docs/Web/API/notification
   * responsive
   * minification
   * HTTP2
