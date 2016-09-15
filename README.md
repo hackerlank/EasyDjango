@@ -2,11 +2,13 @@ EasyDjango
 ==========
 
   * npm
-  
+
+    npm install yuglify -g
 
   * extensible config system
 
   * create favicon
+  * images @2x retina
   * language
   * cache (server/client-side): new decorator?
   * push notifications
@@ -29,6 +31,8 @@ EasyDjango
     * last internal checks
     * state of all components
     * Nagios checks
+    
+  * notification messages for all users
     
   * affichage de toutes les vues avec les décorateurs (cache, login_required, …)
   * using reverse proxies

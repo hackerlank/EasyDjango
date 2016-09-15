@@ -17,6 +17,11 @@ __author__ = 'Matthieu Gallet'
 class Command(BaseCommand):
     help = 'Use npm to download all packages that are keys of "settings.NPM_FILE_PATTERNS"'
 
+    def add_arguments(self, parser):
+        assert isinstance(parser, ArgumentParser)
+        parser.add_argument('--favicon', default=None,
+                            help=('path or URL of to master favicon. Otherwise use "icons/favicon.ico" from the static files'))
+
     def handle(self, *args, **options):
         ensure_dir(settings.NPM_ROOT_PATH, False)
         for npm_package, patterns in settings.NPM_FILE_PATTERNS.items():

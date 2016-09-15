@@ -18,6 +18,8 @@ USE_DJANGO_REDIS = is_package_present('dango_redis')
 USE_CELERY = is_package_present('celery')
 USE_SCSS = is_package_present('scss')
 USE_PIPELINE = is_package_present('pipeline')
+USE_DEBUG_TOOLBAR = is_package_present('debug_toolbar')
+
 # ######################################################################################################################
 #
 # settings that can be kept as-is
@@ -58,13 +60,14 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.sitemaps',
     'django.contrib.admin',
-    'debug_toolbar',
-    'easydjango',
 ]
+if USE_DEBUG_TOOLBAR:
+    INSTALLED_APPS.append('debug_toolbar')
 if USE_WS4REDIS:
     INSTALLED_APPS.append('ws4redis')
 if USE_PIPELINE:
     INSTALLED_APPS.append('pipeline')
+INSTALLED_APPS.append('easydjango')
 LOGGING = {}  # TODO
 MANAGERS = SettingReference('ADMINS')
 MEDIA_ROOT = AutocreateDirectory('{LOCAL_PATH}/media')
@@ -144,14 +147,17 @@ CELERY_ACCEPT_CONTENT = ['json', 'yaml', 'msgpack']
 CELERY_APP = 'easydjango'
 CELERY_CREATE_DIRS = True
 CELERY_TASK_SERIALIZER = 'json'
+
 # django-npm
 NPM_EXECUTABLE_PATH = 'npm'
 NPM_ROOT_PATH = AutocreateDirectory('{LOCAL_PATH}/npm')
 NPM_STATIC_FILES_PREFIX = 'vendor'
+
 # easydjango
 DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
 USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
 USE_X_FORWARDED_FOR = True  # X-Forwarded-For
+
 # ws4redis
 WEBSOCKET_URL = '/ws/'
 WS4REDIS_CONNECTION = {'host': '{WS4REDIS_SERVER}', 'port': SettingReference('WS4REDIS_PORT'),
@@ -159,6 +165,13 @@ WS4REDIS_CONNECTION = {'host': '{WS4REDIS_SERVER}', 'port': SettingReference('WS
 WS4REDIS_PREFIX = 'ws'
 WS4REDIS_SUBSCRIBER = 'myapp.redis_store.RedisSubscriber'
 # django-pipeline
+PIPELINE = {
+    'PIPELINE_ENABLED': SettingReference('PIPELINE_ENABLED'),
+    'JAVASCRIPT': SettingReference('PIPELINE_JS'),
+    'STYLESHEETS': SettingReference('PIPELINE_CSS'),
+    'CSS_COMPRESSOR': SettingReference('PIPELINE_CSS_COMPRESSOR'),
+    'JS_COMPRESSOR': SettingReference('PIPELINE_JS_COMPRESSOR'),
+}
 PIPELINE_CSS = {
     'bootstrap3': {
         'source_filenames': ['vendor/bootstrap3/dist/css/bootstrap.min.css',
@@ -193,20 +206,10 @@ PIPELINE_JS = {
     }
 }
 PIPELINE_ENABLED = True
-PIPELINE = {
-    'PIPELINE_ENABLED': SettingReference('PIPELINE_ENABLED'),
-    'JAVASCRIPT': SettingReference('PIPELINE_JS'),
-    'STYLESHEETS': SettingReference('PIPELINE_CSS'),
-    'CSS_COMPRESSOR': SettingReference('PIPELINE_CSS_COMPRESSOR'),
-    'JS_COMPRESSOR': SettingReference('PIPELINE_JS_COMPRESSOR'),
-}
 PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
-# 'pipeline.compressors.slimit.SlimItCompressor'
 PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
 if USE_SCSS:
-    PIPELINE_COMPILERS = (
-        'djangofloor.middleware.PyScssCompiler',
-    )
+    PIPELINE_COMPILERS = ('djangofloor.middleware.PyScssCompiler', )
 
 # ######################################################################################################################
 #
@@ -216,20 +219,24 @@ if USE_SCSS:
 # ######################################################################################################################
 # easydjango
 EASYDJANGO_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
-EASYDJANGO_INDEX = 'easydjango.views.index'
-EASYDJANGO_INSTALLED_APPS = []
+EASYDJANGO_INDEX = '{PROJECT_NAME}.views.index'
+EASYDJANGO_INSTALLED_APPS = ['{PROJECT_NAME}']
 EASYDJANGO_MIDDLEWARE_CLASSES = []
 EASYDJANGO_REMOTE_USER_HEADER = None  # Remote-User
 EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
 EASYDJANGO_CSS = []
 EASYDJANGO_JS = []
+EASYDJANGO_TEMPLATE_BASE = 'metro-ui'  # or "bootstrap3". Unused if you use your own templates
+
 # django-npm
 NPM_FILE_PATTERNS = {
-    'metro-ui': ['build/*'], 'bootstrap3': ['dist/*'], 'font-awesome': ['dist/*', 'css/*', 'fonts/*'],
+    'metro-ui': ['build/*'], 'bootstrap3': ['dist/*'], 'font-awesome': ['css/*', 'fonts/*'],
     'html5shiv': ['dist/*'], 'respond.js': ['dest/*'], 'jquery': ['dist/*'],
 }
+
 # ws4redis
 WS4REDIS_EXPIRE = 7200
+
 # ######################################################################################################################
 #
 # settings that should be customized for each deployment
@@ -257,6 +264,7 @@ LANGUAGE_CODE = 'fr-fr'
 SECRET_KEY = 'secret_key'
 SECURE_HSTS_SECONDS = 0
 TIME_ZONE = 'Europe/Paris'
+
 # easydjango
 LISTEN_ADDRESS = 'localhost:9000'
 LOCAL_PATH = './django_data'
@@ -272,11 +280,13 @@ CACHE_REDIS_SERVER = 'localhost'
 CACHE_REDIS_PORT = 6379
 CACHE_REDIS_DB = 10
 CACHE_REDIS_PASSWORD = ''
+
 # ws4redis
 WS4REDIS_SERVER = 'localhost'
 WS4REDIS_PORT = 6379
 WS4REDIS_DB = 11
 WS4REDIS_PASSWORD = ''
+
 # celery
 CELERY_PROTOCOL = 'redis'
 CELERY_DB = 13

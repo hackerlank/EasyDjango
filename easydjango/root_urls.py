@@ -9,6 +9,7 @@ from django.views.static import serve
 from django.utils.module_loading import import_string
 
 from easydjango.scripts import load_celery
+from easydjango.views import favicon
 
 __author__ = 'Matthieu Gallet'
 
@@ -34,10 +35,10 @@ urlpatterns = [url(r'^admin/', include(admin.site.urls)),
                # url(r'^df/signals.js$', signals),
                # url(r'^df/ws_emulation.js$', get_signal_calls, name='df_get_signal_calls'),
                # url(r'^robots\.txt$', robots),
-               # url(r'^favicon\.ico$', robots),
+               url(r'^favicon\.ico$', favicon),
                url(r'^$', index_view, name='index'),
                ] + list(extra_urls)
 
-if settings.DEBUG:
+if settings.DEBUG and settings.USE_DEBUG_TOOLBAR:
     import debug_toolbar
     urlpatterns += [url(r'^__debug__/', include(debug_toolbar.urls)), ]

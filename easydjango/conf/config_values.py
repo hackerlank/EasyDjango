@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
-
+from easydjango.utils import ensure_dir
 __author__ = 'Matthieu Gallet'
 
 
@@ -40,10 +40,20 @@ class AutocreateDirectory(Path):
     """Represent a directory that must be created on startup
     """
 
+    def get_value(self, merger):
+        value = merger.analyze_raw_value(self.value)
+        ensure_dir(value, parent=False)
+        return value
+
 
 class AutocreateFile(Path):
     """Represent a file, whose parent directory should be created on startup
     """
+
+    def get_value(self, merger):
+        value = merger.analyze_raw_value(self.value)
+        ensure_dir(value, parent=True)
+        return value
 
 
 class SettingReference(EasyDjangoValue):
