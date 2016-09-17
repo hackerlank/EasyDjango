@@ -2,7 +2,6 @@ EasyDjango
 ==========
 
   * npm
-
     npm install yuglify -g
 
   * extensible config system
@@ -16,7 +15,7 @@ EasyDjango
   * minification
   * HTTP2
   * websockets: django-websocket-redis
-  * templates for Bootstrap 3/4, Metro, Admin, Font Awesome
+  * templates for Bootstrap 3, Metro, Admin, Font Awesome
   * REST API: Django REST Framework
    
   * websockets behavior:
@@ -43,3 +42,11 @@ python3-redis - Persistent key-value database with network interface (Python 3 l
 python3-django-websocket-redis - Websockets for Django applications using Redis (Python3 version)
 python3-aioredis - asyncio (PEP 3156) Redis support
 python3-hiredis - redis protocol reader for Python using hiredis
+
+base templates:
+    - login button
+    - create account window
+    - logout button
+    - messages
+    - logo
+    - footer

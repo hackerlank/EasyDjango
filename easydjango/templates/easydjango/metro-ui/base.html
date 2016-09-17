@@ -1,11 +1,12 @@
-{% load pipeline staticfiles %}<!DOCTYPE html>
+{% load pipeline staticfiles metro_ui %}<!DOCTYPE html>
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>{% block title %}Django{% endblock %}</title>
     {% javascript 'metro-ui' %}
     <!--[if lt IE 9 ]>{% javascript 'ie9' %}<![endif]-->
     {% stylesheet 'metro-ui' %}
-{% block favicon %}
+    {% block favicon %}
     <link rel="apple-touch-icon" sizes="152x152" href="{% static 'favicon/apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" href="{% static 'favicon/favicon-32x32.png' %}" sizes="32x32">
     <link rel="icon" type="image/png" href="{% static 'favicon/favicon-16x16.png' %}" sizes="16x16">
@@ -14,10 +15,46 @@
     <meta name="msapplication-TileColor" content="#00a300">
     <meta name="msapplication-TileImage" content="{% static 'favicon/mstile-144x144.png' %}">
     <meta name="theme-color" content="#ffffff">
-{% endblock %}
+    {% endblock %}
 
 </head>
-<body>
-    {% block body %}{% endblock %}
+{% block body %}
+<body {% block body-attributes %}class="bg-steel"{% endblock %}>
+{% block menubar %}
+<div class="app-bar">
+    <a class="app-bar-element" href="...">Home</a>
+    <span class="app-bar-divider"></span>
+    <ul class="app-bar-menu">
+        <li><a href="">Home</a></li>
+        <li>
+            <a href="" class="dropdown-toggle">Products</a>
+            <ul class="d-menu" data-role="dropdown">
+                <li><a href="">Windows 10</a></li>
+                <li><a href="">Spartan</a></li>
+                <li><a href="">Outlook</a></li>
+                <li><a href="">Office 2015</a></li>
+                <li class="divider"></li>
+                <li><a href="" class="dropdown-toggle">Other Products</a>
+                    <ul class="d-menu" data-role="dropdown">
+                        <li><a href="">Internet Explorer 10</a></li>
+                        <li><a href="">Skype</a></li>
+                        <li><a href="">Surface</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><a href="">Support</a></li>
+        <li><a href="">Help</a></li>
+    </ul>
+    <!-- login -->
+    <!-- search bar -->
+</div>
+{% endblock %}
+
+{% block messages %}<div id="messages"></div>{% metro_ui_messages style="notification" %}{% endblock %}
+
+{% block content %}
+{% endblock %}
 </body>
+{% endblock %}
 </html>

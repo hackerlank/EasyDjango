@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import add_domain
 from django.http import HttpResponsePermanentRedirect
@@ -25,6 +26,10 @@ def robots(request):
 
 
 def index(request):
+    messages.info(request, 'message (info)')
+    messages.success(request, 'message (success)')
+    messages.warning(request, 'message (warning)')
+    messages.error(request, 'message (error)')
     template_values = {}
     return render_to_response('easydjango/%s/index.html' % settings.EASYDJANGO_TEMPLATE_BASE,
                               template_values, RequestContext(request))

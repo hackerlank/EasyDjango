@@ -18,17 +18,27 @@ class Notification(models.Model):
     MODAL = 'modal'
     POPUP = 'popup'
     BANNER = 'banner'
-    title = models.CharField(_('Title'), max_length=255, blank=True, default='')
+    SUCCESS = 'success'
+    WARNING = 'warning'
+    INFO = 'info'
+    ALERT = 'alert'
+
     content = models.TextField(_('Content'), blank=True, default='')
+    title = models.CharField(_('Title'), max_length=255, blank=True, default='')
+    icon = models.FileField(_('Icon'), max_length=255, blank=True, null=True, default=None,
+                            upload_to='notification_icons')
     is_active = models.BooleanField(_('Is active?'), default=True, blank=True, db_index=True)
     not_before = models.DateTimeField(_('Do not display before'), db_index=True)
     not_after = models.DateTimeField(_('Do not display after'), db_index=True)
+    level = models.CharField(_('Level'), max_length=10, default=INFO,
+                             choices=((SUCCESS, _('Success')), (INFO, _('Info')),
+                                      (WARNING, _('Warning')), (ALERT, _('Alert'))))
     auto_hide_seconds = models.IntegerField(_('Automatically hide after (in seconds, 0 means no auto-hide)'),
                                             blank=True, default=0)
     author = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, db_index=True,
                                     related_name='notification_author',
                                     verbose_name=_('Users that should read this message'))
-    display_mode = models.CharField(_('Display mode'),
+    display_mode = models.CharField(_('Display mode'), max_length=20, default=NOTIFICATION,
                                     choices=((MODAL, _('Blocking (modal) window')),
                                              (SYSTEM, _('System notification')),
                                              (NOTIFICATION, _('HTML notification')),
