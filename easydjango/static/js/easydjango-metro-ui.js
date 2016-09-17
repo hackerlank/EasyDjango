@@ -24,6 +24,9 @@
             var keepOpen = (timeout === 0);
             $.Notify({caption: title, content: content, icon: icon, type: level, timeout: timeout, keepOpen: keepOpen});
         }
+        else if (style === "system") {
+            $.ed.systemNotification(level, content, title, icon, timeout);
+        }
         return messageId;
     };
 }(jQuery));
