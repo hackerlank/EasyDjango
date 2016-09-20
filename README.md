@@ -37,6 +37,10 @@ EasyDjango
   * using reverse proxies
   * logs
   * easy initial conf
+  
+  * abonnement aux files websocket 
+    le code HTML fait une liste de topics et signe le tout + ID de session
+    à l'abonnement, on vérifie la signature 
 
 python3-redis - Persistent key-value database with network interface (Python 3 library)
 python3-django-websocket-redis - Websockets for Django applications using Redis (Python3 version)

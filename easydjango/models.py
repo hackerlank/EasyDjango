@@ -39,11 +39,13 @@ class Notification(models.Model):
                                     related_name='notification_author',
                                     verbose_name=_('Users that should read this message'))
     display_mode = models.CharField(_('Display mode'), max_length=20, default=NOTIFICATION,
-                                    choices=((MODAL, _('Blocking (modal) window')),
-                                             (SYSTEM, _('System notification')),
+                                    choices=(
                                              (NOTIFICATION, _('HTML notification')),
+                                             # (MODAL, _('Blocking (modal) window')),
+                                             (SYSTEM, _('System notification')),
                                              (BANNER, _('Screen-wide banner')),
-                                             (POPUP, _('Popup'))))
+                                             # (POPUP, _('Popup')),
+                                    ))
     broadcast_mode = models.IntegerField(_('Broadcast mode'), db_index=True, blank=True,
                                          choices=((ANY, _('Any visitor (using cookies)')),
                                                   (AUTHENTICATED, _('Any authenticated users')),

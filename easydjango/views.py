@@ -26,10 +26,10 @@ def robots(request):
 
 
 def index(request):
-    messages.info(request, 'message (info)')
-    messages.success(request, 'message (success)')
-    messages.warning(request, 'message (warning)')
-    messages.error(request, 'message (error)')
+    # messages.info(request, 'message (info)')
+    # messages.success(request, 'message (success)')
+    # messages.warning(request, 'message (warning)')
+    # messages.error(request, 'message (error)')
     template_values = {}
     return render_to_response('easydjango/%s/index.html' % settings.EASYDJANGO_TEMPLATE_BASE,
                               template_values, RequestContext(request))
