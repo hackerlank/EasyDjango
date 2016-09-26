@@ -9,13 +9,12 @@ __author__ = 'Matthieu Gallet'
 http_application = get_wsgi_application()
 ws_application = None
 
-if settings.USE_WS4REDIS:
+if settings.USE_CELERY:
     # noinspection PyPackageRequirements,PyUnresolvedReferences
     import gevent.socket
     # noinspection PyPackageRequirements,PyUnresolvedReferences
     import redis.connection
-    # noinspection PyPackageRequirements,PyUnresolvedReferences
-    from ws4redis.uwsgi_runserver import uWSGIWebsocketServer
+    from easydjango.websockets.uwsgi_runserver import uWSGIWebsocketServer
     redis.connection.socket = gevent.socket
     ws_application = uWSGIWebsocketServer()
 
@@ -26,6 +25,6 @@ def application(environ, start_response):
 
     :return: a HTTP app, or a WS app (depending on the URL path)
     """
-    if settings.USE_WS4REDIS and environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
+    if settings.USE_CELERY and environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
         return ws_application(environ, start_response)
     return http_application(environ, start_response)

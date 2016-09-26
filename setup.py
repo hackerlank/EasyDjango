@@ -23,7 +23,7 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding=
 
 
 extras_requirements = {}
-install_requirements = ['django', 'celery', 'gunicorn', ]
+install_requirements = ['django', 'celery', 'gunicorn', 'django-websocket-redis', ]
 if python_version < (3, 3):
     install_requirements.append('funcsigs')
 

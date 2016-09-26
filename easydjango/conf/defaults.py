@@ -13,7 +13,6 @@ __author__ = 'Matthieu Gallet'
 # detect if some external packages are available, to automatically customize some settings
 #
 # ######################################################################################################################
-USE_WS4REDIS = is_package_present('ws4redis')
 USE_DJANGO_REDIS = is_package_present('dango_redis')
 USE_CELERY = is_package_present('celery')
 USE_SCSS = is_package_present('scss')
@@ -38,7 +37,7 @@ if USE_DJANGO_REDIS:
         }
     }
 else:
-    CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'unique-snowflake'},}
+    CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'unique-snowflake'}}
 CSRF_COOKIE_DOMAIN = '.{SERVER_FQDN}'
 DATABASES = {'default': {
     'ENGINE': '{DATABASE_ENGINE}', 'NAME': '{DATABASE_NAME}', 'USER': '{DATABASE_USER}',
@@ -63,8 +62,6 @@ INSTALLED_APPS = [
 ]
 if USE_DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
-if USE_WS4REDIS:
-    INSTALLED_APPS.append('ws4redis')
 if USE_PIPELINE:
     INSTALLED_APPS.append('pipeline')
 INSTALLED_APPS.append('easydjango')
@@ -106,8 +103,6 @@ TEMPLATE_CONTEXT_PROCESSORS = ['django.contrib.auth.context_processors.auth',
                                'django.template.context_processors.tz',
                                'django.contrib.messages.context_processors.messages',
                                ExpandIterable('EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS')]
-if USE_WS4REDIS:
-    TEMPLATE_CONTEXT_PROCESSORS.append('ws4redis.context_processors.default')
 TEMPLATE_LOADERS = ('django.template.loaders.filesystem.Loader',
                     'django.template.loaders.app_directories.Loader')
 USE_I18N = True
@@ -162,8 +157,11 @@ USE_X_FORWARDED_FOR = True  # X-Forwarded-For
 WEBSOCKET_URL = '/ws/'
 WS4REDIS_CONNECTION = {'host': '{WS4REDIS_SERVER}', 'port': SettingReference('WS4REDIS_PORT'),
                        'db': SettingReference('WS4REDIS_DB'), 'password': '{WS4REDIS_PASSWORD}'}
+WS4REDIS_TOPIC_SERIALIZER = 'django.core.serializers.json.DjangoJSONEncoder'
+WS4REDIS_SIGNAL_DECODER = 'json.JSONDecoder'
+WS4REDIS_SIGNAL_ENCODER = 'easydjango.websockets.topics.serialize_topic'
 WS4REDIS_PREFIX = 'ws'
-WS4REDIS_SUBSCRIBER = 'myapp.redis_store.RedisSubscriber'
+WS4REDIS_EXPIRE = 36000
 # django-pipeline
 PIPELINE = {
     'PIPELINE_ENABLED': SettingReference('PIPELINE_ENABLED'),
