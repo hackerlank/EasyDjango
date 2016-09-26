@@ -102,7 +102,7 @@ def load_celery():
     """
     from django.conf import settings
     if settings.USE_CELERY:
-        from easydjango.celery import app
+        from easydjango.celery_app import app
         return app
     return None
 

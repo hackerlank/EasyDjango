@@ -13,16 +13,15 @@ import sys
 import django
 import django.utils.six as six
 from django.core import signing
-from django.middleware.csrf import CSRF_KEY_LENGTH
-from django.utils import lru_cache
+from django.utils.lru_cache import lru_cache
 from django.utils.crypto import get_random_string
 from django.utils.module_loading import import_string
 from django.utils.six.moves import http_client
 from redis import StrictRedis
 
-from easydjango.signals import _call_signal
 from easydjango.signals.connection import SERVER
 from easydjango.signals.request import SignalRequest
+from easydjango.tasks import _call_signal
 
 if django.VERSION[:2] >= (1, 7):
     django.setup()
@@ -45,7 +44,6 @@ except ImportError:
 
 signer = signing.Signer()
 topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
-signal_encoder = import_string(settings.WS4REDIS_SIGNAL_ENCODER)
 signal_decoder = import_string(settings.WS4REDIS_SIGNAL_DECODER)
 
 
@@ -56,7 +54,7 @@ def _get_redis_connection():
 
 
 def set_websocket_topics(request, *topics):
-    token = get_random_string(CSRF_KEY_LENGTH)
+    token = get_random_string(32)
     prefix = settings.WS4REDIS_PREFIX
     topic_strings = [prefix + topic_serializer(request, x) for x in topics if x is not SERVER]
     connection = _get_redis_connection()
@@ -78,12 +76,6 @@ def get_websocket_topics(request):
     connection = _get_redis_connection()
     topics = connection.lrange(redis_key, 0, -1)
     return topics
-
-
-def call_ws_signal(signal_name, signal_id, serialized_topic, kwargs):
-    connection = _get_redis_connection()
-    serialized_message = json.dumps({'signal': signal_name, 'opts': kwargs, 'id': signal_id}, cls=signal_encoder)
-    connection.publish(serialized_topic, serialized_message.encode('utf-8'))
 
 
 class WebsocketWSGIServer(object):
@@ -129,6 +121,8 @@ class WebsocketWSGIServer(object):
 
     # noinspection PyMethodMayBeStatic
     def publish_message(self, request, message):
+        if message == settings.WS4REDIS_HEARTBEAT:
+            return
         try:
             unserialized_message = json.loads(message)
             kwargs = unserialized_message['opts']

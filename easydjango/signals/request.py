@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
-from django.db.models import Q, cached_property
+from django.db.models import Q
+from django.utils.functional import cached_property
 
 __author__ = 'Matthieu Gallet'
 

@@ -4,6 +4,8 @@ from __future__ import unicode_literals, print_function, absolute_import
 from django.core.wsgi import get_wsgi_application
 from django.conf import settings
 
+from easydjango.websockets.django_runserver import WebsocketRunServer
+
 __author__ = 'Matthieu Gallet'
 
 http_application = get_wsgi_application()
@@ -14,9 +16,12 @@ if settings.USE_CELERY:
     import gevent.socket
     # noinspection PyPackageRequirements,PyUnresolvedReferences
     import redis.connection
-    from easydjango.websockets.uwsgi_runserver import uWSGIWebsocketServer
-    redis.connection.socket = gevent.socket
-    ws_application = uWSGIWebsocketServer()
+    try:
+        from easydjango.websockets.uwsgi_runserver import uWSGIWebsocketServer
+        redis.connection.socket = gevent.socket
+        ws_application = uWSGIWebsocketServer()
+    except ImportError:
+        ws_application = WebsocketRunServer()
 
 
 def application(environ, start_response):

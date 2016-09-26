@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 
 from easydjango.signals.connection import WINDOW, USER, BROADCAST
 
