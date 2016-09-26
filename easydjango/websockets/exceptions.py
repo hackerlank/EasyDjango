@@ -15,6 +15,10 @@ class WebSocketError(socket_error):
     """
 
 
+class NoWindowKeyException(ValueError):
+    """raise when the middleware EasyDjangoMiddleware is not used."""
+
+
 # noinspection PyClassHasNoInit
 class FrameTooLargeException(WebSocketError):
     """

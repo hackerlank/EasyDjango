@@ -10,10 +10,15 @@ from django.utils.module_loading import import_string
 from django.utils.lru_cache import lru_cache
 from redis import StrictRedis
 
-from easydjango.signals.connection import BROADCAST, SERVER, WINDOW, USER
+from easydjango.signals.connection import REGISTERED_SIGNALS, SignalConnection
+from easydjango.signals.request import SignalRequest
 
 __author__ = 'Matthieu Gallet'
 
+SERVER = [[]]
+WINDOW = [[]]
+USER = [[]]
+BROADCAST = [[]]
 
 signal_encoder = import_string(settings.WS4REDIS_SIGNAL_ENCODER)
 topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
@@ -77,13 +82,21 @@ def _call_ws_signal(signal_name, signal_id, serialized_topic, kwargs):
 
 
 @shared_task(serializer='json')
-def _server_signal_call(signal_name, request_dict, args=None, kwargs=None,
-                        from_client=False, serialized_client_topics=None, to_server=False):
+def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=False, serialized_client_topics=None,
+                        to_server=False):
+    if kwargs is None:
+        kwargs = {}
     if serialized_client_topics:
         signal_id = str(uuid.uuid4())
         for topic in serialized_client_topics:
             _call_ws_signal(signal_name, signal_id, topic, kwargs)
+    request = SignalRequest.from_dict(request_dict)
     if not to_server:
         return
-    elif from_client:
-        pass
+    if signal_name not in REGISTERED_SIGNALS:
+        return
+    for connection in REGISTERED_SIGNALS[signal_name]:
+        assert isinstance(connection, SignalConnection)
+        if (from_client and not connection.is_allowed_to(request)) or not connection.check(**kwargs):
+            continue
+        connection(**kwargs)

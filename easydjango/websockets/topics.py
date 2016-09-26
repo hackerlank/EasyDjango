@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 from django.contrib.auth import get_user_model
 
-from easydjango.signals.connection import WINDOW, USER, BROADCAST
+from easydjango.tasks import BROADCAST, USER, WINDOW
 
 __author__ = 'Matthieu Gallet'
 

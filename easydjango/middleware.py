@@ -5,8 +5,10 @@ import base64
 
 from django.conf import settings
 from django.contrib import auth
-from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth.middleware import RemoteUserMiddleware
+from django.contrib.sessions.backends.base import VALID_KEY_CHARS
+from django.core.exceptions import ImproperlyConfigured
+from django.utils.crypto import get_random_string
 
 __author__ = 'Matthieu Gallet'
 
@@ -23,6 +25,7 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
 
     # noinspection PyMethodMayBeStatic
     def process_request(self, request):
+        request.window_key = get_random_string(32, VALID_KEY_CHARS)
 
         if settings.USE_X_FORWARDED_FOR and 'HTTP_X_FORWARDED_FOR' in request.META:
             request.META['REMOTE_ADDR'] = request.META['HTTP_X_FORWARDED_FOR'].split(',')[0].strip()
@@ -45,7 +48,6 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
     # noinspection PyUnusedLocal,PyMethodMayBeStatic
     def process_template_response(self, request, response):
         response['X-UA-Compatible'] = 'IE=edge,chrome=1'
-        return response
 
     def remote_user_authentication(self, request):
         # AuthenticationMiddleware is required so that request.user exists.

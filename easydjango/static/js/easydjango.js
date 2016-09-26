@@ -1,5 +1,6 @@
 (function($) {
     $.ed = {};
+    $.ed._window_token = null;
     $.ed._notificationId = 1;
     $.ed._notificationClosers = {}
     $.ed._closeHTMLNotification = function (id) {

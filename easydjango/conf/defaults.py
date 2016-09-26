@@ -78,6 +78,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'easydjango.middleware.EasyDjangoMiddleware',
     ExpandIterable('EASYDJANGO_MIDDLEWARE_CLASSES'),
 )
 
@@ -102,7 +103,8 @@ TEMPLATE_CONTEXT_PROCESSORS = ['django.contrib.auth.context_processors.auth',
                                'django.template.context_processors.static',
                                'django.template.context_processors.tz',
                                'django.contrib.messages.context_processors.messages',
-                               ExpandIterable('EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS')]
+                               ExpandIterable('EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS'),
+                               'easydjango.context_processors.context_base', ]
 TEMPLATE_LOADERS = ('django.template.loaders.filesystem.Loader',
                     'django.template.loaders.app_directories.Loader')
 USE_I18N = True

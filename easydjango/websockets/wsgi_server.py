@@ -14,14 +14,14 @@ import django
 import django.utils.six as six
 from django.core import signing
 from django.utils.lru_cache import lru_cache
-from django.utils.crypto import get_random_string
 from django.utils.module_loading import import_string
+# noinspection PyUnresolvedReferences
 from django.utils.six.moves import http_client
 from redis import StrictRedis
 
-from easydjango.signals.connection import SERVER
 from easydjango.signals.request import SignalRequest
-from easydjango.tasks import _call_signal
+# noinspection PyProtectedMember
+from easydjango.tasks import _call_signal, SERVER
 
 if django.VERSION[:2] >= (1, 7):
     django.setup()
@@ -31,7 +31,7 @@ from django.core.handlers.wsgi import WSGIRequest, logger
 from django.core.exceptions import PermissionDenied
 from django import http
 from django.utils.encoding import force_str
-from easydjango.websockets.exceptions import WebSocketError, HandshakeError, UpgradeRequiredError
+from easydjango.websockets.exceptions import WebSocketError, HandshakeError, UpgradeRequiredError, NoWindowKeyException
 
 try:
     # django >= 1.8 && python >= 2.7
@@ -39,6 +39,7 @@ try:
     from importlib import import_module
 except ImportError:
     # RemovedInDjango19Warning: django.utils.importlib will be removed in Django 1.9.
+    # noinspection PyUnresolvedReferences
     from django.utils.importlib import import_module
 
 
@@ -54,7 +55,9 @@ def _get_redis_connection():
 
 
 def set_websocket_topics(request, *topics):
-    token = get_random_string(32)
+    if not hasattr(request, 'window_key'):
+        raise NoWindowKeyException('You should use the EasyDjangoMiddleware middleware')
+    token = request.window_key
     prefix = settings.WS4REDIS_PREFIX
     topic_strings = [prefix + topic_serializer(request, x) for x in topics if x is not SERVER]
     connection = _get_redis_connection()
@@ -63,7 +66,6 @@ def set_websocket_topics(request, *topics):
     for topic in topic_strings:
         connection.rpush(redis_key, topic)
     connection.expire(redis_key, settings.WS4REDIS_EXPIRE)
-    return signer.sign(token)
 
 
 def get_websocket_topics(request):
