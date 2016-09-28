@@ -54,20 +54,6 @@ def _get_redis_connection():
     return StrictRedis(**settings.WS4REDIS_CONNECTION)
 
 
-def set_websocket_topics(request, *topics):
-    if not hasattr(request, 'window_key'):
-        raise NoWindowKeyException('You should use the EasyDjangoMiddleware middleware')
-    token = request.window_key
-    prefix = settings.WS4REDIS_PREFIX
-    topic_strings = [prefix + topic_serializer(request, x) for x in topics if x is not SERVER]
-    connection = _get_redis_connection()
-    redis_key = '%s%s' % (prefix, token)
-    connection.delete(redis_key)
-    for topic in topic_strings:
-        connection.rpush(redis_key, topic)
-    connection.expire(redis_key, settings.WS4REDIS_EXPIRE)
-
-
 def get_websocket_topics(request):
     signed_token = request.GET.get('token', '')
     try:
@@ -93,8 +79,7 @@ class WebsocketWSGIServer(object):
     def select(self, rlist, wlist, xlist, timeout=None):
         raise NotImplementedError
 
-    @staticmethod
-    def assure_protocol_requirements(environ):
+    def assure_protocol_requirements(self, environ):
         if environ.get('REQUEST_METHOD') != 'GET':
             raise HandshakeError('HTTP method must be a GET')
 
@@ -130,7 +115,7 @@ class WebsocketWSGIServer(object):
             kwargs = unserialized_message['opts']
             signal_name = unserialized_message['signal']
             _call_signal(request, signal_name, to=[SERVER], kwargs=kwargs, from_client=True)
-        except ValueError:
+        except TypeError:
             pass
         except KeyError:
             pass
@@ -148,13 +133,14 @@ class WebsocketWSGIServer(object):
             request = WSGIRequest(environ)
             # noinspection PyTypeChecker
             signal_request = self.process_request(request)
+            websocket = self.upgrade_websocket(environ, start_response)
+
+            websocket_fd = websocket.get_file_descriptor()
+            listening_fds = [websocket_fd]
+
             channels, echo_message = self.process_subscriptions(request)
             pubsub.subscribe(*channels)
             logger.debug('Subscribed to channels: {0}'.format(', '.join(channels)))
-
-            websocket = self.upgrade_websocket(environ, start_response)
-            websocket_fd = websocket.get_file_descriptor()
-            listening_fds = [websocket_fd]
             # noinspection PyProtectedMember
             redis_fd = pubsub.connection._sock.fileno()
             if redis_fd:
@@ -171,10 +157,12 @@ class WebsocketWSGIServer(object):
                         message = websocket.receive()
                         self.publish_message(signal_request, message)
                     elif fd == redis_fd:
-                        sendmsg = pubsub.parse_response()
+                        pass
+                        # sendmsg = pubsub.parse_response()
+                        # print(sendmsg)
                         # TODO check is .decode('utf-8') is required
-                        if sendmsg and (echo_message or sendmsg != recvmsg):
-                            websocket.send(sendmsg)
+                        # if sendmsg and (echo_message or sendmsg != recvmsg):
+                        #     websocket.send(sendmsg)
                     else:
                         logger.error('Invalid file descriptor: {0}'.format(fd))
                 # Check again that the websocket is closed before sending the heartbeat,
@@ -199,7 +187,7 @@ class WebsocketWSGIServer(object):
         else:
             response = http.HttpResponse()
         finally:
-            pubsub.release()
+            # pubsub.release()
             if websocket:
                 websocket.close(code=1001, message='Websocket Closed')
             else:

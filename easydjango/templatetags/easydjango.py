@@ -14,5 +14,5 @@ register = template.Library()
 def init_websocket(context):
     ws_token = context['ed_ws_token']
     signed_token = signer.sign(ws_token)
-    script = '$(function () { $.ed._window_token = "%s"; });' % signed_token
+    script = 'edWsToken = "%s";' % signed_token
     return mark_safe('<script type="application/javascript">%s</script>' % script)

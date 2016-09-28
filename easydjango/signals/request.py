@@ -131,7 +131,7 @@ class SignalRequest(object):
         window_key = request.window_key if hasattr(request, 'window_key') else None
         # noinspection PyUnresolvedReferences,PyTypeChecker
         user = request.user if hasattr(request, 'user') and request.user else None
-        if user.is_authenticated():
+        if user and user.is_authenticated():
             return cls(username=user.get_username(), window_key=window_key,
                        user_pk=user.pk, is_superuser=user.is_superuser, is_staff=user.is_staff,
                        is_active=user.is_active)

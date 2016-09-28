@@ -15,11 +15,11 @@ if settings.USE_CELERY:
     # noinspection PyPackageRequirements,PyUnresolvedReferences
     import redis.connection
     try:
-        from easydjango.websockets.uwsgi_runserver import uWSGIWebsocketServer as WebsocketRunServer
+        from easydjango.websockets.uwsgi_runserver import uWSGIWebsocketServer as WebsocketServer
         redis.connection.socket = gevent.socket
     except ImportError:
-        from easydjango.websockets.django_runserver import WebsocketRunServer
-    ws_application = WebsocketRunServer()
+        from easydjango.websockets.django_runserver import WebsocketRunServer as WebsocketServer
+    ws_application = WebsocketServer()
 
 
 def application(environ, start_response):
@@ -28,6 +28,7 @@ def application(environ, start_response):
 
     :return: a HTTP app, or a WS app (depending on the URL path)
     """
+    print(start_response, environ.get('PATH_INFO', ''))
     if settings.USE_CELERY and environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
         return ws_application(environ, start_response)
     return http_application(environ, start_response)

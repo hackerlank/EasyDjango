@@ -159,12 +159,11 @@ USE_X_FORWARDED_FOR = True  # X-Forwarded-For
 WEBSOCKET_URL = '/ws/'
 WS4REDIS_CONNECTION = {'host': '{WS4REDIS_SERVER}', 'port': SettingReference('WS4REDIS_PORT'),
                        'db': SettingReference('WS4REDIS_DB'), 'password': '{WS4REDIS_PASSWORD}'}
-WS4REDIS_TOPIC_SERIALIZER = 'django.core.serializers.json.DjangoJSONEncoder'
+WS4REDIS_TOPIC_SERIALIZER = 'easydjango.websockets.topics.serialize_topic'
 WS4REDIS_HEARTBEAT = '--HEARTBEAT--'
 WS4REDIS_SIGNAL_DECODER = 'json.JSONDecoder'
-WS4REDIS_SIGNAL_ENCODER = 'easydjango.websockets.topics.serialize_topic'
+WS4REDIS_SIGNAL_ENCODER = 'django.core.serializers.json.DjangoJSONEncoder'
 WS4REDIS_PREFIX = 'ws'
-WS4REDIS_EXPIRE = 36000
 # django-pipeline
 PIPELINE = {
     'PIPELINE_ENABLED': SettingReference('PIPELINE_ENABLED'),
@@ -193,12 +192,14 @@ PIPELINE_CSS = {
 PIPELINE_JS = {
     'bootstrap3': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/bootstrap3/dist/js/bootstrap.min.js',
-                             'js/easydjango.js', 'js/easydjango-bootstrap3.js', ExpandIterable('EASYDJANGO_JS')],
+                             'js/websockets.js', 'js/easydjango.js', 'js/easydjango-bootstrap3.js',
+                             ExpandIterable('EASYDJANGO_JS')],
         'output_filename': 'js/bootstrap3.js',
     },
     'metro-ui': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/metro-ui/build/js/metro.min.js',
-                             'js/easydjango.js', 'js/easydjango-metro-ui.js', ExpandIterable('EASYDJANGO_JS')],
+                             'js/websockets.js', 'js/easydjango.js','js/easydjango-metro-ui.js',
+                             ExpandIterable('EASYDJANGO_JS')],
         'output_filename': 'js/metro-ui.js',
     },
     'ie9': {
@@ -236,7 +237,7 @@ NPM_FILE_PATTERNS = {
 }
 
 # ws4redis
-WS4REDIS_EXPIRE = 7200
+WS4REDIS_EXPIRE = 36000
 
 # ######################################################################################################################
 #

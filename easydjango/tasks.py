@@ -12,6 +12,7 @@ from redis import StrictRedis
 
 from easydjango.signals.connection import REGISTERED_SIGNALS, SignalConnection
 from easydjango.signals.request import SignalRequest
+from easydjango.websockets.exceptions import NoWindowKeyException
 
 __author__ = 'Matthieu Gallet'
 
@@ -28,6 +29,21 @@ topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
 @lru_cache()
 def _get_redis_connection():
     return StrictRedis(**settings.WS4REDIS_CONNECTION)
+
+
+def set_websocket_topics(request, *topics):
+    if not hasattr(request, 'window_key'):
+        raise NoWindowKeyException('You should use the EasyDjangoMiddleware middleware')
+    token = request.window_key
+    prefix = settings.WS4REDIS_PREFIX
+    request = SignalRequest.from_request(request)
+    topic_strings = [prefix + topic_serializer(request, x) for x in topics if x is not SERVER]
+    connection = _get_redis_connection()
+    redis_key = '%s%s' % (prefix, token)
+    connection.delete(redis_key)
+    for topic in topic_strings:
+        connection.rpush(redis_key, topic)
+    connection.expire(redis_key, settings.WS4REDIS_EXPIRE)
 
 
 def call(request, signal_name, to=None, **kwargs):

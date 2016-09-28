@@ -341,6 +341,11 @@ class Header(object):
         :returns: A `Header` instance.
         """
         read = stream.read
+
+        def read(n):
+            v = stream.read(n)
+            print('read [%s]' % v)
+            return v
         data = read(2)
         if len(data) != 2:
             raise WebSocketError("Unexpected EOF while decoding header")

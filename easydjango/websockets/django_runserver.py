@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-import six
 import base64
 import select
 from hashlib import sha1
 from wsgiref import util
-from django.core.wsgi import get_wsgi_application
-from django.core.servers.basehttp import WSGIServer, WSGIRequestHandler
+
+import six
 from django.core.handlers.wsgi import logger
-from django.conf import settings
 from django.core.management.commands import runserver
+from django.core.servers.basehttp import WSGIServer, WSGIRequestHandler, ServerHandler
+from django.utils.encoding import force_str
 # noinspection PyUnresolvedReferences
 from django.utils.six.moves import socketserver
-from django.utils.encoding import force_str
+
 from easydjango.websockets.websocket import WebSocket
 from easydjango.websockets.wsgi_server import WebsocketWSGIServer, HandshakeError, UpgradeRequiredError
 
@@ -65,23 +65,14 @@ def run(addr, port, wsgi_handler, ipv6=False, threading=False):
     """
     Function to monkey patch the internal Django command: manage.py runserver
     """
-    logger.info('Websocket support is enabled')
+    logger.info('Websocket support is enabled.')
     server_address = (addr, port)
     if not threading:
         raise Exception("Django's Websocket server must run with threading enabled")
+
+    ServerHandler.http_version = '1.1'
     httpd_cls = type('WSGIServer', (socketserver.ThreadingMixIn, WSGIServer), {'daemon_threads': True})
     httpd = httpd_cls(server_address, WSGIRequestHandler, ipv6=ipv6)
     httpd.set_app(wsgi_handler)
     httpd.serve_forever()
 runserver.run = run
-
-
-_django_app = get_wsgi_application()
-_websocket_app = WebsocketRunServer()
-_websocket_url = getattr(settings, 'WEBSOCKET_URL')
-
-
-def application(environ, start_response):
-    if _websocket_url and environ.get('PATH_INFO').startswith(_websocket_url):
-        return _websocket_app(environ, start_response)
-    return _django_app(environ, start_response)

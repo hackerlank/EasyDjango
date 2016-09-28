@@ -48,6 +48,7 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
     # noinspection PyUnusedLocal,PyMethodMayBeStatic
     def process_template_response(self, request, response):
         response['X-UA-Compatible'] = 'IE=edge,chrome=1'
+        return response
 
     def remote_user_authentication(self, request):
         # AuthenticationMiddleware is required so that request.user exists.
