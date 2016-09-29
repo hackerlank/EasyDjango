@@ -12,6 +12,7 @@ from redis import StrictRedis
 
 from easydjango.signals.connection import REGISTERED_SIGNALS, SignalConnection
 from easydjango.signals.request import SignalRequest
+from easydjango.utils import import_module
 from easydjango.websockets.exceptions import NoWindowKeyException
 
 __author__ = 'Matthieu Gallet'
@@ -97,6 +98,17 @@ def _call_ws_signal(signal_name, signal_id, serialized_topic, kwargs):
     connection.publish(serialized_topic, serialized_message.encode('utf-8'))
 
 
+@lru_cache()
+def import_signals():
+    """Import all `signals.py` files to register signals.
+    """
+    for app in settings.INSTALLED_APPS:
+        try:
+            import_module('%s.signals' % app)
+        except ImportError:
+            pass
+
+
 @shared_task(serializer='json')
 def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=False, serialized_client_topics=None,
                         to_server=False):
@@ -109,6 +121,7 @@ def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=Fals
     request = SignalRequest.from_dict(request_dict)
     if not to_server:
         return
+    import_signals()
     if signal_name not in REGISTERED_SIGNALS:
         return
     for connection in REGISTERED_SIGNALS[signal_name]:

@@ -14,7 +14,6 @@ celery.__file__
 from celery import Celery
 
 __author__ = 'Matthieu Gallet'
-
 project_name = set_env()
 app = Celery(project_name)
 app.config_from_object('django.conf:settings')

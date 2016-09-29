@@ -10,7 +10,7 @@ from django.utils.lru_cache import lru_cache
 
 from easydjango.signals.connection import REGISTERED_SIGNALS
 from easydjango.signals.request import SignalRequest
-from easydjango.tasks import WINDOW, set_websocket_topics, BROADCAST
+from easydjango.tasks import WINDOW, set_websocket_topics, BROADCAST, import_signals
 
 __author__ = 'Matthieu Gallet'
 
@@ -38,6 +38,7 @@ def __get_js_mimetype():
 
 def signals(request):
     signal_request = SignalRequest.from_request(request)
+    import_signals()
     valid_signal_names = []
     for signal_name, list_of_connections in REGISTERED_SIGNALS.items():
         if any(x.is_allowed_to(signal_request) for x in list_of_connections):

@@ -106,14 +106,17 @@ class WebsocketWSGIServer(object):
 
     # noinspection PyMethodMayBeStatic
     def publish_message(self, request, message):
-        print('[[%r]]' % message)
         if message == settings.WS4REDIS_HEARTBEAT:
             return
         try:
             unserialized_message = json.loads(message)
             kwargs = unserialized_message['opts']
             signal_name = unserialized_message['signal']
-            _call_signal(request, signal_name, to=[SERVER], kwargs=kwargs, from_client=True)
+            eta = int(unserialized_message.get('eta', 0)) or None
+            expires = int(unserialized_message.get('expires', 0)) or None
+            countdown = int(unserialized_message.get('countdown', 0)) or None
+            _call_signal(request, signal_name, to=[SERVER], kwargs=kwargs, from_client=True, eta=eta, expires=expires,
+                         countdown=countdown)
         except TypeError:
             pass
         except KeyError:
@@ -149,7 +152,6 @@ class WebsocketWSGIServer(object):
                 if redis_fd:
                     listening_fds.append(redis_fd)
             # subscriber.send_persited_messages(websocket)
-            recvmsg = None
             while websocket and not websocket.closed:
                 selected_fds = self.select(listening_fds, [], [], 4.0)
                 ready = selected_fds[0]
