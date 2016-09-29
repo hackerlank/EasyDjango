@@ -12,6 +12,7 @@ import sys
 
 import django
 import django.utils.six as six
+import time
 from django.core import signing
 from django.utils.lru_cache import lru_cache
 from django.utils.module_loading import import_string
@@ -31,7 +32,7 @@ from django.core.handlers.wsgi import WSGIRequest, logger
 from django.core.exceptions import PermissionDenied
 from django import http
 from django.utils.encoding import force_str
-from easydjango.websockets.exceptions import WebSocketError, HandshakeError, UpgradeRequiredError, NoWindowKeyException
+from easydjango.websockets.exceptions import WebSocketError, HandshakeError, UpgradeRequiredError
 
 try:
     # django >= 1.8 && python >= 2.7
@@ -127,7 +128,7 @@ class WebsocketWSGIServer(object):
         """
         response = http.HttpResponse(status=200, content='Websocket Closed')
         websocket = None
-        pubsub = self._redis_connection.pubsub()
+
         try:
             self.assure_protocol_requirements(environ)
             request = WSGIRequest(environ)
@@ -139,30 +140,36 @@ class WebsocketWSGIServer(object):
             listening_fds = [websocket_fd]
 
             channels, echo_message = self.process_subscriptions(request)
-            pubsub.subscribe(*channels)
-            logger.debug('Subscribed to channels: {0}'.format(', '.join(channels)))
-            # noinspection PyProtectedMember
-            redis_fd = pubsub.connection._sock.fileno()
-            if redis_fd:
-                listening_fds.append(redis_fd)
+            redis_fd, pubsub = None, None
+            if channels:
+                pubsub = self._redis_connection.pubsub()
+                pubsub.subscribe(*channels)
+                print(channels)
+                logger.debug('Subscribed to channels: {0}'.format(', '.join(channels)))
+                # noinspection PyProtectedMember
+                redis_fd = pubsub.connection._sock.fileno()
+                if redis_fd:
+                    listening_fds.append(redis_fd)
             # subscriber.send_persited_messages(websocket)
             recvmsg = None
             while websocket and not websocket.closed:
-                ready = self.select(listening_fds, [], [], 4.0)[0]
+                a = time.time()
+                selected_fds = self.select(listening_fds, [], [], 4.0)
+                b = time.time()
+                print(selected_fds, int(b - a))
+                ready = selected_fds[0]
                 if not ready:
                     # flush empty socket
                     websocket.flush()
                 for fd in ready:
                     if fd == websocket_fd:
                         message = websocket.receive()
+                        print(repr(message))
                         self.publish_message(signal_request, message)
                     elif fd == redis_fd:
-                        pass
-                        # sendmsg = pubsub.parse_response()
-                        # print(sendmsg)
-                        # TODO check is .decode('utf-8') is required
-                        # if sendmsg and (echo_message or sendmsg != recvmsg):
-                        #     websocket.send(sendmsg)
+                        kind, topic, message = pubsub.parse_response()
+                        if kind == 'message':
+                            websocket.send(message)
                     else:
                         logger.error('Invalid file descriptor: {0}'.format(fd))
                 # Check again that the websocket is closed before sending the heartbeat,
