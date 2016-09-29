@@ -12,16 +12,13 @@ import sys
 
 import django
 import django.utils.six as six
-import time
 from django.core import signing
 from django.utils.lru_cache import lru_cache
 from django.utils.module_loading import import_string
-# noinspection PyUnresolvedReferences
 from django.utils.six.moves import http_client
 from redis import StrictRedis
 
 from easydjango.signals.request import SignalRequest
-# noinspection PyProtectedMember
 from easydjango.tasks import _call_signal, SERVER
 
 if django.VERSION[:2] >= (1, 7):
@@ -109,6 +106,7 @@ class WebsocketWSGIServer(object):
 
     # noinspection PyMethodMayBeStatic
     def publish_message(self, request, message):
+        print('[[%r]]' % message)
         if message == settings.WS4REDIS_HEARTBEAT:
             return
         try:
@@ -153,10 +151,7 @@ class WebsocketWSGIServer(object):
             # subscriber.send_persited_messages(websocket)
             recvmsg = None
             while websocket and not websocket.closed:
-                a = time.time()
                 selected_fds = self.select(listening_fds, [], [], 4.0)
-                b = time.time()
-                print(selected_fds, int(b - a))
                 ready = selected_fds[0]
                 if not ready:
                     # flush empty socket
@@ -164,7 +159,6 @@ class WebsocketWSGIServer(object):
                 for fd in ready:
                     if fd == websocket_fd:
                         message = websocket.receive()
-                        print(repr(message))
                         self.publish_message(signal_request, message)
                     elif fd == redis_fd:
                         kind, topic, message = pubsub.parse_response()
@@ -174,7 +168,7 @@ class WebsocketWSGIServer(object):
                         logger.error('Invalid file descriptor: {0}'.format(fd))
                 # Check again that the websocket is closed before sending the heartbeat,
                 # because the websocket can closed previously in the loop.
-                if settings.WS4REDIS_HEARTBEAT and not websocket.closed:
+                if settings.WS4REDIS_HEARTBEAT and not websocket.closed and not ready:
                     websocket.send(settings.WS4REDIS_HEARTBEAT)
         except WebSocketError as excpt:
             logger.warning('WebSocketError: {}'.format(excpt), exc_info=sys.exc_info())

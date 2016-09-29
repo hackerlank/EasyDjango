@@ -3,8 +3,10 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 import os
 
-from easydjango.conf.config_values import Path, AutocreateDirectory, SettingReference, ExpandIterable
+from easydjango.conf.config_values import Path, AutocreateDirectory, SettingReference, ExpandIterable, CallableSetting
 from easydjango.utils import is_package_present
+# noinspection PyUnresolvedReferences
+from django.utils.six.moves.urllib.parse import urlparse
 
 __author__ = 'Matthieu Gallet'
 
@@ -26,7 +28,7 @@ USE_DEBUG_TOOLBAR = is_package_present('debug_toolbar')
 #
 # ######################################################################################################################
 ADMINS = (('admin', '{ADMIN_EMAIL}',),)
-ALLOWED_HOSTS = ['{SERVER_FQDN}']
+ALLOWED_HOSTS = ['{SERVER_NAME}']
 if USE_DJANGO_REDIS:
     CACHES = {
         'default': {
@@ -38,7 +40,7 @@ if USE_DJANGO_REDIS:
     }
 else:
     CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'unique-snowflake'}}
-CSRF_COOKIE_DOMAIN = '.{SERVER_FQDN}'
+CSRF_COOKIE_DOMAIN = '.{SERVER_NAME}'
 DATABASES = {'default': {
     'ENGINE': '{DATABASE_ENGINE}', 'NAME': '{DATABASE_NAME}', 'USER': '{DATABASE_USER}',
     'OPTIONS': SettingReference('DATABASE_OPTIONS'),
@@ -46,7 +48,7 @@ DATABASES = {'default': {
 }
 DEBUG = False
 # you should create a "local_config.py" with "DEBUG = True" at the root of your project
-DEFAULT_FROM_EMAIL = 'webmaster@{SERVER_FQDN}'
+DEFAULT_FROM_EMAIL = 'webmaster@{SERVER_NAME}'
 FILE_UPLOAD_TEMP_DIR = AutocreateDirectory('{LOCAL_PATH}/tmp-uploads')
 INSTALLED_APPS = [
     ExpandIterable('EASYDJANGO_INSTALLED_APPS'),
@@ -83,7 +85,7 @@ MIDDLEWARE_CLASSES = (
 )
 
 ROOT_URLCONF = 'easydjango.root_urls'
-SERVER_EMAIL = 'root@{SERVER_FQDN}'
+SERVER_EMAIL = 'root@{SERVER_NAME}'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # X-Forwarded-Proto
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -152,7 +154,11 @@ NPM_STATIC_FILES_PREFIX = 'vendor'
 
 # easydjango
 DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
+SERVER_NAME = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).hostname, 'SERVER_BASE_URL')
+SERVER_PORT = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).port or (USE_SSL and 443) or 80, 
+                              'SERVER_BASE_URL', 'USE_SSL')
 USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
+USE_SSL = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).scheme == 'https', 'SERVER_BASE_URL')
 USE_X_FORWARDED_FOR = True  # X-Forwarded-For
 
 # ws4redis
@@ -245,7 +251,7 @@ WS4REDIS_EXPIRE = 36000
 # {PROJECT_NAME}.iniconf:INI_MAPPING should be a list of ConfigField, allowing to define these settings in a .ini file
 #
 # ######################################################################################################################
-ADMIN_EMAIL = 'admin@{SERVER_FQDN}'
+ADMIN_EMAIL = 'admin@{SERVER_NAME}'
 DATABASE_ENGINE = 'django.db.backends.sqlite3'
 DATABASE_NAME = Path('{DATA_PATH}/database.sqlite3')
 DATABASE_USER = ''
@@ -257,7 +263,7 @@ EMAIL_HOST = 'localhost'
 EMAIL_HOST_PASSWORD = ''
 EMAIL_HOST_USER = ''
 EMAIL_PORT = 25
-EMAIL_SUBJECT_PREFIX = '{SERVER_FQDN}'
+EMAIL_SUBJECT_PREFIX = '{SERVER_NAME}'
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = False
 EMAIL_SSL_CERTFILE = None
@@ -274,7 +280,7 @@ __split_path = __file__.split(os.path.sep)
 if 'lib' in __split_path:
     prefix = os.path.join(*__split_path[:__split_path.index('lib')])
     LOCAL_PATH = AutocreateDirectory('/%s/var/{PROJECT_NAME}' % prefix)
-SERVER_FQDN = 'localhost'
+SERVER_BASE_URL = 'http://localhost:9000'
 
 # django_redis
 CACHE_REDIS_PROTOCOL = 'redis'

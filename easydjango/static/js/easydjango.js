@@ -30,6 +30,29 @@
             });
         }
     };
+    $.ed._wsConnect = function (edWsUrl) {
+        var url = edWsUrl;
+        $.ed._wsConnection = new WebSocket(edWsUrl);
+        $.ed._wsConnection.onopen = function() {
+            console.log("websocket connected");
+        };
+        $.ed._wsConnection.onmessage = function(e) {
+            console.log("Received: " + e.data);
+            if (e.data == $.ed._heartbeatMessage) {
+                $.ed._wsConnection.send(e.data);
+            }
+        };
+        $.ed._wsConnection.onerror = function(e) {
+            console.error(e);
+        };
+        $.ed._wsConnection.onclose = function(e) {
+            console.log("connection closed");
+            $.ed._wsConnect(url);
+        }
+//            function send_message(msg) {
+//                $.ed._wsConnection.send(msg);
+//            }
+    }
 
     $.ed.call = function (signal, opts, id) {
         alert(signal, opts, id);
@@ -41,10 +64,10 @@
             if ($.ed._wsConnection === null) {
                 $.ed.connectWebsocket();
             }
-            $.ed._wsConnection.send_message(JSON.stringify({signal: signal, opts: opts}));
+            $.ed._wsConnection.send(JSON.stringify({signal: signal, opts: opts}));
         }
     };
-    $(document).ready(function() {
-        $.ed.connectWebsocket();
-    });
+//    $(document).ready(function() {
+//        $.ed.connectWebsocket();
+//    });
 }(jQuery));
