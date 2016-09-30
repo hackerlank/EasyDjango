@@ -10,8 +10,8 @@ from django.utils.module_loading import import_string
 from django.utils.lru_cache import lru_cache
 from redis import StrictRedis
 
-from easydjango.signals.connection import REGISTERED_SIGNALS, SignalConnection
-from easydjango.signals.request import SignalRequest
+from easydjango.decorators import REGISTERED_SIGNALS, SignalConnection
+from easydjango.request import SignalRequest
 from easydjango.utils import import_module
 from easydjango.websockets.exceptions import NoWindowKeyException
 
@@ -79,7 +79,8 @@ def _call_signal(request, signal_name, to=None, kwargs=None, countdown=None, exp
         celery_kwargs['eta'] = eta
     if countdown:
         celery_kwargs['countdown'] = countdown
-
+    print("appel de la task Celery")
+    print([signal_name, request.to_dict(), kwargs, from_client, serialized_client_topics, to_server])
     if celery_kwargs:
         _server_signal_call.apply_async([signal_name, request.to_dict(), kwargs, from_client, serialized_client_topics,
                                          to_server], **celery_kwargs)
@@ -112,6 +113,7 @@ def import_signals():
 @shared_task(serializer='json')
 def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=False, serialized_client_topics=None,
                         to_server=False):
+    print('----')
     if kwargs is None:
         kwargs = {}
     if serialized_client_topics:
@@ -122,10 +124,12 @@ def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=Fals
     if not to_server:
         return
     import_signals()
+    print(REGISTERED_SIGNALS)
     if signal_name not in REGISTERED_SIGNALS:
         return
     for connection in REGISTERED_SIGNALS[signal_name]:
+        print("---")
         assert isinstance(connection, SignalConnection)
         if (from_client and not connection.is_allowed_to(request)) or not connection.check(**kwargs):
             continue
-        connection(**kwargs)
+        connection(request, **kwargs)

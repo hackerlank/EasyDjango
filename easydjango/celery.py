@@ -2,7 +2,7 @@
 """load Celery and discover tasks
 ==============================
 
-You should not use this module, as it is only used to auto-discover tasks.
+You should not use this module (or rename it), as it is only used to auto-discover tasks.
 """
 from __future__ import unicode_literals, absolute_import
 from django.conf import settings

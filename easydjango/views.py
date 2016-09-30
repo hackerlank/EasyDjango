@@ -8,8 +8,8 @@ from django.http import HttpResponsePermanentRedirect
 from django.template.response import TemplateResponse
 from django.utils.lru_cache import lru_cache
 
-from easydjango.signals.connection import REGISTERED_SIGNALS
-from easydjango.signals.request import SignalRequest
+from easydjango.decorators import REGISTERED_SIGNALS
+from easydjango.request import SignalRequest
 from easydjango.tasks import WINDOW, set_websocket_topics, BROADCAST, import_signals
 
 __author__ = 'Matthieu Gallet'

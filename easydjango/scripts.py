@@ -102,7 +102,7 @@ def load_celery():
     """
     from django.conf import settings
     if settings.USE_CELERY:
-        from easydjango.celery_app import app
+        from easydjango.celery import app
         return app
     return None
 
@@ -149,9 +149,8 @@ def gunicorn():
 def celery():
     set_env()
     from celery.bin.celery import main as celery_main
-    from django.conf import settings
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
-    parser.add_argument('-A', '--app', action='store', default='djangofloor', help=settings.BIND_ADDRESS_HELP)
+    parser.add_argument('-A', '--app', action='store', default='easydjango')
     options, extra_args = parser.parse_known_args()
     sys.argv[1:] = extra_args
     __set_default_option(options, 'app')

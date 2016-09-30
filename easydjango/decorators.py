@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
-
 try:
     from inspect import signature
 except ImportError:
@@ -72,3 +71,11 @@ class SignalConnection(object):
 
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
+
+
+def connect(fn=None, path=None, is_allowed_to=server_side):
+    def wrapped(fn_):
+        return SignalConnection(fn=fn_, path=path, is_allowed_to=is_allowed_to)
+    if fn is not None:
+        wrapped = wrapped(fn)
+    return wrapped

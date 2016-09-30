@@ -15,10 +15,12 @@ import django.utils.six as six
 from django.core import signing
 from django.utils.lru_cache import lru_cache
 from django.utils.module_loading import import_string
+# noinspection PyUnresolvedReferences
 from django.utils.six.moves import http_client
 from redis import StrictRedis
 
-from easydjango.signals.request import SignalRequest
+from easydjango.request import SignalRequest
+# noinspection PyProtectedMember
 from easydjango.tasks import _call_signal, SERVER
 
 if django.VERSION[:2] >= (1, 7):
