@@ -43,6 +43,7 @@ def signals(request):
     for signal_name, list_of_connections in REGISTERED_SIGNALS.items():
         if any(x.is_allowed_to(signal_request) for x in list_of_connections):
             valid_signal_names.append(signal_name)
+    print(valid_signal_names)
     csrf_header_name = getattr(settings, 'CSRF_HEADER_NAME', 'HTTP_X_CSRFTOKEN')
     return TemplateResponse(request, 'easydjango/signals.html',
                             {'signals': valid_signal_names,

@@ -93,9 +93,12 @@ def _call_signal(request, signal_name, to=None, kwargs=None, countdown=None, exp
 
 
 def _call_ws_signal(signal_name, signal_id, serialized_topic, kwargs):
-    connection = _get_redis_connection()
+    # connection = _get_redis_connection()
+    connection = StrictRedis(**settings.WS4REDIS_CONNECTION)
     serialized_message = json.dumps({'signal': signal_name, 'opts': kwargs, 'id': signal_id}, cls=signal_encoder)
-    connection.publish(settings.WS4REDIS_PREFIX + serialized_topic, serialized_message.encode('utf-8'))
+    topic = settings.WS4REDIS_PREFIX + serialized_topic
+    print(topic)
+    connection.publish(topic, serialized_message.encode('utf-8'))
 
 
 @lru_cache()
@@ -112,7 +115,7 @@ def import_signals():
 @shared_task(serializer='json')
 def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=False, serialized_client_topics=None,
                         to_server=False):
-    print('----')
+    print('---- %s' % signal_name)
     if kwargs is None:
         kwargs = {}
     if serialized_client_topics:

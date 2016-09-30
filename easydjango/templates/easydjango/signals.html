@@ -18,7 +18,7 @@ function csrfSafeMethod(method) {
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
 $.ed._heartbeatMessage = "{{ WS4REDIS_HEARTBEAT }}";
-{% for s in signals %}$.ed._wsSignalConnect("s");
+{% for s in signals %}$.ed._wsSignalConnect("{{ s }}");
 {% endfor %}
 $.ed.csrfTokenValue = get_cookie("{{ CSRF_COOKIE_NAME }}")
 $.ajaxSetup({

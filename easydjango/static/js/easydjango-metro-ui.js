@@ -1,10 +1,21 @@
-(function($) {
+(function(jQ) {
 
-    $.ed.notification = function (style, level, content, title, icon, timeout) {
-        var notificationId = "edMessage" + $.ed._notificationId++;
+    notification = function (style, level, content, title, icon, timeout) {
+        var notificationId = "edMessage" + jQ.ed._notificationId++;
         if (timeout === undefined) {
             timeout = 0;
         }
+        if (style === undefined) {
+            style = "notification";
+        }
+        if (level === undefined) {
+            style = "info";
+        }
+        $.Notify({
+    caption: 'Notify title',
+    content: 'Notify content'
+});
+
         if (style === "banner") {
             var htmlContent = "<div class=\"notify " + level + " banner\" id=\"" + notificationId + "\">";
             htmlContent += "<span class=\"notify-closer\" onclick=\"$(this.parentNode).fadeOut();\"></span>";
@@ -17,7 +28,7 @@
         }
         else if (style === "notification") {
             var keepOpen = (timeout === 0);
-            $.Notify({caption: title, content: content, icon: icon, type: level, timeout: 0, keepOpen: true});
+//            $.Notify({caption: title, content: content, icon: icon, type: level, timeout: 0, keepOpen: true});
         }
 //        else if (style === "modal") {
 //            var htmlContent = "<div data-role=\"dialog\" id=\"" + notificationId + "\">";
@@ -30,7 +41,14 @@
 //            window.showMetroDialog('#' + notificationId, undefined);
 //        }
         else if (style === "system") {
-            $.ed._systemNotification(notificationId, level, content, title, icon, timeout);
+            jQ.ed._systemNotification(notificationId, level, content, title, icon, timeout);
         }
     };
+    console.warn("Connect");
+    jQ.ed.connect("notify", function (opts, id) {
+        console.warn("notify", opts, id);
+        notification(opts.style, opts.level, opts.content, opts.title, opts.icon, opts.timeout);
+    });
+    jQ.ed.call("notify", {style: "notification", level: "warning", content: "First notification"});
+
 }(jQuery));
