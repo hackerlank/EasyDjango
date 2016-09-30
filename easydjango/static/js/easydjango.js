@@ -68,7 +68,7 @@
     };
     $.ed.call = function (signal, opts, id) {
         "use strict";
-        console.warning(signal, opts, id);
+        console.warn(signal, opts, id);
         if ($.ed._registered_signals[signal] === undefined) {
             return false;
         }
