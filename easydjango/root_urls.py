@@ -10,6 +10,7 @@ from django.utils.module_loading import import_string
 
 from easydjango.scripts import load_celery
 from easydjango.views import favicon, robots, signals
+from easydjango.views import auth
 
 __author__ = 'Matthieu Gallet'
 
@@ -29,10 +30,12 @@ index_view = import_string(index_view)
 
 urlpatterns = [url(r'^admin/', include(admin.site.urls)),
                url(r'^jsi18n/$', javascript_catalog, {'packages': ('easydjango', 'django.contrib.admin'), }),
-               url(r'^' + settings.MEDIA_URL[1:] + '(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
-               url(r'^' + settings.STATIC_URL[1:] + '(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
-               # url(r'^df/signal/(?P<signal>[\w\.\-_]+)\.json$', signal_call, name='df_signal_call'),
-               # url(r'^df/ws_emulation.js$', get_signal_calls, name='df_get_signal_calls'),
+               url(r'^%s(?P<path>.*)$' % settings.MEDIA_URL[1:], serve, {'document_root': settings.MEDIA_ROOT}),
+               url(r'^%s(?P<path>.*)$' % settings.STATIC_URL[1:], serve, {'document_root': settings.STATIC_ROOT}),
+               url(r'^auth/signin/', auth.signin, name='auth-signin'),
+               url(r'^auth/login/', auth.login, name='auth-login'),
+               url(r'^auth/logout/', auth.logout, name='auth-logout'),
+               url(r'^auth/auth-forgot-password/', auth.forgot_password, name='auth-forgot-password'),
                url(r'^ed/signals.js$', signals, name='signals'),
                url(r'^robots\.txt$', robots),
                url(r'^favicon\.ico$', favicon),

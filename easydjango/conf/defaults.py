@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.sitemaps',
     'django.contrib.admin',
+    'bootstrap3',
 ]
 if USE_DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
@@ -198,13 +199,13 @@ PIPELINE_CSS = {
 PIPELINE_JS = {
     'bootstrap3': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/bootstrap3/dist/js/bootstrap.min.js',
-                             'js/websockets.js', 'js/easydjango.js', 'js/easydjango-bootstrap3.js',
+                             'js/easydjango.js', 'js/easydjango-bootstrap3.js',
                              ExpandIterable('EASYDJANGO_JS')],
         'output_filename': 'js/bootstrap3.js',
     },
     'metro-ui': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/metro-ui/build/js/metro.min.js',
-                             'js/websockets.js', 'js/easydjango.js','js/easydjango-metro-ui.js',
+                             'js/easydjango.js', 'js/easydjango-metro-ui.js',
                              ExpandIterable('EASYDJANGO_JS')],
         'output_filename': 'js/metro-ui.js',
     },
@@ -218,6 +219,20 @@ PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
 PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
 if USE_SCSS:
     PIPELINE_COMPILERS = ('djangofloor.middleware.PyScssCompiler', )
+# Django-Debug-Toolbar
+DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js', }
+
+# Django-Bootstrap3
+BOOTSTRAP3 = {
+    'jquery_url': '{STATIC_URL}vendor/jquery/dist/jquery.min.js',
+    'base_url': '{STATIC_URL}vendor/bootstrap3/dist/',
+    'theme_url': None, 'include_jquery': False, 'horizontal_label_class': 'col-md-3',
+    'horizontal_field_class': 'col-md-9', 'set_disabled': True, 'set_placeholder': False,
+    'formset_renderers': {'default': 'bootstrap3.renderers.FormsetRenderer'},
+    'form_renderers': {'default': 'bootstrap3.renderers.FormRenderer'},
+    'field_renderers': {'default': 'bootstrap3.renderers.FieldRenderer',
+                        'inline': 'bootstrap3.renderers.InlineFieldRenderer'},
+}
 
 # ######################################################################################################################
 #
@@ -234,13 +249,13 @@ EASYDJANGO_REMOTE_USER_HEADER = None  # Remote-User
 EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
 EASYDJANGO_CSS = []
 EASYDJANGO_JS = []
-EASYDJANGO_TEMPLATE_BASE = 'metro-ui'  # or "bootstrap3". Unused if you use your own templates
+EASYDJANGO_TEMPLATE_BASE = 'bootstrap3'  # or "metro-ui". Unused if you use your own base templates
 
 # django-npm
 NPM_FILE_PATTERNS = {
     'metro-ui': ['build/*'], 'bootstrap3': ['dist/*'], 'font-awesome': ['css/*', 'fonts/*'],
-    'html5shiv': ['dist/*'], 'respond.js': ['dest/*'], 'jquery': ['dist/*'],
-}
+    'html5shiv': ['dist/*'], 'respond.js': ['dest/*'], 'jquery': ['dist/*'], 'bootstrap-notify': ['*.js'],
+    'jquery-file-upload': ['css/*', 'js/*'], }
 
 # ws4redis
 WS4REDIS_EXPIRE = 36000

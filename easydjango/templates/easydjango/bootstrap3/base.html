@@ -1,0 +1,100 @@
+<!DOCTYPE html>{% load pipeline staticfiles easydjango %}
+<html lang="{% block header-language %}{{ ed_language_code }}{% endblock %}">
+<head>
+    {% block header %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{% block header-description %}{% endblock %}">
+    <meta name="author" content="{% block header-author %}{% endblock %}">
+    {% block header-favicon %}
+    <link rel="apple-touch-icon" sizes="152x152" href="{% static 'favicon/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" href="{% static 'favicon/favicon-32x32.png' %}" sizes="32x32">
+    <link rel="icon" type="image/png" href="{% static 'favicon/favicon-16x16.png' %}" sizes="16x16">
+    <link rel="manifest" href="{% static 'favicon/manifest.json' %}">
+    <link rel="mask-icon" href="{% static 'favicon/safari-pinned-tab.svg' %}" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#00a300">
+    <meta name="msapplication-TileImage" content="{% static 'favicon/mstile-144x144.png' %}">
+    <meta name="theme-color" content="#ffffff">
+    {% endblock %}
+    <title>{% block header-title %}{{ ed_project_name|capfirst }}{% endblock %}</title>
+    {% endblock %}
+</head>
+
+<body>
+
+{% block navbar %}
+<nav class="navbar navbar-inverse">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{% url 'index' %}">{{ ed_project_name |capfirst}}</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            {% block navbar-login %}
+            <form class="navbar-form navbar-right">
+                <div class="form-group">
+                    <input type="text" placeholder="Email" class="form-control">
+                </div>
+                <div class="form-group">
+                    <input type="password" placeholder="Password" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-success">Sign in</button>
+            </form>
+            {% endblock %}
+            {% block navbar-search %}
+            <form class="navbar-form navbar-right">
+                <input type="text" placeholder="Search" class="form-control">
+                <button type="submit" class="btn btn-success">Search</button>
+            </form>
+            {% endblock %}
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+<div class="container">
+    {% block content %}
+    <div class="row">
+        <div class="col-md-4">
+            <h2>Heading</h2>
+            <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris
+                condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+                euismod. Donec sed odio dui. </p>
+            <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+        </div>
+        <div class="col-md-4">
+            <h2>Heading</h2>
+            <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris
+                condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+                euismod. Donec sed odio dui. </p>
+            <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+        </div>
+        <div class="col-md-4">
+            <h2>Heading</h2>
+            <p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula
+                porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut
+                fermentum massa justo sit amet risus.</p>
+            <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+        </div>
+    </div>
+    {% endblock %}
+    {% block footer %}
+    <hr><footer><p>{% block footer-copyright %}&copy; 2016, Matthieu Gallet{% endblock %}</p></footer>
+    {% endblock %}
+</div> <!-- /container -->
+
+<!-- Placed at the end of the document so the pages load faster -->
+{% javascript 'bootstrap3' %}
+<!--[if lt IE 9 ]>{% javascript 'ie9' %}<![endif]-->
+{% stylesheet 'bootstrap3' %}
+{% init_websocket %}
+<script type="text/javascript" src="{% url 'signals' %}" charset="utf-8"></script>
+</body>
+</html>
+

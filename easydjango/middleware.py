@@ -46,7 +46,7 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
                 self.remote_user_authentication(request)
 
     # noinspection PyUnusedLocal,PyMethodMayBeStatic
-    def process_template_response(self, request, response):
+    def process_response(self, request, response):
         response['X-UA-Compatible'] = 'IE=edge,chrome=1'
         return response
 
