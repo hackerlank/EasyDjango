@@ -253,9 +253,15 @@ EASYDJANGO_TEMPLATE_BASE = 'bootstrap3'  # or "metro-ui". Unused if you use your
 
 # django-npm
 NPM_FILE_PATTERNS = {
-    'metro-ui': ['build/*'], 'bootstrap3': ['dist/*'], 'font-awesome': ['css/*', 'fonts/*'],
-    'html5shiv': ['dist/*'], 'respond.js': ['dest/*'], 'jquery': ['dist/*'], 'bootstrap-notify': ['*.js'],
-    'jquery-file-upload': ['css/*', 'js/*'], }
+    'bootstrap-notify': ['*.js'],
+    'bootstrap3': ['dist/*'],
+    'font-awesome': ['css/*', 'fonts/*'],
+    'html5shiv': ['dist/*'],
+    'jquery': ['dist/*'],
+    'jquery-file-upload': ['css/*', 'js/*'],
+    'metro-ui': ['build/*'],
+    'respond.js': ['dest/*'],
+}
 
 # ws4redis
 WS4REDIS_EXPIRE = 36000
