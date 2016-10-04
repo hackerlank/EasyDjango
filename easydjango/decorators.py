@@ -9,6 +9,7 @@ except ImportError:
 __author__ = 'Matthieu Gallet'
 
 REGISTERED_SIGNALS = {}
+REGISTERED_FUNCTIONS = {}
 
 
 # noinspection PyUnusedLocal
@@ -29,7 +30,7 @@ def is_anonymous(request):
     return request.is_anonymous()
 
 
-class SignalConnection(object):
+class Connection(object):
     def __init__(self, fn, path=None, is_allowed_to=server_side):
         self.function = fn
         # noinspection PyTypeChecker
@@ -61,10 +62,10 @@ class SignalConnection(object):
                     self.argument_types[key] = param.annotation
         if not request_present:
             raise ValueError('Your signal must takes "request" as first argument')
-        REGISTERED_SIGNALS.setdefault(path, []).append(self)
         # noinspection PyTypeChecker
         if hasattr(fn, '__name__'):
             self.__name__ = fn.__name__
+        self.register()
 
     def check(self, **kwargs):
         return True
@@ -72,10 +73,31 @@ class SignalConnection(object):
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
 
+    def register(self):
+        raise NotImplementedError
 
-def connect(fn=None, path=None, is_allowed_to=server_side):
+
+class SignalConnection(Connection):
+    def register(self):
+        REGISTERED_SIGNALS.setdefault(self.path, []).append(self)
+
+
+class FunctionConnection(Connection):
+    def register(self):
+        REGISTERED_FUNCTIONS[self.path] = self
+
+
+def signal(fn=None, path=None, is_allowed_to=server_side):
     def wrapped(fn_):
         return SignalConnection(fn=fn_, path=path, is_allowed_to=is_allowed_to)
+    if fn is not None:
+        wrapped = wrapped(fn)
+    return wrapped
+
+
+def function(fn=None, path=None, is_allowed_to=server_side):
+    def wrapped(fn_):
+        return FunctionConnection(fn=fn_, path=path, is_allowed_to=is_allowed_to)
     if fn is not None:
         wrapped = wrapped(fn)
     return wrapped

@@ -1,4 +1,4 @@
-function get_cookie(name) {
+function getCookie(name) {
     /* copied from the Django doc */
     var cookieValue = null;
     if (document.cookie && document.cookie != '') {
@@ -18,9 +18,13 @@ function csrfSafeMethod(method) {
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
 $.ed._heartbeatMessage = "{{ WS4REDIS_HEARTBEAT }}";
-{% for s in signals %}$.ed._wsSignalConnect("{{ s }}");
+
+{% for s in SIGNALS %}$.ed._wsSignalConnect("{{ s }}");
 {% endfor %}
-$.ed.csrfTokenValue = get_cookie("{{ CSRF_COOKIE_NAME }}")
+{% for f in FUNCTIONS %}$.edws.{{ f }} = function(opts) { return $.ed._callWsFunction("{{ f }}", opts); };
+{% endfor %}
+
+$.ed.csrfTokenValue = getCookie("{{ CSRF_COOKIE_NAME }}")
 $.ajaxSetup({
     beforeSend: function(xhr, settings) {
         if (!csrfSafeMethod(settings.type) && !this.crossDomain) {

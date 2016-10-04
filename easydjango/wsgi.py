@@ -28,7 +28,6 @@ def application(environ, start_response):
 
     :return: a HTTP app, or a WS app (depending on the URL path)
     """
-    print(start_response, environ.get('PATH_INFO', ''))
     if settings.USE_CELERY and environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
         return ws_application(environ, start_response)
     return http_application(environ, start_response)

@@ -8,9 +8,10 @@ from celery import shared_task
 from django.conf import settings
 from django.utils.module_loading import import_string
 from django.utils.lru_cache import lru_cache
+from django.utils.six import text_type
 from redis import StrictRedis
 
-from easydjango.decorators import REGISTERED_SIGNALS, SignalConnection
+from easydjango.decorators import REGISTERED_SIGNALS, SignalConnection, REGISTERED_FUNCTIONS, FunctionConnection
 from easydjango.request import SignalRequest
 from easydjango.utils import import_module
 from easydjango.websockets.exceptions import NoWindowKeyException
@@ -85,7 +86,6 @@ def _call_signal(request, signal_name, to=None, kwargs=None, countdown=None, exp
     else:
         if to_server:
             _server_signal_call.apply_async([signal_name, request.to_dict(), kwargs, from_client, [], to_server])
-        print("serialized_topics", serialized_client_topics)
         if serialized_client_topics:
             signal_id = str(uuid.uuid4())
             for topic in serialized_client_topics:
@@ -95,14 +95,30 @@ def _call_signal(request, signal_name, to=None, kwargs=None, countdown=None, exp
 def _call_ws_signal(signal_name, signal_id, serialized_topic, kwargs):
     # connection = _get_redis_connection()
     connection = StrictRedis(**settings.WS4REDIS_CONNECTION)
-    serialized_message = json.dumps({'signal': signal_name, 'opts': kwargs, 'id': signal_id}, cls=signal_encoder)
+    serialized_message = json.dumps({'signal': signal_name, 'opts': kwargs, 'signal_id': signal_id}, cls=signal_encoder)
     topic = settings.WS4REDIS_PREFIX + serialized_topic
-    print(topic)
+    connection.publish(topic, serialized_message.encode('utf-8'))
+
+
+def _return_ws_function_result(request, result_id, result, exception=None):
+    """
+
+    :param result_id:
+    :param result:
+    :param exception:
+    :return:
+    """
+    # connection = _get_redis_connection()
+    connection = StrictRedis(**settings.WS4REDIS_CONNECTION)
+    json_msg = {'result_id': result_id, 'result': result, 'exception': text_type(exception) if exception else None}
+    serialized_message = json.dumps(json_msg, cls=signal_encoder)
+    serialized_topic = topic_serializer(request, WINDOW)
+    topic = settings.WS4REDIS_PREFIX + serialized_topic
     connection.publish(topic, serialized_message.encode('utf-8'))
 
 
 @lru_cache()
-def import_signals():
+def import_signals_and_functions():
     """Import all `signals.py` files to register signals.
     """
     for app in settings.INSTALLED_APPS:
@@ -110,12 +126,15 @@ def import_signals():
             import_module('%s.signals' % app)
         except ImportError:
             pass
+        try:
+            import_module('%s.functions' % app)
+        except ImportError:
+            pass
 
 
 @shared_task(serializer='json')
 def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=False, serialized_client_topics=None,
                         to_server=False):
-    print('---- %s' % signal_name)
     if kwargs is None:
         kwargs = {}
     if serialized_client_topics:
@@ -125,13 +144,32 @@ def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=Fals
     request = SignalRequest.from_dict(request_dict)
     if not to_server:
         return
-    import_signals()
-    print(REGISTERED_SIGNALS)
+    import_signals_and_functions()
     if signal_name not in REGISTERED_SIGNALS:
         return
     for connection in REGISTERED_SIGNALS[signal_name]:
-        print("---")
         assert isinstance(connection, SignalConnection)
         if (from_client and not connection.is_allowed_to(request)) or not connection.check(**kwargs):
             continue
         connection(request, **kwargs)
+
+
+@shared_task(serializer='json')
+def _server_function_call(function_name, request_dict, result_id, kwargs=None):
+    if kwargs is None:
+        kwargs = {}
+    request = SignalRequest.from_dict(request_dict)
+    import_signals_and_functions()
+    if function_name in REGISTERED_FUNCTIONS:
+        connection = REGISTERED_FUNCTIONS[function_name]
+        assert isinstance(connection, FunctionConnection)
+        # noinspection PyBroadException
+        try:
+            result = connection(request, **kwargs)
+            e = None
+        except Exception as e:
+            result = None
+        _return_ws_function_result(request, result_id, result, exception=e)
+    else:
+        exception = ValueError('Unknown function %s' % function_name)
+        _return_ws_function_result(request, result_id, None, exception=exception)

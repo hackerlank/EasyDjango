@@ -21,7 +21,7 @@ from redis import StrictRedis
 
 from easydjango.request import SignalRequest
 # noinspection PyProtectedMember
-from easydjango.tasks import _call_signal, SERVER
+from easydjango.tasks import _call_signal, SERVER, _server_function_call
 
 if django.VERSION[:2] >= (1, 7):
     django.setup()
@@ -79,6 +79,7 @@ class WebsocketWSGIServer(object):
     def select(self, rlist, wlist, xlist, timeout=None):
         raise NotImplementedError
 
+    # noinspection PyMethodMayBeStatic
     def assure_protocol_requirements(self, environ):
         if environ.get('REQUEST_METHOD') != 'GET':
             raise HandshakeError('HTTP method must be a GET')
@@ -98,7 +99,13 @@ class WebsocketWSGIServer(object):
             engine = import_module(settings.SESSION_ENGINE)
             request.session = engine.SessionStore(session_key)
             request.user = get_user(request)
-        return SignalRequest.from_request(request)
+        signal_request = SignalRequest.from_request(request)
+        signed_token = request.GET.get('token', '')
+        try:
+            signal_request.window_key = signer.unsign(signed_token)
+        except signing.BadSignature:
+            pass
+        return signal_request
 
     # noinspection PyMethodMayBeStatic
     def process_subscriptions(self, request):
@@ -113,12 +120,17 @@ class WebsocketWSGIServer(object):
         try:
             unserialized_message = json.loads(message)
             kwargs = unserialized_message['opts']
-            signal_name = unserialized_message['signal']
-            eta = int(unserialized_message.get('eta', 0)) or None
-            expires = int(unserialized_message.get('expires', 0)) or None
-            countdown = int(unserialized_message.get('countdown', 0)) or None
-            _call_signal(request, signal_name, to=[SERVER], kwargs=kwargs, from_client=True, eta=eta, expires=expires,
-                         countdown=countdown)
+            if 'signal' in unserialized_message:
+                signal_name = unserialized_message['signal']
+                eta = int(unserialized_message.get('eta', 0)) or None
+                expires = int(unserialized_message.get('expires', 0)) or None
+                countdown = int(unserialized_message.get('countdown', 0)) or None
+                _call_signal(request, signal_name, to=[SERVER], kwargs=kwargs, from_client=True, eta=eta,
+                             expires=expires, countdown=countdown)
+            elif 'func' in unserialized_message:
+                function_name = unserialized_message['func']
+                result_id = unserialized_message['result_id']
+                _server_function_call.apply_async([function_name, request.to_dict(), result_id, kwargs])
         except TypeError:
             pass
         except KeyError:
@@ -147,7 +159,6 @@ class WebsocketWSGIServer(object):
             if channels:
                 pubsub = self._redis_connection.pubsub()
                 pubsub.subscribe(*channels)
-                print(channels)
                 logger.debug('Subscribed to channels: {0}'.format(', '.join(channels)))
                 # noinspection PyProtectedMember
                 redis_fd = pubsub.connection._sock.fileno()

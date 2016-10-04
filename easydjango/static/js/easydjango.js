@@ -1,10 +1,13 @@
 (function($) {
     $.ed = {};
+    $.edws = {};
     $.ed._wsToken = null;
     $.ed._wsConnection = null;
     $.ed._notificationId = 1;
+    $.ed._wsFunctionCallId = 1;
     $.ed._notificationClosers = {};
     $.ed._signalIds = {};
+    $.ed._functionCallPromises = {};
     $.ed._registered_signals = {};
     $.ed._closeHTMLNotification = function (id) {
         $("#" + id).fadeOut(400, "swing", function () { $("#" + id).remove()});
@@ -45,7 +48,15 @@
                 $.ed._wsConnection.send(e.data);
             } else {
                 var msg = JSON.parse(e.data);
-                $.ed.call(msg.signal, msg.opts, msg.id)
+                if (msg.signal && msg.signal_id) {
+                    $.ed.call(msg.signal, msg.opts, msg.signal_id);
+                }
+                else if((msg.result_id) && (msg.exception)) {
+                    $.ed._functionCallPromises[msg.result_id][1](msg.exception);
+                }
+                else if(msg.result_id) {
+                    $.ed._functionCallPromises[msg.result_id][0](msg.result);
+                }
             };
         };
         $.ed._wsConnection.onerror = function(e) {
@@ -53,7 +64,7 @@
         };
         $.ed._wsConnection.onclose = function(e) {
             console.log("connection closed");
-            $.ed._wsConnect(url);
+            setTimeout(function () {$.ed._wsConnect(url);}, 5000);
         }
     }
     $.ed._wsSignalConnect = function (signal) {
@@ -66,10 +77,23 @@
         };
         $.ed.connect(signal, wrapper);
     };
+    $.ed._callWsFunction = function (func, opts) {
+        "use strict";
+        var callId = 'f' + ($.ed._wsFunctionCallId++);
+        if (opts === undefined) {
+            opts = {};
+        }
+        $.ed._wsConnection.send(JSON.stringify({func: func, opts: opts, result_id: callId}));
+        var promise = new Promise(function(resolve, reject) {
+            $.ed._functionCallPromises[callId] = [resolve, reject];
+            });
+        return promise;
+    };
+
+
     $.ed.call = function (signal, opts, id) {
         "use strict";
         var i;
-        console.warn("call: " + signal + opts + "id: " + id);
         if ($.ed._registered_signals[signal] === undefined) {
             return false;
         }
@@ -85,7 +109,6 @@
     };
     $.ed.connect = function (signal, fn) {
         "use strict";
-        console.warn("connect: " + signal);
         if ($.ed._registered_signals[signal] === undefined) {
             $.ed._registered_signals[signal] = [];
         }
