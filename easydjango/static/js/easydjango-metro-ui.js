@@ -12,9 +12,9 @@
             style = "info";
         }
         $.Notify({
-    caption: 'Notify title',
-    content: 'Notify content'
-});
+            caption: 'Notify title',
+            content: 'Notify content'
+        });
 
         if (style === "banner") {
             var htmlContent = "<div class=\"notify " + level + " banner\" id=\"" + notificationId + "\">";
@@ -44,11 +44,8 @@
             jQ.ed._systemNotification(notificationId, level, content, title, icon, timeout);
         }
     };
-    console.warn("Connect");
+
     jQ.ed.connect("notify", function (opts, id) {
-        console.warn("notify", opts, id);
         notification(opts.style, opts.level, opts.content, opts.title, opts.icon, opts.timeout);
     });
-    jQ.ed.call("notify", {style: "notification", level: "warning", content: "First notification"});
-
 }(jQuery));

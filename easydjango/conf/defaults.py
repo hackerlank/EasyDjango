@@ -199,14 +199,13 @@ PIPELINE_CSS = {
 PIPELINE_JS = {
     'bootstrap3': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/bootstrap3/dist/js/bootstrap.min.js',
-                             'js/easydjango.js', 'js/easydjango-bootstrap3.js',
-                             ExpandIterable('EASYDJANGO_JS')],
+                             'js/easydjango.js', 'vendor/bootstrap-notify/bootstrap-notify.min.js',
+                             'js/easydjango-bootstrap3.js', ExpandIterable('EASYDJANGO_JS')],
         'output_filename': 'js/bootstrap3.js',
     },
     'metro-ui': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/metro-ui/build/js/metro.min.js',
-                             'js/easydjango.js', 'js/easydjango-metro-ui.js',
-                             ExpandIterable('EASYDJANGO_JS')],
+                             'js/easydjango.js', 'js/easydjango-metro-ui.js', ExpandIterable('EASYDJANGO_JS')],
         'output_filename': 'js/metro-ui.js',
     },
     'ie9': {

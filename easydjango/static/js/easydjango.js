@@ -53,9 +53,11 @@
                 }
                 else if((msg.result_id) && (msg.exception)) {
                     $.ed._functionCallPromises[msg.result_id][1](msg.exception);
+                    delete $.ed._functionCallPromises[msg.result_id];
                 }
                 else if(msg.result_id) {
                     $.ed._functionCallPromises[msg.result_id][0](msg.result);
+                    delete $.ed._functionCallPromises[msg.result_id];
                 }
             };
         };
@@ -77,7 +79,7 @@
         };
         $.ed.connect(signal, wrapper);
     };
-    $.ed._callWsFunction = function (func, opts) {
+    $.ed._wsCallFunction = function (func, opts) {
         "use strict";
         var callId = 'f' + ($.ed._wsFunctionCallId++);
         if (opts === undefined) {
@@ -89,7 +91,6 @@
             });
         return promise;
     };
-
 
     $.ed.call = function (signal, opts, id) {
         "use strict";

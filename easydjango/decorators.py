@@ -14,20 +14,59 @@ REGISTERED_FUNCTIONS = {}
 
 # noinspection PyUnusedLocal
 def server_side(request):
+    """does not allow a signal to be called from WebSockets
+
+    >>> @signal(is_allowed_to=server_side)
+    >>> def my_signal(request, arg1=None):
+    >>>     print(request, arg1)
+    """
     return False
 
 
 # noinspection PyUnusedLocal
 def everyone(request):
+    """allow everyone to call a WS signal or function
+
+    >>> @signal(is_allowed_to=everyone)
+    >>> def my_signal(request, arg1=None):
+    >>>     print(request, arg1)
+    """
     return True
 
 
 def is_authenticated(request):
+    """restrict a WS signal or a WS function to authenticated users
+
+    >>> @signal(is_allowed_to=is_authenticated)
+    >>> def my_signal(request, arg1=None):
+    >>>     print(request, arg1)
+    """
     return request.is_authenticated()
 
 
 def is_anonymous(request):
+    """restrict a WS signal or a WS function to anonymous users
+
+    >>> @signal(is_allowed_to=is_anonymous)
+    >>> def my_signal(request, arg1=None):
+    >>>     print(request, arg1)
+    """
     return request.is_anonymous()
+
+
+# noinspection PyPep8Naming
+class has_perm(object):
+    """restrict a WS signal or a WS function to users with permission "perm"
+
+    >>> @signal(is_allowed_to=has_perm('app_label.codename'))
+    >>> def my_signal(request, arg1=None):
+    >>>     print(request, arg1)
+    """
+    def __init__(self, perm):
+        self.perm = perm
+
+    def __call__(self, request):
+        return request.has_perm(self.perm)
 
 
 class Connection(object):

@@ -48,7 +48,6 @@ def check_user_creation(request, username=None, email=None, password1=None, pass
             call(request, 'ed.fields.state', to=[WINDOW], field_id=None, level='error', text=_('Passwords must match.'))
 
 
-
 @signal(is_allowed_to=everyone, path='demo.print_sig1')
 def print_sig1(request, content=''):
     subprocess.check_call(['say'] + content.split(' '))
@@ -58,3 +57,5 @@ def print_sig1(request, content=''):
 @signal(is_allowed_to=everyone, path='demo.print_sig2')
 def print_sig2(request, content=''):
     subprocess.check_call(['say'] + content.split(' '))
+    call(request, 'notify', to=[BROADCAST, SERVER], content="Server notification",
+         level='warning', timeout=2, style='notification')

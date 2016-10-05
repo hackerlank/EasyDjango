@@ -21,7 +21,7 @@ $.ed._heartbeatMessage = "{{ WS4REDIS_HEARTBEAT }}";
 
 {% for s in SIGNALS %}$.ed._wsSignalConnect("{{ s }}");
 {% endfor %}
-{% for f in FUNCTIONS %}$.edws.{{ f }} = function(opts) { return $.ed._callWsFunction("{{ f }}", opts); };
+{% for f in FUNCTIONS %}$.edws.{{ f }} = function(opts) { return $.ed._wsCallFunction("{{ f }}", opts); };
 {% endfor %}
 
 $.ed.csrfTokenValue = getCookie("{{ CSRF_COOKIE_NAME }}")
