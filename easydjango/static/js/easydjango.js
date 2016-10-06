@@ -115,4 +115,17 @@
         }
         $.ed._registered_signals[signal].push(fn);
     };
+    /**
+     * add the CSRF token to a form as a hidden input. Always returns True so you can use it as onsubmit attribute;
+     <form onsubmit="return df.add_csrf_to_form(this);" method="POST" >;
+    */
+    $.ed.CsrfForm = function (form) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'csrfmiddlewaretoken';
+        input.value = $.ed.csrfTokenValue;
+        form.appendChild(input);
+        return true;
+    };
+
 }(jQuery));

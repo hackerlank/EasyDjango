@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+from django import forms
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import add_domain
@@ -62,11 +63,17 @@ def system_check(request):
     pass
 
 
+class TestForm(forms.Form):
+    email = forms.EmailField(label='email1')
+    integer = forms.IntegerField(label='entier')
+    name = forms.CharField(label='nom')
+
+
 def index(request):
     # messages.info(request, 'message (info)')
     # messages.success(request, 'message (success)')
     # messages.warning(request, 'message (warning)')
     # messages.error(request, 'message (error)')
     set_websocket_topics(request, WINDOW, BROADCAST)
-    template_values = {}
+    template_values = {'form': TestForm()}
     return TemplateResponse(request, 'easydjango/%s/index.html' % settings.EASYDJANGO_TEMPLATE_BASE, template_values)

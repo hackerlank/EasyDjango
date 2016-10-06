@@ -38,7 +38,7 @@ def check_user_creation(request, username=None, email=None, password1=None, pass
             try:
                 validator(email)
             except ValidationError as e:
-                call(request, 'ed.fields.state', to=[WINDOW], field_id=None, level='error', text=str(e))
+                call(request, 'ed.fields.state', to=[WINDOW], field_id=None, level='erro#r', text=str(e))
         else:
             call(request, 'ed.fields.state', to=[WINDOW], field_id=None, level='success')
     if password1 and password2:

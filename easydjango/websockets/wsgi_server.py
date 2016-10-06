@@ -166,7 +166,7 @@ class WebsocketWSGIServer(object):
                     listening_fds.append(redis_fd)
             # subscriber.send_persited_messages(websocket)
             while websocket and not websocket.closed:
-                selected_fds = self.select(listening_fds, [], [], 4.0)
+                selected_fds = self.select(listening_fds, [], [], 10.0)
                 ready = selected_fds[0]
                 if not ready:
                     # flush empty socket
