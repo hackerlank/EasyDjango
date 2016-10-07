@@ -70,7 +70,6 @@
             var errors = data.errors, helpTexts = data.help_texts;
             $(form).find('.form-group').each(function (index, formGroup) {
                 formInput = $(formGroup).find(':input').first()[0];
-
                 if (formInput) {
                     key = formInput ? formInput.name : undefined;
                     if (key) {
@@ -94,6 +93,11 @@
                     }
                 }
             });
+            if(data.valid) {
+                $(form).find('input[type=submit]').removeAttr("disabled");
+            } else {
+                $(form).find('input[type=submit]').attr("disabled", "disabled");
+            }
         });
     };
 }(jQuery));
