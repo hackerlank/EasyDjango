@@ -4,8 +4,8 @@ from __future__ import unicode_literals, print_function, absolute_import
 from django import template
 from django.conf import settings
 from django.templatetags.static import PrefixNode, StaticNode
+from django.urls import reverse
 from django.utils.safestring import mark_safe
-# noinspection PyUnresolvedReferences
 from django.utils.six.moves.urllib.parse import urljoin, urlparse
 
 from easydjango.websockets.wsgi_server import signer
@@ -22,7 +22,9 @@ def init_websocket(context):
     site_name = '%s:%s' % (settings.SERVER_NAME, settings.SERVER_PORT)
     script = '$(document).ready(function() { $.ed._wsConnect("%s://%s%s?token=%s"); });' % \
              (protocol, site_name,  settings.WEBSOCKET_URL, signed_token)
-    return mark_safe('<script type="application/javascript">%s</script>' % script)
+    init_value = '<script type="application/javascript">%s</script>' % script
+    init_value += '<script type="text/javascript" src="%s" charset="utf-8"></script>' % reverse('signals')
+    return mark_safe(init_value)
 
 
 class MediaNode(StaticNode):

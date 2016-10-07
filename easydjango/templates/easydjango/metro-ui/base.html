@@ -18,7 +18,6 @@
     {% endblock %}
 
 </head>
-{% init_websocket %}
 {% block body %}
 <body {% block body-attributes %}class="bg-steel"{% endblock %}>
 {% block menubar %}
@@ -58,5 +57,5 @@
 {% endblock %}
 </body>
 {% endblock %}
-<script type="text/javascript" src="{% url 'signals' %}" charset="utf-8"></script>
+{% init_websocket %}
 </html>

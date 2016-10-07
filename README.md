@@ -10,11 +10,10 @@ EasyDjango
   * images @2x retina
   * language
   * cache (server/client-side): new decorator?
-  * push notifications https://developer.mozilla.org/fr/docs/Web/API/notification
   * responsive
   * minification
-  * HTTP2
-  * websockets: django-websocket-redis
+  * HTTP2 ?
+  * websockets: built-in
   * templates for Bootstrap 3, Metro, Admin, Font Awesome
   * REST API: Django REST Framework
    
@@ -43,7 +42,6 @@ EasyDjango
     à l'abonnement, on vérifie la signature 
 
 python3-redis - Persistent key-value database with network interface (Python 3 library)
-python3-django-websocket-redis - Websockets for Django applications using Redis (Python3 version)
 python3-aioredis - asyncio (PEP 3156) Redis support
 python3-hiredis - redis protocol reader for Python using hiredis
 
@@ -54,6 +52,8 @@ base templates:
     - messages
     - logo
     - footer
+    
+New (production-ready) log system
     
 WebSocket:
   - on génère un ID de fenêtre avec une liste de topics associés et une expiration

@@ -180,6 +180,10 @@ PIPELINE = {
     'JS_COMPRESSOR': SettingReference('PIPELINE_JS_COMPRESSOR'),
 }
 PIPELINE_CSS = {
+    'default': {
+        'source_filenames': SettingReference('EASYDJANGO_CSS'),
+        'output_filename': 'css/default-all.css', 'extra_context': {'media': 'all'},
+    },
     'bootstrap3': {
         'source_filenames': ['vendor/bootstrap3/dist/css/bootstrap.min.css',
                              'vendor/bootstrap3/dist/css/bootstrap-theme.min.css',
@@ -197,6 +201,10 @@ PIPELINE_CSS = {
     },
 }
 PIPELINE_JS = {
+    'default': {
+        'source_filenames': ['vendor/jquery/dist/jquery.min.js',  'js/easydjango.js', ExpandIterable('EASYDJANGO_JS')],
+        'output_filename': 'js/default.js',
+    },
     'bootstrap3': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/bootstrap3/dist/js/bootstrap.min.js',
                              'js/easydjango.js', 'vendor/bootstrap-notify/bootstrap-notify.min.js',
@@ -264,6 +272,8 @@ NPM_FILE_PATTERNS = {
 
 # ws4redis
 WS4REDIS_EXPIRE = 36000
+WS4REDIS_PUBLIC_WS_LIST = True
+# do not check for each WS signal/function before sending its name to the client
 
 # ######################################################################################################################
 #

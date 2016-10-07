@@ -113,8 +113,8 @@ class Connection(object):
         if not request_present:
             raise ValueError('Your signal must takes "request" as first argument')
 
-    def check(self, **kwargs):
-        return True
+    def check(self, kwargs):
+        return kwargs
 
     def __call__(self, request, **kwargs):
         return self.function(request, **kwargs)
@@ -165,14 +165,15 @@ def function(fn=None, path=None, is_allowed_to=server_side):
 class FormValidator(FunctionConnection):
     def signature_check(self, fn):
         if not isinstance(fn, type) or not issubclass(fn, forms.Form):
-            raise ValueError('Can only be applied on a Django Form')
+            raise ValueError('FormValidator only apply to Django Forms')
         self.required_arguments_names = ['request']
         self.optional_arguments_names = ['data']
 
     def __call__(self, request, data=None):
         validated_form = SerializedForm(self.function)(data)
         validated_form.is_valid()
-        return {f: e.get_json_data(escape_html=False) for f, e in validated_form.errors.items()}
+        return {'errors': {f: e.get_json_data(escape_html=False) for f, e in validated_form.errors.items()},
+                'help_texts': {f: e.help_text for (f, e) in validated_form.fields.items() if e.help_text}}
 
 
 def validate_form(form_cls=None, path=None, is_allowed_to=server_side):

@@ -12,9 +12,9 @@ __author__ = 'Matthieu Gallet'
 
 @validate_form(path='validate', is_allowed_to=everyone)
 class TestForm(forms.Form):
-    email = forms.EmailField(label='email1')
-    integer = forms.IntegerField(label='entier')
-    name = forms.CharField(label='nom')
+    email = forms.EmailField(label='Email', help_text='Please enter your e-mail')
+    name = forms.CharField(label='Name', help_text='Please enter your name')
+    age = forms.IntegerField(label='Age')
 
 
 @function(path='test_function', is_allowed_to=everyone)

@@ -66,15 +66,32 @@
     });
     jQ.ed.validateForm = function (form, fn) {
         $.edws[fn]({data: $(form).serializeArray()}).then(function(data) {
-            var index, formGroup, formInput, key;
+            var index, formGroup, formInput, key, helpText;
+            var errors = data.errors, helpTexts = data.help_texts;
             $(form).find('.form-group').each(function (index, formGroup) {
                 formInput = $(formGroup).find(':input').first()[0];
+
                 if (formInput) {
-                    key = formInput ? formInput.name:undefined;
-                    var addedCls = (data[key] === undefined) ? 'has-success' : 'has-error';
-                    var removedCls = (data[key] === undefined) ? 'has-error' : 'has-success';
-                    $(formGroup).addClass(addedCls);
-                    $(formGroup).removeClass(removedCls);
+                    key = formInput ? formInput.name : undefined;
+                    if (key) {
+                        var addedCls = (errors[key] === undefined) ? 'has-success' : 'has-error';
+                        var removedCls = (errors[key] === undefined) ? 'has-error' : 'has-success';
+                        helpText = "";
+                        if (helpTexts[key] !== undefined) {
+                            helpText += helpTexts[key];
+                        }
+                        if (errors[key] !== undefined) {
+                            for(value in errors[key]) {
+                                helpText += ' ' + errors[key][value].message;
+                            }
+                        }
+                        $(formGroup).addClass(addedCls);
+                        $(formGroup).removeClass(removedCls);
+                        if($(formGroup).find('.help-block').length === 0) {
+                            $(formGroup).append('<span class="help-block"></span>');
+                        }
+                        $(formGroup).find('.help-block').empty().html(helpText);
+                    }
                 }
             });
         });

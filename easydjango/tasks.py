@@ -6,6 +6,8 @@ import uuid
 
 from celery import shared_task
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db.models import Model
 from django.utils.module_loading import import_string
 from django.utils.lru_cache import lru_cache
 from django.utils.six import text_type
@@ -23,8 +25,8 @@ WINDOW = [[]]
 USER = [[]]
 BROADCAST = [[]]
 
-signal_encoder = import_string(settings.WS4REDIS_SIGNAL_ENCODER)
-topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
+_signal_encoder = import_string(settings.WS4REDIS_SIGNAL_ENCODER)
+_topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
 
 
 # noinspection PyCallingNonCallable
@@ -34,12 +36,15 @@ def _get_redis_connection():
 
 
 def set_websocket_topics(request, *topics):
+    # noinspection PyTypeChecker
     if not hasattr(request, 'window_key'):
         raise NoWindowKeyException('You should use the EasyDjangoMiddleware middleware')
     token = request.window_key
     prefix = settings.WS4REDIS_PREFIX
     request = SignalRequest.from_request(request)
-    topic_strings = [prefix + topic_serializer(request, x) for x in topics if x is not SERVER]
+    topic_strings = {prefix + _topic_serializer(request, x) for x in topics if x is not SERVER}
+    topic_strings.add(prefix + _topic_serializer(request, WINDOW))
+    topic_strings.add(prefix + _topic_serializer(request, BROADCAST))
     connection = _get_redis_connection()
     redis_key = '%s%s' % (prefix, token)
     connection.delete(redis_key)
@@ -72,7 +77,7 @@ def _call_signal(request, signal_name, to=None, kwargs=None, countdown=None, exp
         if serialized_topic is SERVER:
             to_server = True
         else:
-            serialized_client_topics.append(topic_serializer(request, serialized_topic))
+            serialized_client_topics.append(_topic_serializer(request, serialized_topic))
     celery_kwargs = {}
     if expires:
         celery_kwargs['expires'] = expires
@@ -95,7 +100,8 @@ def _call_signal(request, signal_name, to=None, kwargs=None, countdown=None, exp
 def _call_ws_signal(signal_name, signal_id, serialized_topic, kwargs):
     # connection = _get_redis_connection()
     connection = StrictRedis(**settings.WS4REDIS_CONNECTION)
-    serialized_message = json.dumps({'signal': signal_name, 'opts': kwargs, 'signal_id': signal_id}, cls=signal_encoder)
+    serialized_message = json.dumps({'signal': signal_name, 'opts': kwargs, 'signal_id': signal_id},
+                                    cls=_signal_encoder)
     topic = settings.WS4REDIS_PREFIX + serialized_topic
     connection.publish(topic, serialized_message.encode('utf-8'))
 
@@ -111,8 +117,8 @@ def _return_ws_function_result(request, result_id, result, exception=None):
     # connection = _get_redis_connection()
     connection = StrictRedis(**settings.WS4REDIS_CONNECTION)
     json_msg = {'result_id': result_id, 'result': result, 'exception': text_type(exception) if exception else None}
-    serialized_message = json.dumps(json_msg, cls=signal_encoder)
-    serialized_topic = topic_serializer(request, WINDOW)
+    serialized_message = json.dumps(json_msg, cls=_signal_encoder)
+    serialized_topic = _topic_serializer(request, WINDOW)
     topic = settings.WS4REDIS_PREFIX + serialized_topic
     connection.publish(topic, serialized_message.encode('utf-8'))
 
@@ -149,7 +155,10 @@ def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=Fals
         return
     for connection in REGISTERED_SIGNALS[signal_name]:
         assert isinstance(connection, SignalConnection)
-        if (from_client and not connection.is_allowed_to(request)) or not connection.check(**kwargs):
+        if from_client and not connection.is_allowed_to(request):
+            continue
+        kwargs = connection.check(kwargs)
+        if kwargs is None:
             continue
         connection(request, **kwargs)
 
