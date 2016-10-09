@@ -37,15 +37,7 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             {% block navbar-login %}
-            <form class="navbar-form navbar-right">
-                <div class="form-group">
-                    <input type="text" placeholder="Email" class="form-control">
-                </div>
-                <div class="form-group">
-                    <input type="password" placeholder="Password" class="form-control">
-                </div>
-                <button type="submit" class="btn btn-success">Sign in</button>
-            </form>
+            <a href="{% url 'auth-login' %}">{% fontawesome_icon 'sign-in' large=1 %}</a>
             {% endblock %}
             {% block navbar-search %}
             <form class="navbar-form navbar-right">
@@ -58,7 +50,6 @@
 </nav>
 {% endblock %}
     <div id="edMessages"></div>
-
 <div class="container">
     {% block content %}
     <div class="row">
@@ -95,5 +86,6 @@
 <!--[if lt IE 9 ]>{% javascript 'ie9' %}<![endif]-->
 {% stylesheet 'bootstrap3' %}
 {% init_websocket %}
+{% ed_messages style='notification' %}
 </body>
 </html>

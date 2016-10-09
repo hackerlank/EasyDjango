@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 from django import forms
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import add_domain
 from django.http import HttpResponsePermanentRedirect
@@ -69,10 +70,10 @@ def system_check(request):
 
 
 def index(request):
-    # messages.info(request, 'message (info)')
-    # messages.success(request, 'message (success)')
-    # messages.warning(request, 'message (warning)')
-    # messages.error(request, 'message (error)')
+    messages.info(request, 'message (info)')
+    messages.success(request, 'message (success)')
+    messages.warning(request, 'message (warning)')
+    messages.error(request, 'message (error)')
     set_websocket_topics(request)
     if request.method == 'POST':
         form = TestForm(request.POST)

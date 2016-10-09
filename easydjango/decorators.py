@@ -164,8 +164,8 @@ def function(fn=None, path=None, is_allowed_to=server_side):
 
 class FormValidator(FunctionConnection):
     def signature_check(self, fn):
-        if not isinstance(fn, type) or not issubclass(fn, forms.Form):
-            raise ValueError('FormValidator only apply to Django Forms')
+        if not isinstance(fn, type) or not issubclass(fn, forms.BaseForm):
+            raise ValueError('validate_form only apply to Django Forms')
         self.required_arguments_names = ['request']
         self.optional_arguments_names = ['data']
 
@@ -177,7 +177,7 @@ class FormValidator(FunctionConnection):
 
 
 def validate_form(form_cls=None, path=None, is_allowed_to=server_side):
-    if form_cls is not None:
+    if path is None or is_allowed_to == server_side:
         # @validate_form
         # class MyForm(forms.Form):
         #     ...
@@ -188,6 +188,8 @@ def validate_form(form_cls=None, path=None, is_allowed_to=server_side):
         wrapper.register()
         return form_cls_
 
+    if form_cls:
+        return wrapped(form_cls)
     return wrapped
 
 

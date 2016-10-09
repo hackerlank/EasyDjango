@@ -3,10 +3,15 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 from django import template
 from django.conf import settings
+from django.template import Context
 from django.templatetags.static import PrefixNode, StaticNode
 from django.urls import reverse
+from django.utils.encoding import force_text
+# noinspection PyProtectedMember
+from django.utils.html import _js_escapes
 from django.utils.safestring import mark_safe
-from django.utils.six.moves.urllib.parse import urljoin, urlparse
+# noinspection PyUnresolvedReferences
+from django.utils.six.moves.urllib.parse import urljoin
 
 from easydjango.websockets.wsgi_server import signer
 
@@ -21,14 +26,13 @@ def init_websocket(context):
     protocol = 'wss' if settings.USE_SSL else 'ws'
     site_name = '%s:%s' % (settings.SERVER_NAME, settings.SERVER_PORT)
     script = '$(document).ready(function() { $.ed._wsConnect("%s://%s%s?token=%s"); });' % \
-             (protocol, site_name,  settings.WEBSOCKET_URL, signed_token)
+             (protocol, site_name, settings.WEBSOCKET_URL, signed_token)
     init_value = '<script type="application/javascript">%s</script>' % script
     init_value += '<script type="text/javascript" src="%s" charset="utf-8"></script>' % reverse('signals')
     return mark_safe(init_value)
 
 
 class MediaNode(StaticNode):
-
     @classmethod
     def handle_simple(cls, path):
         return urljoin(PrefixNode.handle_simple('MEDIA_URL'), path)
@@ -76,3 +80,38 @@ def fontawesome_icon(name, large=False, fixed=False, spin=False, li=False, rotat
         border=' fa-border' if border else '',
         color='style="color:%s;"' % color if color else ''
     ))
+
+
+@register.simple_tag(takes_context=True)
+def ed_messages(context, style='banner'):
+    """
+    Show django.contrib.messages Messages in Metro alert containers.
+    In order to make the alerts dismissable (with the close button),
+    we have to set the jquery parameter too when using the
+    bootstrap_javascript tag.
+    Uses the template ``bootstrap3/messages.html``.
+    **Tag name**::
+        ed_bootstrap_messages
+    **Parameters**:
+        style: "notification", "banner", "modal" or "system"
+    **Usage**::
+        {% ed_bootstrap_messages style='banner' %}
+    **Example**::
+        {% ed_bootstrap_messages style='notification' %}
+    """
+
+    if context and isinstance(context, Context):
+        context = context.flatten()
+
+    def message_level(msg):
+        for (tag, bound) in (('danger', 40), ('warning', 30), ('success', 25)):
+            if msg.level >= bound:
+                return tag
+        return 'info'
+    result = '<script type="text/javascript">\n'
+    for message in context['messages']:
+        result += '$.ed.call("notify", {style: "%s", level: "%s", content: "%s"});\n' \
+                  % (style, message_level(message), force_text(message).translate(_js_escapes))
+
+    result += '</script>'
+    return mark_safe(result)

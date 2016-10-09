@@ -91,7 +91,6 @@
             });
         return promise;
     };
-
     $.ed.call = function (signal, opts, id) {
         "use strict";
         var i;

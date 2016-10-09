@@ -15,6 +15,6 @@
 <form id="testForm" onchange="$.ed.validateForm(this, 'validate');" action="?" method="post">
     {% csrf_token %}
     {% bootstrap_form form %}
-    <input type="submit" class="btn btn-success" value="Valider" disabled>
+    <input type="submit" class="btn btn-success" value="Valider">
 </form>
 {% endblock %}

@@ -257,6 +257,7 @@ EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
 EASYDJANGO_CSS = []
 EASYDJANGO_JS = []
 EASYDJANGO_TEMPLATE_BASE = 'bootstrap3'  # or "metro-ui". Unused if you use your own base templates
+EASYDJANGO_ALLOW_ACCOUNT_CREATION = True
 
 # django-npm
 NPM_FILE_PATTERNS = {

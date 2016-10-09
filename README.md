@@ -14,16 +14,11 @@ EasyDjango
   * minification
   * HTTP2 ?
   * websockets: built-in
-  * templates for Bootstrap 3, Metro, Admin, Font Awesome
+  * templates for Bootstrap 3 & Font Awesome
   * REST API: Django REST Framework
-   
-  * websockets behavior:
-    * send message to users with a given property
-    * send message to windows with a given property
-    * code for checking requested properties
-    
   * nginx or apache configuration
   * uwsgi or gunicorn
+  * build de .deb
   
   * admin page:
     * last internal checks
@@ -32,14 +27,9 @@ EasyDjango
     
   * notification messages for all users
     
-  * affichage de toutes les vues avec les décorateurs (cache, login_required, …)
   * using reverse proxies
   * logs
   * easy initial conf
-  
-  * abonnement aux files websocket 
-    le code HTML fait une liste de topics et signe le tout + ID de session
-    à l'abonnement, on vérifie la signature 
 
 python3-redis - Persistent key-value database with network interface (Python 3 library)
 python3-aioredis - asyncio (PEP 3156) Redis support
@@ -47,6 +37,7 @@ python3-hiredis - redis protocol reader for Python using hiredis
 
 base templates:
     - login button
+    - search button
     - create account window
     - logout button
     - messages
