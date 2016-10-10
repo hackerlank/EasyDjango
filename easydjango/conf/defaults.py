@@ -121,8 +121,8 @@ WSGI_APPLICATION = 'easydjango.wsgi.application'
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 
 # django.contrib.sessions
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+# SESSION_CACHE_ALIAS = 'default'
 
 # django.contrib.sites
 SITE_ID = 1

@@ -24,12 +24,13 @@ def context_base(request):
     :return: a dict to update the global template context
     :rtype: :class:`dict`
     """
-    # noinspection PyCallByClass,PyTypeChecker
+    # noinspection PyTypeChecker
     return {
-        'ed_project_name': settings.PROJECT_NAME,
-        'ed_user': request.user,
-        'ed_language_code': settings.LANGUAGE_CODE,
-        'ed_user_agent': request.META.get('HTTP_USER_AGENT', ''),
         'ed_index_view': 'index',
-        'ed_ws_token': request.window_key if hasattr(request, 'window_key') else None,
+        'ed_language_code': settings.LANGUAGE_CODE,
+        'ed_project_name': settings.PROJECT_NAME,
+        'ed_remote_username': getattr(request, 'remote_username'),
+        'ed_user': getattr(request, 'user'),
+        'ed_user_agent': request.META.get('HTTP_USER_AGENT', ''),
+        'ed_ws_token': getattr(request, 'window_key'),
     }

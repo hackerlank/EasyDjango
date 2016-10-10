@@ -26,6 +26,7 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
     # noinspection PyMethodMayBeStatic
     def process_request(self, request):
         request.window_key = get_random_string(32, VALID_KEY_CHARS)
+        request.remote_username = None
 
         if settings.USE_X_FORWARDED_FOR and 'HTTP_X_FORWARDED_FOR' in request.META:
             request.META['REMOTE_ADDR'] = request.META['HTTP_X_FORWARDED_FOR'].split(',')[0].strip()
@@ -52,6 +53,7 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
 
     def remote_user_authentication(self, request):
         # AuthenticationMiddleware is required so that request.user exists.
+        # noinspection PyTypeChecker
         if not hasattr(request, 'user'):
             raise ImproperlyConfigured(
                 "The Django remote user auth middleware requires the"
@@ -59,10 +61,10 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
                 " MIDDLEWARE_CLASSES setting to insert"
                 " 'django.contrib.auth.middleware.AuthenticationMiddleware'"
                 " before the RemoteUserMiddleware class.")
-        username = request.META.get(self.remote_user_header)
-        if not username or username == '(null)':  # special case due to apache2+auth_mod_kerb :-(
+        remote_username = request.META.get(self.remote_user_header)
+        if not remote_username or remote_username == '(null)':  # special case due to apache2+auth_mod_kerb :-(
             return
-        username, sep, domain = username.partition('@')
+        username = self.format_remote_username(remote_username)
         # If the user is already authenticated and that user is the user we are
         # getting passed in the headers, then the correct user is already
         # persisted in the session and we don't need to continue.
@@ -82,3 +84,8 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
             # by logging the user in.
             request.user = user
             auth.login(request, user)
+            request.remote_username = remote_username
+
+    # noinspection PyMethodMayBeStatic
+    def format_remote_username(self, remote_username):
+        return remote_username.partition('@')[0]

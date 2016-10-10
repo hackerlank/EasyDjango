@@ -1,6 +1,0 @@
-{% load easydjango bootstrap3 %}
-<script type="text/javascript">
-{% for message in messages %}
-$.ed.notification("{{ message_style }}", "{{ message|metro_ui_message_level }}", "{{ message|escapejs }}", "", null, 0);
-{% endfor %}
-</script>

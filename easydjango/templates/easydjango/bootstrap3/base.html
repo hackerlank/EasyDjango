@@ -1,4 +1,4 @@
-<!DOCTYPE html>{% load pipeline staticfiles easydjango %}
+<!DOCTYPE html>{% load pipeline staticfiles easydjango bootstrap3 %}
 <html lang="{% block header-language %}{{ ed_language_code }}{% endblock %}">
 <head>
     {% block header %}
@@ -36,20 +36,29 @@
             <a class="navbar-brand" href="{% url 'index' %}">{{ ed_project_name |capfirst}}</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
-            {% block navbar-login %}
-            <a href="{% url 'auth-login' %}">{% fontawesome_icon 'sign-in' large=1 %}</a>
-            {% endblock %}
             {% block navbar-search %}
             <form class="navbar-form navbar-right">
                 <input type="text" placeholder="Search" class="form-control">
                 <button type="submit" class="btn btn-success">Search</button>
             </form>
             {% endblock %}
+            {% block navbar-login %}
+            <ul class="nav navbar-nav navbar-right">
+                {% if ed_user.is_anonymous %}
+                <li><a href="{% url 'auth-login' %}">{% bootstrap_icon 'log-in' %}</a></li>
+                {% elif ed_remote_username %}
+                <li>{{ ed_user }}</li>
+                {% else %}
+                <li>{{ ed_user }} <a href="{% url 'auth-logout' %}">{% bootstrap_icon 'log-out' %}</a>
+                </li>
+                {% endif %}
+            </ul>
+            {% endblock %}
         </div>
     </div>
 </nav>
 {% endblock %}
-    <div id="edMessages"></div>
+<div id="edMessages"></div>
 <div class="container">
     {% block content %}
     <div class="row">
@@ -77,7 +86,8 @@
     </div>
     {% endblock %}
     {% block footer %}
-    <hr><footer><p>{% block footer-copyright %}&copy; 2016, Matthieu Gallet{% endblock %}</p></footer>
+    <hr>
+    <footer><p>{% block footer-copyright %}&copy; 2016, Matthieu Gallet{% endblock %}</p></footer>
     {% endblock %}
 </div> <!-- /container -->
 
@@ -86,6 +96,6 @@
 <!--[if lt IE 9 ]>{% javascript 'ie9' %}<![endif]-->
 {% stylesheet 'bootstrap3' %}
 {% init_websocket %}
-{% ed_messages style='notification' %}
+{% ed_messages style='banner' %}
 </body>
 </html>
