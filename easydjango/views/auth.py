@@ -2,12 +2,16 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, login as auth_login
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordResetForm, PasswordChangeForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordResetForm, SetPasswordForm
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.http import is_safe_url
+from django.utils.translation import ugettext_lazy as _
 
 from easydjango.decorators import validate_form, everyone
 from easydjango.tasks import set_websocket_topics
@@ -17,8 +21,6 @@ __author__ = 'Matthieu Gallet'
 validate_form(form_cls=UserCreationForm, path='easydjango_validate_user_creation', is_allowed_to=everyone)
 validate_form(form_cls=PasswordResetForm,
               path='easydjango_validate_password_reset', is_allowed_to=everyone)
-validate_form(form_cls=PasswordChangeForm,
-              path='easydjango_validate_password_change', is_allowed_to=everyone)
 
 
 def login(request):
@@ -52,9 +54,30 @@ def logout(request):
     return HttpResponseRedirect(redirect_to)
 
 
-def forgot_password(request):
-    pass
+def password_reset(request):
+    if request.method == 'POST':
+        password_reset_form = PasswordResetForm(request.POST)
+        if password_reset_form.is_valid():
+            redirect_to = reverse('password_reset')
+            return HttpResponseRedirect(redirect_to)
+    else:
+        password_reset_form = PasswordResetForm()
+    template_values = {'password_reset_form': password_reset_form}
+    set_websocket_topics(request)
+    return TemplateResponse(request, 'easydjango/bootstrap3/password_reset.html', template_values)
 
 
-def change_password(request):
-    pass
+@login_required(login_url='ed:login')
+def set_password(request):
+    if request.method == 'POST':
+        set_password_form = SetPasswordForm(request.user, request.POST)
+        if set_password_form.is_valid():
+            redirect_to = reverse('ed:set_password')
+            set_password_form.save()
+            messages.success(request, _('Your password has been modified. Please log-in again.'))
+            return HttpResponseRedirect(redirect_to)
+    else:
+        set_password_form = SetPasswordForm(request.user)
+    template_values = {'set_password_form': set_password_form}
+    set_websocket_topics(request)
+    return TemplateResponse(request, 'easydjango/bootstrap3/set_password.html', template_values)

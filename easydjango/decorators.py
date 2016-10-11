@@ -170,10 +170,10 @@ class FormValidator(FunctionConnection):
         self.optional_arguments_names = ['data']
 
     def __call__(self, request, data=None):
-        validated_form = SerializedForm(self.function)(data)
-        valid = validated_form.is_valid()
-        return {'valid': valid, 'errors': {f: e.get_json_data(escape_html=False) for f, e in validated_form.errors.items()},
-                'help_texts': {f: e.help_text for (f, e) in validated_form.fields.items() if e.help_text}}
+        form = SerializedForm(self.function)(data)
+        valid = form.is_valid()
+        return {'valid': valid, 'errors': {f: e.get_json_data(escape_html=False) for f, e in form.errors.items()},
+                'help_texts': {f: e.help_text for (f, e) in form.fields.items() if e.help_text}}
 
 
 def validate_form(form_cls=None, path=None, is_allowed_to=server_side):

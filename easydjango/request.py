@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.utils.functional import cached_property
 
@@ -112,6 +113,13 @@ class SignalRequest(object):
             app_name, sep, codename = perm.partition('.')
             result.setdefault(app_name, {})[codename] = True
         return result
+
+    @cached_property
+    def user(self):
+        users = list(get_user_model().objects.filter(pk=self.user_pk)[0:1])
+        if users:
+            return users[0]
+        return None
 
     @classmethod
     def from_request(cls, request):

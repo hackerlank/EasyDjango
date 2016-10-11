@@ -1,4 +1,4 @@
-<!DOCTYPE html>{% load pipeline staticfiles easydjango bootstrap3 %}
+<!DOCTYPE html>{% load pipeline staticfiles easydjango bootstrap3 i18n %}
 <html lang="{% block header-language %}{{ ed_language_code }}{% endblock %}">
 <head>
     {% block header %}
@@ -45,12 +45,14 @@
             {% block navbar-login %}
             <ul class="nav navbar-nav navbar-right">
                 {% if ed_user.is_anonymous %}
-                <li><a href="{% url 'auth-login' %}">{% bootstrap_icon 'log-in' %}</a></li>
+                <li><a title="{% trans 'Log-in' %}" href="{% url 'ed:login' %}">{% bootstrap_icon 'log-in' %}</a></li>
                 {% elif ed_remote_username %}
                 <li>{{ ed_user }}</li>
                 {% else %}
-                <li>{{ ed_user }} <a href="{% url 'auth-logout' %}">{% bootstrap_icon 'log-out' %}</a>
+                <li><a href="{% url 'ed:logout' %}" title="{% trans 'Log out' %}">{{ ed_user }} {% bootstrap_icon 'log-out' %}</a>
                 </li>
+                <li><a href="{% url 'ed:set_password' %}" title="{% trans 'Change your password' %}">{% bootstrap_icon 'edit' %}</a>
+ </li>
                 {% endif %}
             </ul>
             {% endblock %}

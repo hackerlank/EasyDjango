@@ -36,11 +36,8 @@ python3-aioredis - asyncio (PEP 3156) Redis support
 python3-hiredis - redis protocol reader for Python using hiredis
 
 base templates:
-    - login button
     - search button
     - create account window
-    - logout button
-    - messages
     - logo
     - footer
     
