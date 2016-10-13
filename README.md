@@ -6,15 +6,13 @@ EasyDjango
 
   * extensible config system
 
-  * create favicon
+  
   * images @2x retina
   * language
   * cache (server/client-side): new decorator?
   * responsive
-  * minification
-  * HTTP2 ?
+  * minification: django-pipeline
   * websockets: built-in
-  * templates for Bootstrap 3 & Font Awesome
   * REST API: Django REST Framework
   * nginx or apache configuration
   * uwsgi or gunicorn
@@ -24,12 +22,13 @@ EasyDjango
     * last internal checks
     * state of all components
     * Nagios checks
-    
-  * notification messages for all users
-    
+        
   * using reverse proxies
   * logs
   * easy initial conf
+  * create favicon
+  
+session in Redis
 
 python3-redis - Persistent key-value database with network interface (Python 3 library)
 python3-aioredis - asyncio (PEP 3156) Redis support

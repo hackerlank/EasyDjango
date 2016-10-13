@@ -22,21 +22,18 @@ if settings.EASYDJANGO_URL_CONF:
 else:
     extra_urls = []
 
-if settings.EASYDJANGO_INDEX:
-    index_view = settings.EASYDJANGO_INDEX
-else:
-    index_view = 'easydjango.views.index'
-index_view = import_string(index_view)
-
 urlpatterns = [url(r'^admin/', include(admin.site.urls)),
                url(r'^jsi18n/$', javascript_catalog, {'packages': ('easydjango', 'django.contrib.admin'), }),
                url(r'^%s(?P<path>.*)$' % settings.MEDIA_URL[1:], serve, {'document_root': settings.MEDIA_ROOT}),
                url(r'^%s(?P<path>.*)$' % settings.STATIC_URL[1:], serve, {'document_root': settings.STATIC_ROOT}),
                url(r'^ed/', include(urls, namespace='ed')),
                url(r'^robots\.txt$', robots),
-               url(r'^favicon\.ico$', favicon),
-               url(r'^$', index_view, name='index'),
+               url(r'^favicon\.ico$', favicon, name='favicon'),
                ] + list(extra_urls)
+
+if settings.EASYDJANGO_INDEX_VIEW:
+    index_view = import_string(settings.EASYDJANGO_INDEX_VIEW)
+    urlpatterns += [url(r'^$', index_view.as_view(), name='index')]
 
 if settings.DEBUG and settings.USE_DEBUG_TOOLBAR:
     import debug_toolbar

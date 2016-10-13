@@ -35,8 +35,7 @@ entry_points = {'console_scripts': [
     'easydjango-gunicorn = easydjango.scripts:gunicorn',
                                      ]}
 extras_requirements['deb'] = ['stdeb>=0.8.5']
-extras_requirements['pipeline'] = ['django-pipeline']
-extras_requirements['debug'] = ['django-debug-toolbar']
+extras_requirements['extra'] = ['django-pipeline', 'django-debug-toolbar', 'django-redis-sessions', ]
 
 setup(
     name='easydjango',
@@ -60,5 +59,6 @@ setup(
                  'Operating System :: POSIX :: Linux', 'Operating System :: Unix',
                  'License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1 (CeCILL-2.1)',
                  'Programming Language :: Python :: 2.6', 'Programming Language :: Python :: 2.7',
-                 'Programming Language :: Python :: 3.4', 'Programming Language :: Python :: 3.5'],
+                 'Programming Language :: Python :: 3.4', 'Programming Language :: Python :: 3.5',
+                 'Programming Language :: Python :: 3.6'],
 )

@@ -43,6 +43,8 @@ def set_websocket_topics(request, *topics):
     prefix = settings.WS4REDIS_PREFIX
     request = SignalRequest.from_request(request)
     topic_strings = {prefix + _topic_serializer(request, x) for x in topics if x is not SERVER}
+    if request.user.is_authenticated():
+        topic_strings.add(prefix + _topic_serializer(request, USER))
     topic_strings.add(prefix + _topic_serializer(request, WINDOW))
     topic_strings.add(prefix + _topic_serializer(request, BROADCAST))
     connection = _get_redis_connection()

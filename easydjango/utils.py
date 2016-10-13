@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function, absolute_import
+from __future__ import unicode_literals, print_function
 
 import os
+import sys
 
 import pkg_resources
-import sys
 from django.utils import six
 
 __author__ = 'Matthieu Gallet'
@@ -12,7 +12,7 @@ __author__ = 'Matthieu Gallet'
 
 def is_package_present(package_name):
     try:
-        __import__(package_name)
+        import_module(package_name)
         return True
     except ImportError:
         return False

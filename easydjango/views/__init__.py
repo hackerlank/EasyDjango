@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
-from django import forms
 from django.conf import settings
-from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import add_domain
 from django.http import HttpResponsePermanentRedirect
@@ -11,9 +9,8 @@ from django.template.response import TemplateResponse
 from django.utils.lru_cache import lru_cache
 
 from easydjango.decorators import REGISTERED_SIGNALS, REGISTERED_FUNCTIONS
-from easydjango.functions import TestForm
 from easydjango.request import SignalRequest
-from easydjango.tasks import WINDOW, set_websocket_topics, BROADCAST, import_signals_and_functions
+from easydjango.tasks import import_signals_and_functions
 
 __author__ = 'Matthieu Gallet'
 
@@ -32,6 +29,7 @@ def robots(request):
 
 @lru_cache()
 def __get_js_mimetype():
+    # noinspection PyTypeChecker
     if hasattr(settings, 'PIPELINE_MIMETYPES'):
         for (mimetype, ext) in settings.PIPELINE_MIMETYPES:
             if ext == '.js':
@@ -54,6 +52,7 @@ def signals(request):
         for function_name, connection in REGISTERED_FUNCTIONS.items():
             if connection.is_allowed_to(signal_request):
                 valid_function_names.append(function_name)
+    # noinspection PyTypeChecker
     csrf_header_name = getattr(settings, 'CSRF_HEADER_NAME', 'HTTP_X_CSRFTOKEN')
     return TemplateResponse(request, 'easydjango/signals.html',
                             {'SIGNALS': valid_signal_names,
@@ -67,18 +66,3 @@ def signals(request):
 
 def system_check(request):
     pass
-
-
-def index(request):
-    messages.info(request, 'message (info)')
-    messages.success(request, 'message (success)')
-    messages.warning(request, 'message (warning)')
-    messages.error(request, 'message (error)')
-    set_websocket_topics(request)
-    if request.method == 'POST':
-        form = TestForm(request.POST)
-        form.is_valid()
-    else:
-        form = TestForm()
-    template_values = {'form': form, }
-    return TemplateResponse(request, 'easydjango/%s/index.html' % settings.EASYDJANGO_TEMPLATE_BASE, template_values)

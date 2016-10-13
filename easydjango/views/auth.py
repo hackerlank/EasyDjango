@@ -29,11 +29,14 @@ def login(request):
         authentication_form = AuthenticationForm(request, request.POST)
         if authentication_form.is_valid():
             auth_login(request, authentication_form.get_user())
+            messages.info(request, _('You are now connected.'))
             redirect_to = request.POST.get(REDIRECT_FIELD_NAME, request.GET.get(REDIRECT_FIELD_NAME, '/'))
             if not is_safe_url(url=redirect_to, host=request.get_host()):
                 redirect_to = resolve_url('index')
             return HttpResponseRedirect(redirect_to)
-        if settings.EASYDJANGO_ALLOW_ACCOUNT_CREATION:
+        elif 'password' in request.POST:
+            messages.warning(request, _('Invalid username or password.'))
+        elif settings.EASYDJANGO_ALLOW_ACCOUNT_CREATION:
             creation_form = UserCreationForm(request.POST)
             if creation_form.is_valid():
                 creation_form.save()

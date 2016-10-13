@@ -26,7 +26,8 @@ def context_base(request):
     """
     # noinspection PyTypeChecker
     return {
-        'ed_index_view': 'index',
+        'ed_has_index_view': bool(settings.EASYDJANGO_INDEX_VIEW),
+        'ed_has_site_search': bool(settings.EASYDJANGO_SITE_SEARCH_VIEW),
         'ed_language_code': settings.LANGUAGE_CODE,
         'ed_project_name': settings.PROJECT_NAME,
         'ed_remote_username': getattr(request, 'remote_username'),

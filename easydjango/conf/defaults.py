@@ -15,8 +15,14 @@ __author__ = 'Matthieu Gallet'
 # detect if some external packages are available, to automatically customize some settings
 #
 # ######################################################################################################################
-USE_DJANGO_REDIS = is_package_present('dango_redis')
+try:
+    import django_redis  # does not work with is_package_present (???)
+    USE_DJANGO_REDIS = True
+except ImportError:
+    django_redis = None
+    USE_DJANGO_REDIS = False
 USE_CELERY = is_package_present('celery')
+USE_DJANGO_REDIS_SESSION = is_package_present('redis_sessions')
 USE_SCSS = is_package_present('scss')
 USE_PIPELINE = is_package_present('pipeline')
 USE_DEBUG_TOOLBAR = is_package_present('debug_toolbar')
@@ -121,8 +127,8 @@ WSGI_APPLICATION = 'easydjango.wsgi.application'
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 
 # django.contrib.sessions
-# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-# SESSION_CACHE_ALIAS = 'default'
+if USE_DJANGO_REDIS_SESSION:
+    SESSION_ENGINE = 'redis_sessions.session'
 
 # django.contrib.sites
 SITE_ID = 1
@@ -171,6 +177,7 @@ WS4REDIS_HEARTBEAT = '--HEARTBEAT--'
 WS4REDIS_SIGNAL_DECODER = 'json.JSONDecoder'
 WS4REDIS_SIGNAL_ENCODER = 'django.core.serializers.json.DjangoJSONEncoder'
 WS4REDIS_PREFIX = 'ws'
+
 # django-pipeline
 PIPELINE = {
     'PIPELINE_ENABLED': SettingReference('PIPELINE_ENABLED'),
@@ -226,6 +233,7 @@ PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
 PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
 if USE_SCSS:
     PIPELINE_COMPILERS = ('djangofloor.middleware.PyScssCompiler', )
+
 # Django-Debug-Toolbar
 DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js', }
 
@@ -258,7 +266,8 @@ EASYDJANGO_CSS = []
 EASYDJANGO_JS = []
 EASYDJANGO_TEMPLATE_BASE = 'bootstrap3'  # or "metro-ui". Unused if you use your own base templates
 EASYDJANGO_ALLOW_ACCOUNT_CREATION = True
-
+EASYDJANGO_SITE_SEARCH_VIEW = 'easydjango.views.search.UserSearchView'
+EASYDJANGO_INDEX_VIEW = 'easydjango.views.index.IndexView'
 # django-npm
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],
@@ -317,8 +326,14 @@ SERVER_BASE_URL = 'http://localhost:9000'
 CACHE_REDIS_PROTOCOL = 'redis'
 CACHE_REDIS_SERVER = 'localhost'
 CACHE_REDIS_PORT = 6379
-CACHE_REDIS_DB = 10
+CACHE_REDIS_DB = 2
 CACHE_REDIS_PASSWORD = ''
+
+# django-redis-sessions
+SESSION_REDIS_HOST = 'localhost'
+SESSION_REDIS_PORT = 6379
+SESSION_REDIS_DB = 3
+SESSION_REDIS_PASSWORD = ''
 
 # ws4redis
 WS4REDIS_SERVER = 'localhost'
