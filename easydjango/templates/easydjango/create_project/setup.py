@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Setup file for the EasyDjango project.
-"""
-
+"""Setup file for {project_name}"""
+__author__ = '{author_name}'
 import codecs
 import os.path
 import re
-
 import sys
 from setuptools import setup, find_packages
 
-# avoid a from easydjango import __version__ as version (that compiles easydjango.__init__
+# avoid a from '{package_name}' import __version__ as version (that compiles {package_name}.__init__
 #   and is not compatible with bdist_deb)
 version = None
-for line in codecs.open(os.path.join('easydjango', '__init__.py'), 'r', encoding='utf-8'):
+for line in codecs.open(os.path.join('{package_name}', '__init__.py'), 'r', encoding='utf-8'):
     matcher = re.match(r"""^__version__\s*=\s*['"](.*)['"]\s*$""", line)
     version = version or matcher and matcher.group(1)
 python_version = (sys.version_info[0], sys.version_info[1])
@@ -22,28 +20,20 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding=
     long_description = fd.read()
 
 
-extras_requirements = {}
-install_requirements = ['django', 'celery', 'gunicorn', 'django-bootstrap3', 'redis']
-if python_version < (3, 3):
-    install_requirements.append('funcsigs')
-
-entry_points = {'console_scripts': [
-    'easydjango-ctl = easydjango.scripts:control',
-    'easydjango-celery = easydjango.scripts:celery',
-    'easydjango-django = easydjango.scripts:django',
-    'easydjango-uwsgi = easydjango.scripts:uwsgi',
-    'easydjango-gunicorn = easydjango.scripts:gunicorn',
-    'easydjango-createproject = easydjango.scripts:create_project'
-                                     ]}
-extras_requirements['deb'] = ['stdeb>=0.8.5']
-extras_requirements['extra'] = ['django-pipeline', 'django-debug-toolbar', 'django-redis-sessions', ]
+entry_points = dict(console_scripts=[
+    '{package_name}-ctl = easydjango.scripts:control',
+    '{package_name}-celery = easydjango.scripts:celery',
+    '{package_name}-django = easydjango.scripts:django',
+    '{package_name}-uwsgi = easydjango.scripts:uwsgi',
+    '{package_name}-gunicorn = easydjango.scripts:gunicorn',
+                                     ])
 
 setup(
     name='easydjango',
     version=version,
     description='No description yet.',
     long_description=long_description,
-    author='Matthieu Gallet',
+    author='{author_name}',
     author_email='github@19pouces.net',
     license='CeCILL-B',
     url='',
@@ -51,10 +41,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    test_suite='easydjango.tests',
-    install_requires=install_requirements,
-    extras_require=extras_requirements,
-    setup_requires=[],
+    install_requires=['easydjango'],
     classifiers=['Development Status :: 3 - Alpha', 'Operating System :: MacOS :: MacOS X',
                  'Operating System :: Microsoft :: Windows', 'Operating System :: POSIX :: BSD',
                  'Operating System :: POSIX :: Linux', 'Operating System :: Unix',

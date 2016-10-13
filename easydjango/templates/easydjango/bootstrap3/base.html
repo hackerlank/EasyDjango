@@ -37,14 +37,13 @@
             {% else %}{{ ed_project_name |capfirst}}{% endif %}
         </div>
         <div id="navbar" class="navbar-collapse collapse">
-
-            {% block navbar-search %}{% if ed_has_site_search %}
+            {% block navbar-search %}{% if ed_has_site_search_view %}
             <form class="navbar-form navbar-right" method="get" action="{% url 'ed:site_search' %}">
                 <input type="text" placeholder="{% trans 'search…' %}" class="form-control" name="q">
                 <button type="submit" class="btn btn-success">{% trans 'Search' %}</button>
             </form>{% endif %}{% endblock %}
 
-            {% block navbar-login %}
+            {% block navbar-login %}{% if ed_has_login_view %}
             <ul class="nav navbar-nav navbar-right">
                 {% if ed_user.is_anonymous %}
                 <li><a title="{% trans 'Log-in' %}" href="{% url 'ed:login' %}">{% bootstrap_icon 'log-in' %}</a></li>
@@ -57,7 +56,7 @@
  </li>
                 {% endif %}
             </ul>
-            {% endblock %}
+            {% endif %}{% endblock %}
         </div>
     </div>
 </nav>

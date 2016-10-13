@@ -12,6 +12,7 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
+from django.views.generic import TemplateView
 
 from easydjango.decorators import validate_form, everyone
 from easydjango.tasks import set_websocket_topics
@@ -23,9 +24,21 @@ validate_form(form_cls=PasswordResetForm,
               path='easydjango_validate_password_reset', is_allowed_to=everyone)
 
 
-def login(request):
-    creation_form = None
-    if request.method == 'POST':
+class LoginView(TemplateView):
+    template_name = 'easydjango/bootstrap3/login.html'
+    allow_account_creation = True
+
+    def get(self, request, *args, **kwargs):
+        creation_form = None
+        authentication_form = AuthenticationForm(request)
+        if self.allow_account_creation:
+            creation_form = UserCreationForm()
+        set_websocket_topics(request)
+        context = {'creation_form': creation_form, 'authentication_form': authentication_form}
+        return self.render_to_response(context)
+
+    def post(self, request):
+        creation_form = None
         authentication_form = AuthenticationForm(request, request.POST)
         if authentication_form.is_valid():
             auth_login(request, authentication_form.get_user())
@@ -36,17 +49,13 @@ def login(request):
             return HttpResponseRedirect(redirect_to)
         elif 'password' in request.POST:
             messages.warning(request, _('Invalid username or password.'))
-        elif settings.EASYDJANGO_ALLOW_ACCOUNT_CREATION:
+        elif self.allow_account_creation:
             creation_form = UserCreationForm(request.POST)
             if creation_form.is_valid():
                 creation_form.save()
-    else:
-        authentication_form = AuthenticationForm(request)
-        if settings.EASYDJANGO_ALLOW_ACCOUNT_CREATION:
-            creation_form = UserCreationForm()
-    template_values = {'creation_form': creation_form, 'authentication_form': authentication_form}
-    set_websocket_topics(request)
-    return TemplateResponse(request, 'easydjango/bootstrap3/login.html', template_values)
+        set_websocket_topics(request)
+        context = {'creation_form': creation_form, 'authentication_form': authentication_form}
+        return self.render_to_response(context)
 
 
 def logout(request):

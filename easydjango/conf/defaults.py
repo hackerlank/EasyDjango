@@ -257,7 +257,6 @@ BOOTSTRAP3 = {
 # ######################################################################################################################
 # easydjango
 EASYDJANGO_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
-EASYDJANGO_INDEX = '{PROJECT_NAME}.views.index'
 EASYDJANGO_INSTALLED_APPS = ['{PROJECT_NAME}']
 EASYDJANGO_MIDDLEWARE_CLASSES = []
 EASYDJANGO_REMOTE_USER_HEADER = None  # Remote-User
@@ -266,8 +265,9 @@ EASYDJANGO_CSS = []
 EASYDJANGO_JS = []
 EASYDJANGO_TEMPLATE_BASE = 'bootstrap3'  # or "metro-ui". Unused if you use your own base templates
 EASYDJANGO_ALLOW_ACCOUNT_CREATION = True
-EASYDJANGO_SITE_SEARCH_VIEW = 'easydjango.views.search.UserSearchView'
 EASYDJANGO_INDEX_VIEW = 'easydjango.views.index.IndexView'
+EASYDJANGO_SITE_SEARCH_VIEW = 'easydjango.views.search.UserSearchView'
+EASYDJANGO_LOGIN_VIEW = 'easydjango.views.auth.LoginView'
 # django-npm
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],

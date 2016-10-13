@@ -6,10 +6,8 @@ import uuid
 
 from celery import shared_task
 from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db.models import Model
-from django.utils.module_loading import import_string
 from django.utils.lru_cache import lru_cache
+from django.utils.module_loading import import_string
 from django.utils.six import text_type
 from redis import StrictRedis
 
@@ -43,7 +41,8 @@ def set_websocket_topics(request, *topics):
     prefix = settings.WS4REDIS_PREFIX
     request = SignalRequest.from_request(request)
     topic_strings = {prefix + _topic_serializer(request, x) for x in topics if x is not SERVER}
-    if request.user.is_authenticated():
+    # noinspection PyUnresolvedReferences
+    if request.user and request.user.is_authenticated():
         topic_strings.add(prefix + _topic_serializer(request, USER))
     topic_strings.add(prefix + _topic_serializer(request, WINDOW))
     topic_strings.add(prefix + _topic_serializer(request, BROADCAST))

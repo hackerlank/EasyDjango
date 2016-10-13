@@ -186,3 +186,22 @@ def uwsgi():
     p = subprocess.Popen(argv)
     p.wait()
     sys.exit(p.returncode)
+
+
+def create_project():
+    import easydjango
+    base_path = os.path.dirname(easydjango.__file__)
+    template_base_path = os.path.join(base_path, 'templates', 'easydjango', 'create_project')
+    template_values = {'author_name': '', 'version': '',
+                       'project_name': '', 'package_name': '',
+                       }
+    dest_path = None
+    for root, dirnames, filenames in os.walk(template_base_path):
+        for dirname in dirnames:
+            src_path = os.path.join(root, dirname)
+            dst_path = os.path.relpath(src_path, template_base_path)
+            dst_path = dst_path.format(**template_values)
+        for filename in filenames:
+            src_path = os.path.join(root, filename)
+            dst_path = os.path.relpath(src_path, template_base_path)
+            dst_path = dst_path.format(**template_values)
