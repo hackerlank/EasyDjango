@@ -14,7 +14,8 @@ __author__ = 'Matthieu Gallet'
 
 
 class Command(BaseCommand):
-    help = 'show the current configuration'
+    help = 'show the current configuration.' \
+           'Can display as python file ("config python") or as .ini file ("config ini"). Use -v 2 to display more info.'
 
     def add_arguments(self, parser):
         assert isinstance(parser, ArgumentParser)

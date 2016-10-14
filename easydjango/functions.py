@@ -30,6 +30,7 @@ class TestForm(forms.Form):
     age = forms.IntegerField(label='Age')
 
 
+# noinspection PyUnusedLocal
 @function(path='test_function', is_allowed_to=everyone)
 def test_function(request):
     # TODO to remove before release

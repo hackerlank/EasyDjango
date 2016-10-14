@@ -28,7 +28,7 @@ def init_websocket(context):
     script = '$(document).ready(function() { $.ed._wsConnect("%s://%s%s?token=%s"); });' % \
              (protocol, site_name, settings.WEBSOCKET_URL, signed_token)
     init_value = '<script type="application/javascript">%s</script>' % script
-    init_value += '<script type="text/javascript" src="%s" charset="utf-8"></script>' % reverse('signals')
+    init_value += '<script type="text/javascript" src="%s" charset="utf-8"></script>' % reverse('ed:signals')
     return mark_safe(init_value)
 
 

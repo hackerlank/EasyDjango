@@ -124,7 +124,9 @@ USE_X_FORWARDED_HOST = True  # X-Forwarded-Host
 WSGI_APPLICATION = 'easydjango.wsgi.application'
 
 # django.contrib.auth
-AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
+AUTHENTICATION_BACKENDS = (
+    'easydjango.backends.DefaultGroupsRemoteUserBackend',
+    'django.contrib.auth.backends.ModelBackend',)
 
 # django.contrib.sessions
 if USE_DJANGO_REDIS_SESSION:
@@ -206,6 +208,10 @@ PIPELINE_CSS = {
                              'css/easydjango-metro-ui.css', ExpandIterable('EASYDJANGO_CSS')],
         'output_filename': 'css/metro-ui-all.css', 'extra_context': {'media': 'all'},
     },
+    'ie9': {
+        'source_filenames': [],
+        'output_filename': 'css/ie9.css', 'extra_context': {'media': 'all'},
+    },
 }
 PIPELINE_JS = {
     'default': {
@@ -256,18 +262,18 @@ BOOTSTRAP3 = {
 #
 # ######################################################################################################################
 # easydjango
+EASYDJANGO_CSS = []
+EASYDJANGO_JS = []
+EASYDJANGO_INDEX_VIEW = 'easydjango.views.index.IndexView'
+EASYDJANGO_SITE_SEARCH_VIEW = 'easydjango.views.search.UserSearchView'
+EASYDJANGO_LOGIN_VIEW = 'easydjango.views.auth.LoginView'
+
 EASYDJANGO_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
 EASYDJANGO_INSTALLED_APPS = ['{PROJECT_NAME}']
 EASYDJANGO_MIDDLEWARE_CLASSES = []
 EASYDJANGO_REMOTE_USER_HEADER = None  # Remote-User
+EASYDJANGO_DEFAULT_GROUPS = ['Users']
 EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
-EASYDJANGO_CSS = []
-EASYDJANGO_JS = []
-EASYDJANGO_TEMPLATE_BASE = 'bootstrap3'  # or "metro-ui". Unused if you use your own base templates
-EASYDJANGO_ALLOW_ACCOUNT_CREATION = True
-EASYDJANGO_INDEX_VIEW = 'easydjango.views.index.IndexView'
-EASYDJANGO_SITE_SEARCH_VIEW = 'easydjango.views.search.UserSearchView'
-EASYDJANGO_LOGIN_VIEW = 'easydjango.views.auth.LoginView'
 # django-npm
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],

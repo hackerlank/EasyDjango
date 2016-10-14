@@ -6,12 +6,15 @@ Define "main" functions for your scripts using the Django `manage.py` system or 
 """
 from __future__ import unicode_literals, absolute_import, print_function
 
+import codecs
 import glob
 import os
 import re
+import shutil
 import subprocess
 import sys
 from argparse import ArgumentParser
+from collections import OrderedDict
 
 from easydjango.conf.merger import SettingMerger
 from easydjango.conf.providers import PythonModuleProvider, PythonFileProvider, IniConfigProvider, \
@@ -86,7 +89,7 @@ def set_env():
     # django settings
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'easydjango.conf.settings')
     # project name
-    script_re = re.match(r'^([\w_\-.]+)-(ctl|manage|gunicorn|celery|uwsgi)(\.py|\.pyc|)$',
+    script_re = re.match(r'^([\w_\-.]+)-(ctl|gunicorn|celery|uwsgi|django)(\.py|\.pyc|)$',
                          os.path.basename(sys.argv[0]))
     if script_re:
         project_name = script_re.group(1)
@@ -190,18 +193,62 @@ def uwsgi():
 
 def create_project():
     import easydjango
+    inp = input
+    if sys.version_info[0] == 2:
+        inp = raw_input
     base_path = os.path.dirname(easydjango.__file__)
     template_base_path = os.path.join(base_path, 'templates', 'easydjango', 'create_project')
-    template_values = {'author_name': '', 'version': '',
-                       'project_name': '', 'package_name': '',
-                       }
-    dest_path = None
+    template_values = {}
+    default_values = [('project_name', 'Your new project name', 'MyProject'),
+                      ('package_name', 'Python package name', ''),
+                      ('version', 'Initial version', '0.1'),
+                      ('dst_dir', 'Root project path', '.'), ]
+    for key, text, default_value in default_values:
+        if key == 'package_name':
+            default_value = re.sub('[^a-z0-9_]', '_', template_values['project_name'].lower())
+            while default_value[0:1] in '0123456789_':
+                default_value = default_value[1:]
+        value = None
+        while not value:
+            value = inp('%s [%s] ' % (text, default_value))
+            if not value:
+                value = default_value
+        template_values[key] = value
+    dst_dir = template_values['dst_dir']
+
+    if os.path.exists(dst_dir):
+        value = ''
+        while not value:
+            value = inp('%s already exists. Do you want to remove it? [Y/n]')
+            value = value.lower()
+            if value == 'n':
+                return
+            elif value != 'y':
+                value = ''
+        if os.path.isdir(dst_dir):
+            shutil.rmtree(dst_dir)
+        if os.path.exists(dst_dir):
+            os.remove(dst_dir)
+
     for root, dirnames, filenames in os.walk(template_base_path):
         for dirname in dirnames:
             src_path = os.path.join(root, dirname)
             dst_path = os.path.relpath(src_path, template_base_path)
             dst_path = dst_path.format(**template_values)
+            dst_path = os.path.join(dst_dir, dst_path)
+            print('%s -> %s' % (src_path, dst_path))
+            if not os.path.isdir(dst_path):
+                os.makedirs(dst_path)
         for filename in filenames:
             src_path = os.path.join(root, filename)
             dst_path = os.path.relpath(src_path, template_base_path)
             dst_path = dst_path.format(**template_values)
+            dst_path = os.path.join(dst_dir, dst_path)
+            print('%s -> %s' % (src_path, dst_path))
+            dirname = os.path.dirname(dst_path)
+            if not os.path.isdir(dirname):
+                os.makedirs(dirname)
+            with codecs.open(dst_path, 'w', encoding='utf-8') as out_fd:
+                with codecs.open(src_path, 'r', encoding='utf-8') as in_fd:
+                    content = in_fd.read().format(**template_values)
+                    out_fd.write(content)

@@ -12,7 +12,7 @@ __author__ = 'Matthieu Gallet'
 
 
 class IndexView(TemplateView):
-    template_name = 'easydjango/%s/index.html' % settings.EASYDJANGO_TEMPLATE_BASE
+    template_name = 'easydjango/bootstrap3/index.html'
 
     def get(self, request, *args, **kwargs):
         messages.info(request, 'message (info)')

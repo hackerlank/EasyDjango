@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Setup file for {project_name}"""
-__author__ = '{author_name}'
 import codecs
 import os.path
 import re
@@ -19,22 +18,17 @@ python_version = (sys.version_info[0], sys.version_info[1])
 with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as fd:
     long_description = fd.read()
 
-
-entry_points = dict(console_scripts=[
-    '{package_name}-ctl = easydjango.scripts:control',
-    '{package_name}-celery = easydjango.scripts:celery',
-    '{package_name}-django = easydjango.scripts:django',
-    '{package_name}-uwsgi = easydjango.scripts:uwsgi',
-    '{package_name}-gunicorn = easydjango.scripts:gunicorn',
-                                     ])
+entry_points = dict(console_scripts=['{package_name}-ctl = easydjango.scripts:control',
+                                     '{package_name}-celery = easydjango.scripts:celery',
+                                     '{package_name}-django = easydjango.scripts:django',
+                                     '{package_name}-uwsgi = easydjango.scripts:uwsgi',
+                                     '{package_name}-gunicorn = easydjango.scripts:gunicorn', ])
 
 setup(
-    name='easydjango',
+    name='{project_name}',
     version=version,
     description='No description yet.',
     long_description=long_description,
-    author='{author_name}',
-    author_email='github@19pouces.net',
     license='CeCILL-B',
     url='',
     entry_points=entry_points,
