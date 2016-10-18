@@ -1,0 +1,38 @@
+{% load bootstrap3 i18n l10n %}
+<div class="col-md-6 col-sm-8 col-xs-12">
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">{% trans 'Request info' %}</h3>
+        </div>
+        <div class="panel-body">
+            <ul>
+                <li><strong>{% trans 'User: '%}</strong>
+                    {% if not ed_user %}<span class="label label-danger">{% trans 'no user' %}</span>
+                    {% elif not ed_user.is_authenticated %}<span class="label label-warning">{% trans 'anonymous user' %}</span>
+                    {% else %}<span class="label label-success">{{ ed_user }}</span>
+                    {% endif %}
+                </li>
+                <li>
+                    <strong>{% trans 'Remote address: ' %}</strong>{{ remote_address }}
+                </li>
+                {% if remote_user %}
+                <li><strong>{% trans 'Remote user header: ' %}</strong>{{ remote_user.0|upper }} =
+                    {% if remote_user.1 %}<span class="label label-success">{{ remote_user.1 }}</span>
+                    {% else %}<span class="label label-danger">{% trans 'empty' %}</span>
+                    {% endif %}
+                </li>
+                {% endif %}
+                    {% if secure_proxy_ssl_header %}
+                <li><strong>{% trans 'Secure proxy SSL header: ' %}</strong>{{ secure_proxy_ssl_header.0|upper }} =
+                    {% if secure_proxy_ssl_header.2 %}<span
+                            class="label label-success">{{ secure_proxy_ssl_header.1 }}</span>
+                    {% elif secure_proxy_ssl_header.1 %}<span
+                            class="label warning">{{ secure_proxy_ssl_header.1 }}</span>
+                    {% else %}<span class="label label-danger">{% trans 'empty' %}</span>
+                    {% endif %}
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>

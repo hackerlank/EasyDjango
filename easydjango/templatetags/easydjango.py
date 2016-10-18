@@ -82,6 +82,17 @@ def fontawesome_icon(name, large=False, fixed=False, spin=False, li=False, rotat
     ))
 
 
+@register.filter(name='ed_level')
+def ed_level(value, bounds='80:95'):
+    # noinspection PyTypeChecker
+    warning, error = [float(x) for x in bounds.split(':')]
+    if value < warning <= error or error <= warning < value:
+        return 'success'
+    elif warning <= value < error or error < value <= warning:
+        return 'warning'
+    return 'danger'
+
+
 @register.simple_tag(takes_context=True)
 def ed_messages(context, style='banner'):
     """

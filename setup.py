@@ -23,7 +23,7 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding=
 
 
 extras_requirements = {}
-install_requirements = ['django', 'celery', 'gunicorn', 'django-bootstrap3', 'redis']
+install_requirements = ['django>=1.8', 'celery', 'gunicorn', 'django-bootstrap3', 'redis', 'pip']
 if python_version < (3, 3):
     install_requirements.append('funcsigs')
 
@@ -36,7 +36,7 @@ entry_points = {'console_scripts': [
     'easydjango-createproject = easydjango.scripts:create_project'
                                      ]}
 extras_requirements['deb'] = ['stdeb>=0.8.5']
-extras_requirements['extra'] = ['django-pipeline', 'django-debug-toolbar', 'django-redis-sessions', ]
+extras_requirements['extra'] = ['django-pipeline', 'django-debug-toolbar', 'django-redis-sessions', 'psutil']
 
 setup(
     name='easydjango',

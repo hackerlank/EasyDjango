@@ -46,7 +46,7 @@
             {% block navbar-login %}{% if ed_has_login_view %}
             <ul class="nav navbar-nav navbar-right">
                 {% if ed_user.is_anonymous %}
-                <li><a title="{% trans 'Log-in' %}" href="{% url 'ed:login' %}">{% bootstrap_icon 'log-in' %}</a></li>
+                <li><a title="{% trans 'Log-in' %}" href="{% url 'login' %}">{% bootstrap_icon 'log-in' %}</a></li>
                 {% elif ed_remote_username %}
                 <li>{{ ed_user }}</li>
                 {% else %}
@@ -54,6 +54,9 @@
                 </li>
                 <li><a href="{% url 'ed:set_password' %}" title="{% trans 'Change your password' %}">{% bootstrap_icon 'edit' %}</a>
  </li>
+                {% endif %}
+                {% if ed_user and ed_user.is_staff %}
+                <li><a href="{% url 'ed:system_state' %}" title="{% trans 'Check system state' %}">{% bootstrap_icon 'cog' %}</a></li>
                 {% endif %}
             </ul>
             {% endif %}{% endblock %}

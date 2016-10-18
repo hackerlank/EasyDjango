@@ -271,9 +271,16 @@ EASYDJANGO_LOGIN_VIEW = 'easydjango.views.auth.LoginView'
 EASYDJANGO_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
 EASYDJANGO_INSTALLED_APPS = ['{PROJECT_NAME}']
 EASYDJANGO_MIDDLEWARE_CLASSES = []
-EASYDJANGO_REMOTE_USER_HEADER = None  # Remote-User
+EASYDJANGO_REMOTE_USER_HEADER = None  # HTTP-REMOTE-USER
 EASYDJANGO_DEFAULT_GROUPS = ['Users']
 EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
+EASYDJANGO_CHECKED_REQUIREMENTS = ['django>=1.12', 'django<=1.13', 'celery', 'django-bootstrap3', 'redis', 'pip',
+                                   'psutil']
+EASYDJANGO_SYSTEM_CHECKS = ['easydjango.views.monitoring.System',
+                            'easydjango.views.monitoring.CeleryStats',
+                            'easydjango.views.monitoring.Request',
+                            'easydjango.views.monitoring.Packages',
+                            ]
 # django-npm
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],

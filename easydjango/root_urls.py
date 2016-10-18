@@ -30,6 +30,9 @@ urlpatterns = [url(r'^admin/', include(admin.site.urls)),
                url(r'^robots\.txt$', robots),
                url(r'^favicon\.ico$', favicon, name='favicon'),
                ] + list(extra_urls)
+if settings.EASYDJANGO_LOGIN_VIEW:
+    login_view = import_string(settings.EASYDJANGO_LOGIN_VIEW)
+    urlpatterns += [url(r'^%s' % settings.LOGIN_URL[1:], login_view.as_view(), name='login')]
 
 if settings.EASYDJANGO_INDEX_VIEW:
     index_view = import_string(settings.EASYDJANGO_INDEX_VIEW)

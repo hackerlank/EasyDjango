@@ -3,11 +3,12 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 import random
 
+import time
 from django import forms
 from django.contrib.auth.forms import SetPasswordForm
 from django.http import QueryDict
 
-from easydjango.decorators import function, everyone, validate_form, is_authenticated
+from easydjango.decorators import function, everyone, validate_form, is_authenticated, signal
 
 __author__ = 'Matthieu Gallet'
 
@@ -28,6 +29,12 @@ class TestForm(forms.Form):
     email = forms.EmailField(label='Email', help_text='Please enter your e-mail')
     name = forms.CharField(label='Name', help_text='Please enter your name')
     age = forms.IntegerField(label='Age')
+
+
+@signal(path='slow_sig')
+def slow_signal(request):
+    print(request)
+    time.sleep(10)
 
 
 # noinspection PyUnusedLocal

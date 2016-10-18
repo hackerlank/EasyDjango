@@ -79,7 +79,7 @@ def password_reset(request):
     return TemplateResponse(request, 'easydjango/bootstrap3/password_reset.html', template_values)
 
 
-@login_required(login_url='ed:login')
+@login_required(login_url='login')
 def set_password(request):
     if request.method == 'POST':
         set_password_form = SetPasswordForm(request.user, request.POST)
