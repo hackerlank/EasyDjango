@@ -7,10 +7,15 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext as _
 
-from easydjango.decorators import signal, everyone
+from easydjango.decorators import signal, everyone, is_staff
 from easydjango.tasks import call, SERVER, BROADCAST, WINDOW
 
 __author__ = 'Matthieu Gallet'
+
+
+@signal(path='ed.monitoring.check_ws', is_allowed_to=is_staff)
+def check_websockets(request):
+    call(request, 'ed.monitoring.checked_ws', to=[WINDOW])
 
 
 @signal(is_allowed_to=everyone, path='auth.check_user_creation')

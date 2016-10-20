@@ -3,7 +3,6 @@
 
     * database states (Django databases (version) + Redis),
     * Logs
-    * remote user, http(s), remote ip, user, USE_X_FORWARDED_HOST, USE_X_FORWARDED_FOR
 
 """
 from __future__ import unicode_literals, print_function, absolute_import
@@ -14,11 +13,15 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.template.loader import get_template
 from django.template.response import TemplateResponse
+from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.six import text_type
+from django.views.decorators.cache import never_cache
 from pkg_resources import parse_requirements, Distribution
 
 from easydjango.celery import app
+from easydjango.conf.settings import merger
+from easydjango.tasks import set_websocket_topics
 
 try:
     # noinspection PyPackageRequirements
@@ -133,23 +136,57 @@ class RequestCheck(MonitoringCheck):
     template = 'easydjango/bootstrap3/monitoring/request_check.html'
 
     def get_context(self, request):
-        context = {'remote_user': None, 'remote_address': request.META['REMOTE_ADDR']}
+        def django_fmt(y):
+            return y.upper().replace('-', '_')
+
+        def http_fmt(y):
+            return y.upper().replace('_', '-')
+
+        context = {'remote_user': None, 'remote_address': request.META['REMOTE_ADDR'], 'use_x_forwarded_for': None,
+                   'secure_proxy_ssl_header': None}
         header = settings.EASYDJANGO_REMOTE_USER_HEADER
         if header:
-            context['remote_user'] = (header, request.META.get(header))
+            context['remote_user'] = (http_fmt(header), request.META.get(django_fmt(header)))
+        header = settings.USE_X_FORWARDED_FOR and 'X_FORWARDED_FOR'
+        if header:
+            context['use_x_forwarded_for'] = (http_fmt(header), request.META.get(django_fmt(header)))
         context['secure_proxy_ssl_header'] = None
         if settings.SECURE_PROXY_SSL_HEADER:
             header, value = settings.SECURE_PROXY_SSL_HEADER
-            context['secure_proxy_ssl_header'] = (header, request.META.get(header), request.META.get(header) == value)
+            context['secure_proxy_ssl_header'] = (http_fmt(header), request.META.get(django_fmt(header)),
+                                                  request.META.get(django_fmt(header)) == value)
+        host, sep, port = request.get_host().partition(':')
+        context['allowed_hosts'] = settings.ALLOWED_HOSTS
+        context['allowed_host'] = host in settings.ALLOWED_HOSTS
+        context['request_host'] = host
+        context['request_site'] = None
+        if hasattr(request, 'site'):
+            context['request_site'] = request.site
+            context['request_site_valid'] = request.site == host
+        context['server_name'] = settings.SERVER_NAME
+        context['server_name_valid'] = settings.SERVER_NAME == host
+        context['debug'] = settings.DEBUG
+        context['settings_providers'] = [p for p in merger.providers if p.is_valid()]
         return context
 
 
+class LogLastLines(MonitoringCheck):
+    template = 'easydjango/bootstrap3/monitoring/log_last_lines.html'
+
+    def get_context(self, request):
+        return {}
+
+
+system_checks = [import_string(x)() for x in settings.EASYDJANGO_SYSTEM_CHECKS]
+
+
+@never_cache
 @login_required(login_url='login')
 def system_state(request):
     if not request.user or not request.user.is_staff:
         raise Http404
-    components = [System(), Packages(), RequestCheck(), CeleryStats()]
-    components_values = [x.render(request) for x in components]
+    components_values = [x.render(request) for x in system_checks]
     template_values = {'components': components_values}
+    set_websocket_topics(request)
     return TemplateResponse(request, template='easydjango/bootstrap3/system_state.html',
                             context=template_values)

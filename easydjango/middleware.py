@@ -21,7 +21,9 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
     * handle HTTP basic authentication
     * set response header for Internet Explorer (to use its most recent render engine)
     """
-    remote_user_header = settings.EASYDJANGO_REMOTE_USER_HEADER
+    header = settings.EASYDJANGO_REMOTE_USER_HEADER
+    if header:
+        header = header.upper().replace('-', '_')
 
     # noinspection PyMethodMayBeStatic
     def process_request(self, request):
@@ -41,8 +43,11 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
                 if user:
                     request.user = user
                     auth.login(request, user)
+        username = settings.EASYDJANGO_FAKE_AUTHENTICATION_USERNAME
+        if username and settings.DEBUG:
+            request.META[self.header] = username
 
-        if self.remote_user_header and self.remote_user_header in request.META:
+        if self.header and self.header in request.META:
             if not request.user.is_authenticated():
                 self.remote_user_authentication(request)
 
@@ -61,7 +66,7 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
                 " MIDDLEWARE_CLASSES setting to insert"
                 " 'django.contrib.auth.middleware.AuthenticationMiddleware'"
                 " before the RemoteUserMiddleware class.")
-        remote_username = request.META.get(self.remote_user_header)
+        remote_username = request.META.get(self.header)
         if not remote_username or remote_username == '(null)':  # special case due to apache2+auth_mod_kerb :-(
             return
         username = self.format_remote_username(remote_username)

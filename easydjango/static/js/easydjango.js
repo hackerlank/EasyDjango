@@ -9,6 +9,7 @@
     $.ed._signalIds = {};
     $.ed._functionCallPromises = {};
     $.ed._registered_signals = {};
+    $.ed._wsBuffer = [];
     $.ed._closeHTMLNotification = function (id) {
         $("#" + id).fadeOut(400, "swing", function () { $("#" + id).remove()});
         delete $.ed._notificationClosers[id];
@@ -38,11 +39,16 @@
     $.ed._wsConnect = function (edWsUrl) {
         "use strict";
         var url = edWsUrl;
-        $.ed._wsConnection = new WebSocket(edWsUrl);
-        $.ed._wsConnection.onopen = function() {
+        var connection = new WebSocket(edWsUrl);
+        connection.onopen = function() {
+            $.ed._wsConnection = connection;
             console.log("websocket connected");
+            for(var i=0; i < $.ed._wsBuffer.length; i++) {
+                connection.send($.ed._wsBuffer[i]);
+            }
+            $.ed._wsBuffer = [];
         };
-        $.ed._wsConnection.onmessage = function(e) {
+        connection.onmessage = function(e) {
             console.log("Received: " + e.data);
             if (e.data == $.ed._heartbeatMessage) {
                 $.ed._wsConnection.send(e.data);
@@ -61,11 +67,12 @@
                 }
             };
         };
-        $.ed._wsConnection.onerror = function(e) {
+        connection.onerror = function(e) {
             console.error(e);
         };
-        $.ed._wsConnection.onclose = function(e) {
+        connection.onclose = function(e) {
             console.log("connection closed");
+            $.ed._wsConnection = null;
             setTimeout(function () {$.ed._wsConnect(url);}, 5000);
         }
     }
@@ -75,7 +82,14 @@
             if (id) {
                 return;
             }
-            $.ed._wsConnection.send(JSON.stringify({signal: signal, opts: opts}));
+            var msg = JSON.stringify({signal: signal, opts: opts});
+            if ($.ed._wsConnection) {
+                console.error("on envoie le message");
+                $.ed._wsConnection.send(msg);
+            } else {
+                console.error("on ajoute au buffer");
+                $.ed._wsBuffer.push(msg);
+            }
         };
         $.ed.connect(signal, wrapper);
     };

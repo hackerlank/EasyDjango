@@ -9,7 +9,7 @@ from easydjango.conf.fields import ConfigField
 from easydjango.conf.providers import IniConfigProvider
 from easydjango.conf.settings import merger
 from easydjango import __version__ as version
-from django.utils.translation import ugettext as _, ugettext_lazy
+from django.utils.translation import ugettext as _
 __author__ = 'Matthieu Gallet'
 
 

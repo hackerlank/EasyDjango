@@ -169,6 +169,8 @@ SERVER_PORT = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).port or (
 USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
 USE_SSL = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).scheme == 'https', 'SERVER_BASE_URL')
 USE_X_FORWARDED_FOR = True  # X-Forwarded-For
+USE_X_SEND_FILE = False  # Apache module
+X_ACCEL_REDIRECT = []  # paths used by nginx
 
 # ws4redis
 WEBSOCKET_URL = '/ws/'
@@ -272,15 +274,15 @@ EASYDJANGO_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
 EASYDJANGO_INSTALLED_APPS = ['{PROJECT_NAME}']
 EASYDJANGO_MIDDLEWARE_CLASSES = []
 EASYDJANGO_REMOTE_USER_HEADER = None  # HTTP-REMOTE-USER
+EASYDJANGO_FAKE_AUTHENTICATION_USERNAME = 'testuser'
 EASYDJANGO_DEFAULT_GROUPS = ['Users']
 EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
 EASYDJANGO_CHECKED_REQUIREMENTS = ['django>=1.12', 'django<=1.13', 'celery', 'django-bootstrap3', 'redis', 'pip',
                                    'psutil']
-EASYDJANGO_SYSTEM_CHECKS = ['easydjango.views.monitoring.System',
+EASYDJANGO_SYSTEM_CHECKS = ['easydjango.views.monitoring.RequestCheck',
+                            'easydjango.views.monitoring.System',
                             'easydjango.views.monitoring.CeleryStats',
-                            'easydjango.views.monitoring.Request',
-                            'easydjango.views.monitoring.Packages',
-                            ]
+                            'easydjango.views.monitoring.Packages', ]
 # django-npm
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],

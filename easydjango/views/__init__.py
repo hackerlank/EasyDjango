@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import mimetypes
+import os
+
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import add_domain
+from django.http import HttpResponse
 from django.http import HttpResponsePermanentRedirect
+from django.http import StreamingHttpResponse
 from django.template.response import TemplateResponse
 from django.utils.lru_cache import lru_cache
+from django.utils.six import binary_type
+from djangofloor.views import read_file_in_chunks
 
 from easydjango.decorators import REGISTERED_SIGNALS, REGISTERED_FUNCTIONS
 from easydjango.request import SignalRequest
@@ -64,5 +71,45 @@ def signals(request):
                             content_type=__get_js_mimetype())
 
 
-def system_check(request):
-    pass
+def send_file(filepath, mimetype=None, force_download=False):
+    """Send a local file. This is not a Django view, but a function that is called at the end of a view.
+
+    If `settings.USE_X_SEND_FILE` (mod_xsendfile is a mod of Apache), then return an empty HttpResponse with the
+    correct header. The file is directly handled by Apache instead of Python.
+    If `settings.X_ACCEL_REDIRECT_ARCHIVE` is defined (as a list of tuple (directory, alias_url)) and filepath is
+    in one of the directories, return an empty HttpResponse with the correct header.
+    This is only available with Nginx.
+
+    Otherwise, return a StreamingHttpResponse to avoid loading the whole file in memory.
+
+    :param filepath: absolute path of the file to send to the client.
+    :param mimetype: MIME type of the file (returned in the response header)
+    :param force_download: always force the client to download the file.
+    :rtype: `StreamingHttpResponse` or `HttpResponse`
+    """
+    if mimetype is None:
+        (mimetype, encoding) = mimetypes.guess_type(filepath)
+        if mimetype is None:
+            mimetype = 'text/plain'
+    if isinstance(mimetype, binary_type):
+        # noinspection PyTypeChecker
+        mimetype = mimetype.decode('utf-8')
+    filepath = os.path.abspath(filepath)
+    if settings.USE_X_SEND_FILE:
+        response = HttpResponse(content_type=mimetype)
+        response['X-SENDFILE'] = filepath
+    else:
+        for dirpath, alias_url in settings.X_ACCEL_REDIRECT:
+            if filepath.startswith(dirpath):
+                response = HttpResponse(content_type=mimetype)
+                response['Content-Disposition'] = 'attachment; filename={0}'.format(os.path.basename(filepath))
+                response['X-Accel-Redirect'] = alias_url + filepath
+                break
+        else:
+            # noinspection PyTypeChecker
+            fileobj = open(filepath, 'rb')
+            response = StreamingHttpResponse(read_file_in_chunks(fileobj), content_type=mimetype)
+            response['Content-Length'] = os.path.getsize(filepath)
+    if force_download or not (mimetype.startswith('text') or mimetype.startswith('image')):
+        response['Content-Disposition'] = 'attachment; filename={0}'.format(os.path.basename(filepath))
+    return response

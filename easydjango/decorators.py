@@ -60,6 +60,10 @@ def is_anonymous(request):
     return request.is_anonymous()
 
 
+def is_staff(request):
+    return request.is_staff
+
+
 # noinspection PyPep8Naming
 class has_perm(object):
     """restrict a WS signal or a WS function to users with permission "perm"
