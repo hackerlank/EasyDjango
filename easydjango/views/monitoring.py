@@ -160,6 +160,8 @@ class RequestCheck(MonitoringCheck):
         context['allowed_host'] = host in settings.ALLOWED_HOSTS
         context['request_host'] = host
         context['request_site'] = None
+        context['fake_username'] = settings.EASYDJANGO_FAKE_AUTHENTICATION_USERNAME
+        # noinspection PyTypeChecker
         if hasattr(request, 'site'):
             context['request_site'] = request.site
             context['request_site_valid'] = request.site == host

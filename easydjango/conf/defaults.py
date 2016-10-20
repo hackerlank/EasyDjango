@@ -84,6 +84,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -171,7 +172,14 @@ USE_SSL = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).scheme == 'ht
 USE_X_FORWARDED_FOR = True  # X-Forwarded-For
 USE_X_SEND_FILE = False  # Apache module
 X_ACCEL_REDIRECT = []  # paths used by nginx
-
+EASYDJANGO_SYSTEM_CHECKS = ['easydjango.views.monitoring.RequestCheck',
+                            'easydjango.views.monitoring.System',
+                            'easydjango.views.monitoring.CeleryStats',
+                            'easydjango.views.monitoring.Packages', ]
+SIGNAL_REQUEST_MIDDLEWARES = [
+    'easydjango.middleware.WindowKeyMiddleware',
+    'easydjango.middleware.DjangoAuthMiddleware',
+    'easydjango.middleware.Djangoi18nMiddleware', ]
 # ws4redis
 WEBSOCKET_URL = '/ws/'
 WS4REDIS_CONNECTION = {'host': '{WS4REDIS_SERVER}', 'port': SettingReference('WS4REDIS_PORT'),
@@ -279,10 +287,6 @@ EASYDJANGO_DEFAULT_GROUPS = ['Users']
 EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
 EASYDJANGO_CHECKED_REQUIREMENTS = ['django>=1.12', 'django<=1.13', 'celery', 'django-bootstrap3', 'redis', 'pip',
                                    'psutil']
-EASYDJANGO_SYSTEM_CHECKS = ['easydjango.views.monitoring.RequestCheck',
-                            'easydjango.views.monitoring.System',
-                            'easydjango.views.monitoring.CeleryStats',
-                            'easydjango.views.monitoring.Packages', ]
 # django-npm
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],

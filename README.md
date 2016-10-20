@@ -43,15 +43,10 @@ Creating a working new project only requires a couple lines:
   * nginx or apache configuration
   * uwsgi or gunicorn
   * build de .deb
-  
-  * admin page:
-    * last internal checks
-    * state of all components
-    * Nagios checks
+
   * python 3  
-        
-  * using reverse proxies
   * logs
+        
   * easy initial conf
   * create favicon
   

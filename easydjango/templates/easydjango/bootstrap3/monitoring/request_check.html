@@ -7,9 +7,12 @@
         <div class="panel-body">
             {% if debug %}<div class="alert alert-danger">{% trans 'The DEBUG mode is activated. You should disable it for a production website.' %}</div>
             {% endif %}
+            {% if fake_username %}<div class="alert alert-danger">{% trans 'The EASYDJANGO_FAKE_AUTHENTICATION_USERNAME is set. You should disable it for a production website.' %}</div>
+            {% endif %}
             <ul>
                 <li><strong>{% trans 'Websockets: ' %}</strong>
                 <span class="label label-danger" id="workingwebsockets">{% bootstrap_icon 'remove' %}</span>
+                    <small id="notworkingwebsockets">{% trans 'At least one Celery worker is required, as well as an uwgsi server.' %}</small>
                 </li>
                 <li><strong>{% trans 'User: '%}</strong>
                     {% if not ed_user %}<span class="label label-danger">{% trans 'no user' %}</span>
@@ -23,7 +26,7 @@
                 {% if remote_user %}
                 <li><strong>{% trans 'Remote user HTTP header: ' %}</strong>{{ remote_user.0|upper }} =
                     {% if remote_user.1 %}<span class="label label-success">{{ remote_user.1 }}</span>
-                    {% else %}<span class="label label-danger">{% trans 'empty' %}</span>
+                    {% else %}<span class="label label-danger">{% trans 'empty' %}</span><small>{% trans 'Please ensure that your web server is correctly set to provide the right header (without the HTTP prefix).' %}</small>
                     {% endif %}
                 </li>
                 {% endif %}
@@ -33,7 +36,9 @@
                             class="label label-success">{{ secure_proxy_ssl_header.1 }}</span>
                     {% elif secure_proxy_ssl_header.1 %}<span
                             class="label warning">{{ secure_proxy_ssl_header.1 }}</span>
-                    {% else %}<span class="label label-danger">{% trans 'empty' %}</span>
+                    {% else %}<span class="label label-danger">{% trans 'empty' %}</span><small>
+                        {% trans 'Please ensure that a HTTPS access is available and that the webserver provide the right header (without the HTTP prefix).' %}
+                    </small>
                     {% endif %}
                 </li>
                 {% endif %}
@@ -69,6 +74,7 @@
                 "use strict";
                 $('#workingwebsockets').removeClass('label-danger').addClass('label-success');
                 $('#workingwebsockets').html('{% bootstrap_icon 'ok' %}');
+                $('#notworkingwebsockets').remove();
             });
             $.ed.call('ed.monitoring.check_ws', {});
         };
