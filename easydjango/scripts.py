@@ -48,16 +48,18 @@ def get_merger_from_env():
         ./local_config.py (overrides ./local_config.ini)
     """
 
-    project_name = os.environ['EASYDJANGO_PROJECT_NAME']
+    project_name, sep, script = os.environ['EASYDJANGO_CONF_NAME'].partition(':')
     project_name = project_name.replace('-', '_')
+    if sep != ':':
+        script = None
 
     prefix = os.path.abspath(sys.prefix)
     if prefix == '/usr':
         prefix = ''
 
-    def search_providers(suffix, cls):
-        default_ini_filename = '%s/etc/%s/*.%s' % (prefix, project_name, suffix)
-        ini_filenames = [default_ini_filename] + glob.glob(default_ini_filename)
+    def search_providers(basename, suffix, cls):
+        default_ini_filename = '%s/etc/%s/%s.%s' % (prefix, project_name, basename, suffix)
+        ini_filenames = [default_ini_filename]
         ini_filenames.sort()
         return [cls(x) for x in ini_filenames]
 
@@ -67,18 +69,24 @@ def get_merger_from_env():
         mapping = '%s.iniconf:INI_MAPPING' % project_name
     else:
         mapping = 'easydjango.conf.mapping:INI_MAPPING'
-    config_providers += search_providers('ini', IniConfigProvider)
-    config_providers += search_providers('py', PythonFileProvider)
+    config_providers += search_providers('settings', 'ini', IniConfigProvider)
+    config_providers += search_providers('settings', 'py', PythonFileProvider)
+    if script:
+        config_providers += search_providers(script, 'ini', IniConfigProvider)
+        config_providers += search_providers(script, 'py', PythonFileProvider)
     config_providers += [IniConfigProvider(os.path.abspath('local_config.ini'))]
     config_providers += [PythonFileProvider(os.path.abspath('local_config.py'))]
 
     fields_provider = PythonConfigFieldsProvider(mapping)
-    return SettingMerger(project_name, fields_provider, config_providers)
+    extra_values = {'PROJECT_NAME': project_name}
+    if script:
+        extra_values['SCRIPT_NAME'] = script
+    return SettingMerger(fields_provider, config_providers, extra_values=extra_values)
 
 
 def set_env():
-    """Set the environment variable `EASYDJANGO_PROJECT_NAME` with the project name and all settings
-    The value looks like "project_name:settings1,settings2,settings3"
+    """Set the environment variable `EASYDJANGO_CONF_NAME` with the project name and the script name
+    The value looks like "project_name:celery" or "project_name:django"
 
     determine the project name
 
@@ -92,11 +100,11 @@ def set_env():
     script_re = re.match(r'^([\w_\-.]+)-(ctl|gunicorn|celery|uwsgi|django)(\.py|\.pyc|)$',
                          os.path.basename(sys.argv[0]))
     if script_re:
-        project_name = script_re.group(1)
+        conf_name = '%s:%s' % (script_re.group(1), script_re.group(2))
     else:
-        project_name = __get_extra_option('dfproject', 'easydjango', '--dfproject')
-    os.environ.setdefault('EASYDJANGO_PROJECT_NAME', project_name)
-    return project_name
+        conf_name = __get_extra_option('dfproject', 'easydjango', '--dfproject')
+    os.environ.setdefault('EASYDJANGO_CONF_NAME', conf_name)
+    return conf_name
 
 
 def load_celery():
@@ -172,9 +180,11 @@ def uwsgi():
     # websocket + http
     # uwsgi --virtualenv /path/to/virtualenv --http :80 --gevent 100 --http-websockets --module wsgi
     # http only
-    # uwsgi --virtualenv /path/to/virtualenv --socket /path/to/django.socket --buffer-size=32768 --workers=5 --master --module wsgi_django
+    # uwsgi --virtualenv /path/to/virtualenv --socket /path/to/django.socket --buffer-size=32768 --workers=5 --master
+    # --module wsgi_django
     # websockets only
-    # uwsgi --virtualenv /path/to/virtualenv --http-socket /path/to/web.socket --gevent 1000 --http-websockets --workers=2 --master --module wsgi_websocket
+    # uwsgi --virtualenv /path/to/virtualenv --http-socket /path/to/web.socket --gevent 1000 --http-websockets
+    # --workers=2 --master --module wsgi_websocket
 
     if options.mode == 'both':
         argv += ['--module', 'djangofloor.wsgi']

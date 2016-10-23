@@ -131,7 +131,7 @@ class BdistDebDjango(sdist_dsc):
         debian_project_name = project_name.replace('-', '_')
         conf_name = '%s.conf' % debian_project_name
         # prepare the use of the gen_install command
-        os.environ['EASYDJANGO_PROJECT_NAME'] = project_name
+        os.environ['EASYDJANGO_CONF_NAME'] = project_name
         set_env()
         collect_static_dir = os.path.join(target_dir, 'gen_install', 'var', project_name, 'static')
         etc_dir = os.path.join(target_dir, 'gen_install', 'etc')

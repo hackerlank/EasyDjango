@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 from django.conf import settings
+from django.template.loader import render_to_string as raw_render_to_string
 from django.utils.module_loading import import_string
 
 __author__ = 'Matthieu Gallet'
@@ -70,3 +71,12 @@ def get_signal_context(request):
     for mdw in middlewares:
         context.update(mdw.get_context(request))
     return context
+
+
+def render_to_string(template_name, context=None, request=None, using=None):
+    if request is not None:
+        request_context = get_signal_context(request)
+        request_context.update(context)
+    else:
+        request_context = context
+    return raw_render_to_string(template_name, context=request_context, using=using)

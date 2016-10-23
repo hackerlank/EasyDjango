@@ -32,15 +32,16 @@ class SettingMerger(object):
     """Load different settings modules and config files and merge them.
     """
 
-    def __init__(self, project_name, fields_provider, providers):
+    def __init__(self, fields_provider, providers, extra_values=None):
         self.fields_provider = fields_provider or PythonConfigFieldsProvider(None)
+        extra_values = extra_values or {}
         self.providers = providers
-        self.project_name = project_name
         self.__formatter = string.Formatter()
         self.settings = {}
         self.raw_settings = OrderedDict()
-        self.raw_settings['PROJECT_NAME'] = OrderedDict()
-        self.raw_settings['PROJECT_NAME'][None] = project_name
+        for key, value in extra_values.items():
+            self.raw_settings[key] = OrderedDict()
+            self.raw_settings[key][None] = value
         # raw_settings[setting_name][str(provider) or None] = raw_value
         self.__working_stack = set()
 

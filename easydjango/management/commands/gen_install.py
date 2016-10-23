@@ -47,10 +47,10 @@ class Command(BaseCommand):
         project_name = os.environ.get('DJANGOFLOOR_PROJECT_NAME', 'djangofloor')
         project_settings_module_name = os.environ.get('DJANGOFLOOR_PROJECT_DEFAULTS', '')
         djangofloor_mapping = os.environ.get('DJANGOFLOOR_MAPPING', '')
-        merger = SettingMerger(project_name, 'djangofloor.defaults', project_settings_module_name, options['defaults'],
-                               options['default_conf'], djangofloor_mapping, read_only=True)
-        merger.process()
-        merger.post_process()
+        # merger = SettingMerger('djangofloor.defaults', project_settings_module_name, options['defaults'],
+        #                        options['default_conf'], djangofloor_mapping, read_only=True, {'PROJECT_NAME': project_name, })
+        # merger.process()
+        # merger.post_process()
 
         # noinspection PyAttributeOutsideInit
         self.verbosity = options.get('verbosity')

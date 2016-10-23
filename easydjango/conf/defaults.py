@@ -79,6 +79,7 @@ MANAGERS = SettingReference('ADMINS')
 MEDIA_ROOT = AutocreateDirectory('{LOCAL_PATH}/media')
 MEDIA_URL = '/media/'
 MIDDLEWARE_CLASSES = (
+    'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -90,6 +91,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
     'easydjango.middleware.EasyDjangoMiddleware',
     ExpandIterable('EASYDJANGO_MIDDLEWARE_CLASSES'),
+    'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
 ROOT_URLCONF = 'easydjango.root_urls'
@@ -286,7 +288,7 @@ EASYDJANGO_FAKE_AUTHENTICATION_USERNAME = 'testuser'
 EASYDJANGO_DEFAULT_GROUPS = ['Users']
 EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
 EASYDJANGO_CHECKED_REQUIREMENTS = ['django>=1.12', 'django<=1.13', 'celery', 'django-bootstrap3', 'redis', 'pip',
-                                   'psutil']
+                                   'psutil', 'django-redis-sessions']
 # django-npm
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],
