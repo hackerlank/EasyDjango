@@ -13,7 +13,6 @@ from django.http import StreamingHttpResponse
 from django.template.response import TemplateResponse
 from django.utils.lru_cache import lru_cache
 from django.utils.six import binary_type
-from djangofloor.views import read_file_in_chunks
 
 from easydjango.decorators import REGISTERED_SIGNALS, REGISTERED_FUNCTIONS
 from easydjango.request import SignalRequest
@@ -44,6 +43,19 @@ def __get_js_mimetype():
     return 'text/javascript'
 
 
+def read_file_in_chunks(fileobj, chunk_size=32768):
+    """ read a file object in chunks of the given size.
+
+    Return an iterator of data
+
+    :param fileobj:
+    :param chunk_size: max size of each chunk
+    :type chunk_size: `int`
+    """
+    for data in iter(lambda: fileobj.read(chunk_size), b''):
+        yield data
+
+
 def signals(request):
     signal_request = SignalRequest.from_request(request)
     import_signals_and_functions()
@@ -69,6 +81,11 @@ def signals(request):
                              'CSRF_COOKIE_NAME': settings.CSRF_COOKIE_NAME,
                              'CSRF_HEADER_NAME': csrf_header_name[5:].replace('_', '-')},
                             content_type=__get_js_mimetype())
+
+
+def test_logging(request):
+    x = 1/0
+    return HttpResponse(x)
 
 
 def send_file(filepath, mimetype=None, force_download=False):

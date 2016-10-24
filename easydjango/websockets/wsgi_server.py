@@ -92,7 +92,6 @@ class WebsocketWSGIServer(object):
 
     # noinspection PyMethodMayBeStatic
     def process_request(self, request):
-        # print(request.__dict__)
         request.session = None
         request.user = None
         session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME, None)

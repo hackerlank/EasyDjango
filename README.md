@@ -5,10 +5,10 @@ EasyDjango helps you to quickly create Django applications that are also easy to
 
   * an extension to the base Django's setting, allowing to split your configuration into several files (default values provided by EasyDjango, constants values for your project, deployement parameters, local values for development),
   * an unified signal dispatcher, using bi-directionnal websockets through Celery and Redis. You can call Python and Javascript signals from the Python or the Javascript side, 
-  * auto-configuration for several widespread Django apps (Django-Debug-Toolbar, Django-Redis-Sessions, Django-Pipeline) if they are present,
+  * auto-configuration for a few widespread Django apps (Django-Debug-Toolbar, Django-Redis-Sessions, Django-Pipeline) if they are present,
   * a base template using the well-known Bootstrap3 (but of course you can use any other templates),
-  * create new Django projects that are working and deployable out-of-box (even if you finally replace all default templates and views). 
-
+  * valid default Django settings (like logs),
+  * create new Django projects that are working and deployable out-of-the-box (even if you finally replace all default templates and views). 
 
 Creating a new project
 ----------------------
@@ -25,8 +25,6 @@ Creating a working new project only requires a couple lines:
     python setup.py deploy
     newproject-django migrate
     newproject-django runserver
-
-
 
     npm install yuglify -g
 
@@ -49,6 +47,26 @@ Creating a working new project only requires a couple lines:
         
   * easy initial conf
   * create favicon
+
+myproject-ctl command
+    celery worker
+    celery purge
+    celery status
+    celery events
+    django migrate
+    django collectstatic
+    django config
+    django dumpdata
+    django loaddata
+    django dbshell
+    django check
+    django sendtestemail
+    django shell
+    django createsuperuser
+    django changepassword
+    gunicorn 
+    uwsgi
+    
   
 session in Redis
 

@@ -89,10 +89,10 @@ class SettingReference(EasyDjangoValue):
 
 class CallableSetting(EasyDjangoValue):
     """
-    Require a function(kwargs) as argument, this function will be called with all
+    Require a function(kwargs) as argument, this function will be called with all already computed settings in a dict.
 
     >>> SETTING_1 = True
-    >>> SETTING_2 = CallableSetting(lambda x: not x['SETTING_1'])
+    >>> SETTING_2 = CallableSetting(lambda x: not x['SETTING_1'], 'SETTING_1')
 
     In `local_settings.py`
 

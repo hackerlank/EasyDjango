@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 
+import logging
 import os
 import sys
 
 import pkg_resources
+import time
+from django.core.management import color_style
 from django.utils import six
+from django.utils.log import AdminEmailHandler as BaseAdminEmailHandler
 
 __author__ = 'Matthieu Gallet'
 
@@ -30,6 +34,140 @@ def ensure_dir(path, parent=True):
         os.makedirs(dirname)
 
 
+class ColorizedFormatter(logging.Formatter):
+    def __init__(self, *args, **kwargs):
+        self.style = color_style()
+        super(ColorizedFormatter, self).__init__(*args, **kwargs)
+
+    def format(self, record):
+        msg = record.msg
+        level = record.levelno
+        if level <= logging.DEBUG:
+            msg = self.style.HTTP_SUCCESS(msg)
+        elif level <= logging.INFO:
+            msg = self.style.HTTP_NOT_MODIFIED(msg)
+        elif level <= logging.WARNING:
+            msg = self.style.HTTP_INFO(msg)
+        else:
+            # Any 5XX, or any other response
+            msg = self.style.HTTP_SERVER_ERROR(msg)
+        record.msg = msg
+        return super(ColorizedFormatter, self).format(record)
+
+
+# noinspection PyClassHasNoInit
+class AdminEmailHandler(BaseAdminEmailHandler):
+    previous_email_time = None
+
+    def send_mail(self, subject, message, *args, **kwargs):
+        now = time.time()
+        previous = AdminEmailHandler.previous_email_time
+        AdminEmailHandler.previous_email_time = now
+        if previous and now - previous < 600:
+            return
+        try:
+            super(AdminEmailHandler, self).send_mail(subject, message, *args, **kwargs)
+        except Exception as e:
+            print("Unable to send e-mail to admin. Please checks your e-mail settings [%r]." % e)
+
+
+def generate_log_configuration(root_directory=None, project_name=None, script_name=None, debug=False):
+    fmt_server = 'django.server' if sys.stdout.isatty() else None
+    fmt_stderr = 'colorized' if sys.stderr.isatty() else None
+    fmt_stdout = 'colorized' if sys.stdout.isatty() else None
+    formatters = {
+        'django.server': {'()': 'django.utils.log.ServerFormatter', 'format': '[%(server_time)s] %(message)s'},
+        'colorized': {'()': 'easydjango.utils.ColorizedFormatter'}}
+    if debug:
+        return {
+            'version': 1, 'disable_existing_loggers': True,
+            'formatters': formatters,
+            'handlers': {
+                'django.server': {'class': 'logging.StreamHandler', 'level': 'DEBUG',
+                                  'stream': 'ext://sys.stdout', 'formatter': fmt_server},
+                'stderr': {'class': 'logging.StreamHandler', 'level': 'ERROR',
+
+                           'stream': 'ext://sys.stderr', 'formatter': fmt_stderr},
+                'stdout': {'class': 'logging.StreamHandler', 'level': 'DEBUG',
+                           'stream': 'ext://sys.stdout', 'formatter': fmt_stdout},
+            },
+            'loggers': {
+                'django': {'handlers': [], 'level': 'WARN', 'propagate': True},
+                'django.db.backends': {'handlers': [], 'level': 'WARN', 'propagate': True},
+                'django.request': {'handlers': [], 'level': 'DEBUG', 'propagate': True},
+                'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
+                'django.server': {'handlers': ['django.server'], 'level': 'INFO', 'propagate': False},
+                'py.warnings': {'handlers': [], 'level': 'INFO', 'propagate': True},
+            },
+            'root': {
+                'handlers': ['stdout', 'stderr'], 'level': 'DEBUG'
+            }
+        }
+    elif root_directory is None:
+        return {
+            'version': 1,
+            'disable_existing_loggers': True,
+            'formatters': formatters,
+            'handlers': {
+                'django.server': {'level': 'INFO', 'class': 'logging.StreamHandler', 'formatter': fmt_server},
+                'mail_admins': {'level': 'ERROR', 'class': 'easydjango.utils.AdminEmailHandler'},
+                'stderr': {
+                    'class': 'logging.StreamHandler', 'level': 'ERROR',
+                    'stream': 'ext://sys.stderr', 'formatter': fmt_stderr},
+                'stdout': {
+                    'class': 'logging.StreamHandler', 'level': 'INFO',
+                    'stream': 'ext://sys.stdout', 'formatter': fmt_stdout},
+            },
+            'loggers': {
+                'django': {'handlers': [], 'level': 'WARN', 'propagate': True},
+                'django.db.backends': {'handlers': [], 'level': 'WARN', 'propagate': True},
+                'django.request': {'handlers': [], 'level': 'WARN', 'propagate': True},
+                'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
+                'django.server': {'handlers': ['django.server'], 'level': 'INFO', 'propagate': False},
+                'py.warnings': {'handlers': [], 'level': 'WARN', 'propagate': True},
+            },
+            'root': {
+                'handlers': ['mail_admins', 'stdout', 'stderr'], 'level': 'INFO'
+            }
+        }
+    ensure_dir(root_directory, parent=False)
+    return {
+        'version': 1,
+        'disable_existing_loggers': True,
+        'handlers': {
+            'info_rotating': {
+                'level': 'INFO',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': os.path.join(root_directory, '%s-%s-info.log' % (project_name, script_name)),
+                'maxBytes': 1000000,
+                'backupCount': 3,
+            },
+            'error_rotating': {
+                'level': 'ERROR',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': os.path.join(root_directory, '%s-%s-error.log' % (project_name, script_name)),
+                'maxBytes': 1000000,
+                'backupCount': 3,
+            },
+            'mail_admins': {
+                'level': 'ERROR',
+                'class': 'easydjango.utils.AdminEmailHandler',
+            }
+        },
+        'loggers': {
+            'django': {'handlers': [], 'level': 'WARN', 'propagate': True},
+            'django.db.backends': {'handlers': [], 'level': 'WARN', 'propagate': True},
+            'django.request': {'handlers': [], 'level': 'INFO', 'propagate': True},
+            'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
+            'django.server': {'handlers': [], 'level': 'INFO', 'propagate': True},
+            'py.warnings': {'handlers': [], 'level': 'WARN', 'propagate': True},
+        },
+        'root': {
+            'handlers': ['mail_admins', 'error_rotating', 'info_rotating'], 'level': 'INFO'
+        }
+    }
+
+
 def walk(module_name, dirname, topdown=True):
     """
     Copy of :func:`os.walk`, please refer to its doc. The only difference is that we walk in a package_resource
@@ -41,6 +179,7 @@ def walk(module_name, dirname, topdown=True):
     :type topdown: bool
     :param topdown: if True, perform a topdown search.
     """
+
     def rec_walk(root):
         """
         Recursively list subdirectories and filenames from the root.
@@ -63,6 +202,7 @@ def walk(module_name, dirname, topdown=True):
             for name in dirnames:
                 for values in rec_walk(root + '/' + name):
                     yield values
+
     return rec_walk(dirname)
 
 
@@ -102,4 +242,3 @@ else:
             name = _resolve_name(name[level:], package, level)
         __import__(name)
         return sys.modules[name]
-

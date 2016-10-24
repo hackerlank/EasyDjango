@@ -33,7 +33,6 @@ class TestForm(forms.Form):
 
 @signal(path='slow_sig')
 def slow_signal(request):
-    print(request)
     time.sleep(10)
 
 

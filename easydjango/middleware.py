@@ -48,7 +48,8 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
                 if user:
                     request.user = user
                     auth.login(request, user)
-        username = settings.EASYDJANGO_FAKE_AUTHENTICATION_USERNAME
+        # noinspection PyTypeChecker
+        username = getattr(settings, 'EASYDJANGO_FAKE_AUTHENTICATION_USERNAME', None)
         if username and settings.DEBUG:
             request.META[self.header] = username
 

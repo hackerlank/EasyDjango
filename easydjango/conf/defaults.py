@@ -4,7 +4,7 @@ from __future__ import unicode_literals, print_function, absolute_import
 import os
 
 from easydjango.conf.config_values import Path, AutocreateDirectory, SettingReference, ExpandIterable, CallableSetting
-from easydjango.utils import is_package_present
+from easydjango.utils import is_package_present, generate_log_configuration
 # noinspection PyUnresolvedReferences
 from django.utils.six.moves.urllib.parse import urlparse
 
@@ -74,7 +74,10 @@ if USE_DEBUG_TOOLBAR:
 if USE_PIPELINE:
     INSTALLED_APPS.append('pipeline')
 INSTALLED_APPS.append('easydjango')
-LOGGING = {}  # TODO
+LOGGING = CallableSetting(lambda x:
+                          generate_log_configuration(root_directory=x['LOG_DIRECTORY'], project_name=x['PROJECT_NAME'],
+                                                     script_name=x['SCRIPT_NAME'], debug=x['DEBUG']),
+                          'DEBUG', 'PROJECT_NAME', 'SCRIPT_NAME', 'LOG_DIRECTORY')
 MANAGERS = SettingReference('ADMINS')
 MEDIA_ROOT = AutocreateDirectory('{LOCAL_PATH}/media')
 MEDIA_URL = '/media/'
@@ -342,6 +345,7 @@ if 'lib' in __split_path:
     prefix = os.path.join(*__split_path[:__split_path.index('lib')])
     LOCAL_PATH = AutocreateDirectory('/%s/var/{PROJECT_NAME}' % prefix)
 SERVER_BASE_URL = 'http://localhost:9000'
+LOG_DIRECTORY = '{LOCAL_PATH}/logs'
 
 # django_redis
 CACHE_REDIS_PROTOCOL = 'redis'

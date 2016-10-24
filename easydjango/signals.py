@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
 import subprocess
 
 from django.contrib.auth import get_user_model
@@ -11,6 +12,7 @@ from easydjango.decorators import signal, everyone, is_staff
 from easydjango.tasks import call, SERVER, BROADCAST, WINDOW
 
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('django.request')
 
 
 @signal(path='ed.monitoring.check_ws', is_allowed_to=is_staff)
@@ -55,12 +57,14 @@ def check_user_creation(request, username=None, email=None, password1=None, pass
 
 @signal(is_allowed_to=everyone, path='demo.print_sig1')
 def print_sig1(request, content=''):
-    print('sig1')
+    logger.debug('Debug log message')
+    logger.info('Debug info message')
+    logger.warn('Debug warn message')
+    logger.error('Debug error message')
     call(request, 'demo.print_sig2', to=[BROADCAST, SERVER], content="Test Signal")
 
 
 @signal(is_allowed_to=everyone, path='demo.print_sig2')
 def print_sig2(request, content=''):
-    print('sig2')
     call(request, 'notify', to=[BROADCAST, SERVER], content="Server notification",
          level='warning', timeout=2, style='notification')
