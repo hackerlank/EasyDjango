@@ -8,7 +8,6 @@ TODO list
   * write doc
   * write ctl command
   * autoconfig pour DjangoRestFramework
-  * signals: allow to specify celery queue
   * write Vagrant files
   
   

@@ -2,5 +2,6 @@
 from __future__ import unicode_literals
 
 DEBUG = True
-LOCAL_PATH = '.'
+LOCAL_PATH = 'django_data'
 PIPELINE_ENABLED = False
+EASYDJANGO_REMOTE_USER_HEADER = 'HTTP-REMOTE-USER'  # HTTP-REMOTE-USER

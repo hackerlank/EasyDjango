@@ -10,11 +10,12 @@ __author__ = 'Matthieu Gallet'
 logger = logging.getLogger('django.request')
 
 
-@signal(path='demo.slow_signal')
-def slow_signal(request):
+@signal(is_allowed_to=everyone, path='demo.slow_signal', queue='slow')
+def slow_signal(request, content=''):
     logger.warn('wait for 10 seconds…')
     time.sleep(10)
     logger.warn('10 seconds: done.')
+    scall(request, 'demo.print_sig2', to=[BROADCAST, SERVER], content='slow result')
 
 
 @signal(is_allowed_to=everyone, path='demo.print_sig1')

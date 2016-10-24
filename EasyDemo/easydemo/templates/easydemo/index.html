@@ -11,6 +11,9 @@
     <button class="btn btn-success btn-sm" onclick="$.ed.call('demo.print_sig1', {content: 'Client notification'});">
         Test Signals
     </button>
+    <button class="btn btn-success btn-sm" onclick="$.ed.call('demo.slow_signal', {content: 'Slow signal'});">
+        Test slow Signals (specific Celery queue)
+    </button>
 </div>
 <form id="testForm" onchange="$.ed.validateForm(this, 'validate');" action="?" method="post">
     {% csrf_token %}
