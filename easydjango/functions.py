@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
-import random
-
-import time
-from django import forms
 from django.contrib.auth.forms import SetPasswordForm
 from django.http import QueryDict
-
-from easydjango.decorators import function, everyone, validate_form, is_authenticated, signal
+from easydjango.decorators import function, is_authenticated
 
 __author__ = 'Matthieu Gallet'
 
@@ -22,22 +17,3 @@ def validate_set_password_form(request, data=None):
     valid = form.is_valid()
     return {'valid': valid, 'errors': {f: e.get_json_data(escape_html=False) for f, e in form.errors.items()},
             'help_texts': {f: e.help_text for (f, e) in form.fields.items() if e.help_text}}
-
-
-@validate_form(path='validate', is_allowed_to=everyone)
-class TestForm(forms.Form):
-    email = forms.EmailField(label='Email', help_text='Please enter your e-mail')
-    name = forms.CharField(label='Name', help_text='Please enter your name')
-    age = forms.IntegerField(label='Age')
-
-
-@signal(path='slow_sig')
-def slow_signal(request):
-    time.sleep(10)
-
-
-# noinspection PyUnusedLocal
-@function(path='test_function', is_allowed_to=everyone)
-def test_function(request):
-    # TODO to remove before release
-    return 'Coucou : %d' % random.randint(0, 100)

@@ -17,11 +17,12 @@ from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.six import text_type
 from django.views.decorators.cache import never_cache
+from easydjango.decorators import REGISTERED_SIGNALS, REGISTERED_FUNCTIONS
 from pkg_resources import parse_requirements, Distribution
 
 from easydjango.celery import app
 from easydjango.conf.settings import merger
-from easydjango.tasks import set_websocket_topics
+from easydjango.tasks import set_websocket_topics, import_signals_and_functions
 
 try:
     # noinspection PyPackageRequirements
@@ -107,6 +108,16 @@ class CeleryStats(MonitoringCheck):
 
     def get_context(self, request):
         celery_stats = app.control.inspect().stats()
+        import_signals_and_functions()
+        expected_queues = {y.queue: ('danger', 'remove') for y in REGISTERED_FUNCTIONS.values()}
+        for connections in REGISTERED_SIGNALS.values():
+            expected_queues.update({y.queue: ('danger', 'remove') for y in connections})
+        queue_stats = app.control.inspect().active_queues()
+        for stats in queue_stats.values():
+            for queue_data in stats:
+                if queue_data['name'] in expected_queues:
+                    expected_queues[queue_data['name']] = ('success', 'ok')
+
         workers = []
         if celery_stats is None:
             celery_stats = {}
@@ -128,8 +139,10 @@ class CeleryStats(MonitoringCheck):
             worker['state'] = ('success', 'ok')
             if worker['timeouts'] > 0:
                 worker['state'] = ('danger', 'remove')
+            worker['queues'] = list({y['name'] for y in queue_stats.get(key, [])})
+            worker['queues'].sort()
             workers.append(worker)
-        return {'workers': workers}
+        return {'workers': workers, 'expected_queues': expected_queues}
 
 
 class RequestCheck(MonitoringCheck):

@@ -189,6 +189,7 @@ def walk(module_name, dirname, topdown=True):
         dirnames = []
         filenames = []
         for name in pkg_resources.resource_listdir(module_name, root):
+            # noinspection PyUnresolvedReferences
             fullname = root + '/' + name
             isdir = pkg_resources.resource_isdir(module_name, fullname)
             if isdir:
@@ -200,6 +201,7 @@ def walk(module_name, dirname, topdown=True):
         yield root, dirnames, filenames
         if topdown:
             for name in dirnames:
+                # noinspection PyUnresolvedReferences
                 for values in rec_walk(root + '/' + name):
                     yield values
 
@@ -208,6 +210,7 @@ def walk(module_name, dirname, topdown=True):
 
 def _resolve_name(name, package, level):
     """Return the absolute name of the module to be imported."""
+    # noinspection PyTypeChecker
     if not hasattr(package, 'rindex'):
         raise ValueError("'package' not set to a string")
     dot = len(package)

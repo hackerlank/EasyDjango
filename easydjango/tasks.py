@@ -54,11 +54,11 @@ def set_websocket_topics(request, *topics):
     connection.expire(redis_key, settings.WS4REDIS_EXPIRE)
 
 
-def call(request, signal_name, to=None, **kwargs):
+def scall(request, signal_name, to=None, **kwargs):
     return _call_signal(request, signal_name, to=to, kwargs=kwargs, from_client=False)
 
 
-def delay_signal(request, signal_name, to=None, kwargs=None, countdown=None, expires=None, eta=None):
+def call(request, signal_name, to=None, kwargs=None, countdown=None, expires=None, eta=None):
     return _call_signal(request, signal_name, to=to, kwargs=kwargs, countdown=countdown, expires=expires,
                         eta=eta, from_client=False)
 
@@ -86,12 +86,20 @@ def _call_signal(request, signal_name, to=None, kwargs=None, countdown=None, exp
         celery_kwargs['eta'] = eta
     if countdown:
         celery_kwargs['countdown'] = countdown
+    import_signals_and_functions()
+    queues = {x.queue for x in REGISTERED_SIGNALS.get(signal_name, [])}
     if celery_kwargs:
-        _server_signal_call.apply_async([signal_name, request.to_dict(), kwargs, from_client, serialized_client_topics,
-                                         to_server], **celery_kwargs)
+        if serialized_client_topics:
+            queues.add(settings.CELERY_DEFAULT_QUEUE)
+        for queue in queues:
+            topics = serialized_client_topics if queue == settings.CELERY_DEFAULT_QUEUE else []
+            _server_signal_call.apply_async([signal_name, request.to_dict(), kwargs, from_client, topics,
+                                             to_server, queue], queue=queue, **celery_kwargs)
     else:
         if to_server:
-            _server_signal_call.apply_async([signal_name, request.to_dict(), kwargs, from_client, [], to_server])
+            for queue in queues:
+                _server_signal_call.apply_async([signal_name, request.to_dict(), kwargs, from_client, [],
+                                                 to_server, queue], queue=queue)
         if serialized_client_topics:
             signal_id = str(uuid.uuid4())
             for topic in serialized_client_topics:
@@ -141,7 +149,7 @@ def import_signals_and_functions():
 
 @shared_task(serializer='json')
 def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=False, serialized_client_topics=None,
-                        to_server=False):
+                        to_server=False, queue=None):
     if kwargs is None:
         kwargs = {}
     if serialized_client_topics:
@@ -149,14 +157,12 @@ def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=Fals
         for topic in serialized_client_topics:
             _call_ws_signal(signal_name, signal_id, topic, kwargs)
     request = SignalRequest.from_dict(request_dict)
-    if not to_server:
-        return
     import_signals_and_functions()
-    if signal_name not in REGISTERED_SIGNALS:
+    if not to_server or signal_name not in REGISTERED_SIGNALS:
         return
     for connection in REGISTERED_SIGNALS[signal_name]:
         assert isinstance(connection, SignalConnection)
-        if from_client and not connection.is_allowed_to(request):
+        if connection.queue != queue or (from_client and not connection.is_allowed_to(request)):
             continue
         kwargs = connection.check(kwargs)
         if kwargs is None:
@@ -170,16 +176,12 @@ def _server_function_call(function_name, request_dict, result_id, kwargs=None):
         kwargs = {}
     request = SignalRequest.from_dict(request_dict)
     import_signals_and_functions()
-    if function_name in REGISTERED_FUNCTIONS:
-        connection = REGISTERED_FUNCTIONS[function_name]
-        assert isinstance(connection, FunctionConnection)
-        # noinspection PyBroadException
-        try:
-            result = connection(request, **kwargs)
-            e = None
-        except Exception as e:
-            result = None
-        _return_ws_function_result(request, result_id, result, exception=e)
-    else:
-        exception = ValueError('Unknown function %s' % function_name)
-        _return_ws_function_result(request, result_id, None, exception=exception)
+    connection = REGISTERED_FUNCTIONS[function_name]
+    assert isinstance(connection, FunctionConnection)
+    # noinspection PyBroadException
+    try:
+        result = connection(request, **kwargs)
+        e = None
+    except Exception as e:
+        result = None
+    _return_ws_function_result(request, result_id, result, exception=e)

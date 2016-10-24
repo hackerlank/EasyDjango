@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function, absolute_import
 import re
 
 from django import forms
+from django.conf import settings
 from django.http import QueryDict
 
 try:
@@ -80,11 +81,12 @@ class has_perm(object):
 
 
 class Connection(object):
-    def __init__(self, fn, path=None, is_allowed_to=server_side):
+    def __init__(self, fn, path=None, is_allowed_to=server_side, queue=None):
         self.function = fn
         # noinspection PyTypeChecker
         self.path = path or (hasattr(fn, '__name__') and fn.__name__)
         self.is_allowed_to = is_allowed_to
+        self.queue = queue or settings.CELERY_DEFAULT_QUEUE
         self.accept_kwargs = False
         self.argument_types = {}
         self.required_arguments_names = []
@@ -137,9 +139,9 @@ class FunctionConnection(Connection):
         REGISTERED_FUNCTIONS[self.path] = self
 
 
-def signal(fn=None, path=None, is_allowed_to=server_side):
+def signal(fn=None, path=None, is_allowed_to=server_side, queue=None):
     def wrapped(fn_):
-        wrapper = SignalConnection(fn=fn_, path=path, is_allowed_to=is_allowed_to)
+        wrapper = SignalConnection(fn=fn_, path=path, is_allowed_to=is_allowed_to, queue=queue)
         wrapper.register()
         return fn_
 
@@ -148,7 +150,7 @@ def signal(fn=None, path=None, is_allowed_to=server_side):
     return wrapped
 
 
-def function(fn=None, path=None, is_allowed_to=server_side):
+def function(fn=None, path=None, is_allowed_to=server_side, queue=None):
     """
 
     .. code-block:: javascript
@@ -157,7 +159,7 @@ def function(fn=None, path=None, is_allowed_to=server_side):
 
      """
     def wrapped(fn_):
-        wrapper = FunctionConnection(fn=fn_, path=path, is_allowed_to=is_allowed_to)
+        wrapper = FunctionConnection(fn=fn_, path=path, is_allowed_to=is_allowed_to, queue=queue)
         wrapper.register()
         return fn_
 

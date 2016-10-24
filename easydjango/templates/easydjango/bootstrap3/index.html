@@ -1,20 +1,4 @@
 {% extends 'easydjango/bootstrap3/base.html' %}
-{% load bootstrap3 %}
 {% block content %}
 <h1>Hello, world!</h1>
-
-
-<div class="btn-group">
-    <button class="btn btn-success btn-sm" onclick="$.edws.test_function({}).then(function(x) { alert(x); });">
-        Test Functions
-    </button>
-    <button class="btn btn-success btn-sm" onclick="$.ed.call('demo.print_sig1', {content: 'Client notification'});">
-        Test Signals
-    </button>
-</div>
-<form id="testForm" onchange="$.ed.validateForm(this, 'validate');" action="?" method="post">
-    {% csrf_token %}
-    {% bootstrap_form form %}
-    <input type="submit" class="btn btn-success" value="Valider">
-</form>
 {% endblock %}

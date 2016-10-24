@@ -11,21 +11,22 @@ import json
 import sys
 
 import django
+if django.VERSION[:2] >= (1, 7):
+    django.setup()
+from django.conf import settings
 import django.utils.six as six
 from django.core import signing
 from django.utils.lru_cache import lru_cache
 from django.utils.module_loading import import_string
 # noinspection PyUnresolvedReferences
 from django.utils.six.moves import http_client
+from easydjango.decorators import REGISTERED_FUNCTIONS
 from redis import StrictRedis
 
 from easydjango.request import SignalRequest
 # noinspection PyProtectedMember
-from easydjango.tasks import _call_signal, SERVER, _server_function_call
+from easydjango.tasks import _call_signal, SERVER, _server_function_call, import_signals_and_functions
 
-if django.VERSION[:2] >= (1, 7):
-    django.setup()
-from django.conf import settings
 from django.contrib.auth import get_user
 from django.core.handlers.wsgi import WSGIRequest, logger
 from django.core.exceptions import PermissionDenied
@@ -130,7 +131,13 @@ class WebsocketWSGIServer(object):
             elif 'func' in unserialized_message:
                 function_name = unserialized_message['func']
                 result_id = unserialized_message['result_id']
-                _server_function_call.apply_async([function_name, request.to_dict(), result_id, kwargs])
+                import_signals_and_functions()
+                if function_name in REGISTERED_FUNCTIONS:
+                    fn = REGISTERED_FUNCTIONS[function_name]
+                    _server_function_call.apply_async([function_name, request.to_dict(), result_id, kwargs],
+                                                      queue=fn.queue or settings.CELERY_DEFAULT_QUEUE)
+                else:
+                    logger.warning('Unknown function "%s" called by client "%s"' % (function_name, request.window_key))
         except TypeError:
             pass
         except KeyError:

@@ -216,6 +216,7 @@ class DjangoAuthMiddleware(SignalRequestMiddleware):
             >>> r.has_perm('app_label.codename')
             True
 
+            :param req: SignalRequest
             :param perm: name of the permission  ("app_label.codename")
             :return: True if the user has the required perm
             :rtype: :class:`bool`
