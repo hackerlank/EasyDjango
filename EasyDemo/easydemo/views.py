@@ -28,36 +28,37 @@ class IndexView(TemplateView):
         messages.error(request, 'message (error)')
         set_websocket_topics(request)
         form = TestForm()
-        template_values = {'form': form}
+        template_values = {'form': form, 'title': 'Hello, world!'}
         return self.render_to_response(template_values)
 
     def post(self, request):
         set_websocket_topics(request)
         form = TestForm(request.POST)
         form.is_valid()
-        template_values = {'form': form}
+        template_values = {'form': form, 'title': 'Hello, world!'}
         return self.render_to_response(template_values)
 
 
 @cache_page(60)
 def cache_60(request):
-    print("compute cache_60 page")
-    return TemplateResponse(request, 'easydjango/bootstrap3/index.html', {'form': TestForm(), })
+    logger.warn("compute cache_60 page")
+    return TemplateResponse(request, 'easydemo/index.html', {'form': TestForm(), 'title': 'Cached during 60s'})
 
 
+@cache_page(60)
 @vary_on_headers('User-Agent')
 def cache_vary_on_headers(request):
-    print("compute cache_vary_on_headers page")
-    return TemplateResponse(request, 'easydjango/bootstrap3/index.html', {'form': TestForm(), })
+    logger.warn("compute cache_vary_on_headers page (User-Agent=%s)" % request.META.get('HTTP_USER_AGENT'))
+    return TemplateResponse(request, 'easydemo/index.html', {'form': TestForm(), 'title': 'Cache by User-Agent'})
 
 
 @cache_control(private=True)
 def cache_private(request):
-    print("compute cache_private page")
-    return TemplateResponse(request, 'easydjango/bootstrap3/index.html', {'form': TestForm(), })
+    logger.warn("compute cache_private page")
+    return TemplateResponse(request, 'easydemo/index.html', {'form': TestForm(), 'title': 'Cached for public'})
 
 
 @never_cache
 def cache_nevercache(request):
-    print("compute never_cache page")
-    return TemplateResponse(request, 'easydjango/bootstrap3/index.html', {'form': TestForm(), })
+    logger.warn("compute never_cache page")
+    return TemplateResponse(request, 'easydemo/index.html', {'form': TestForm(), 'title': 'Never cache'})

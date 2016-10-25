@@ -1,7 +1,6 @@
 TODO list
 =========
 
-  * write example project
   * notification system
   * test with Python 3
   * utiliser uwsgi
@@ -10,11 +9,8 @@ TODO list
   * autoconfig pour DjangoRestFramework
   * write Vagrant files
   
-  
 Example project:
 
-  * index view
   * test signals
   * test functions
-  
   * REST API
