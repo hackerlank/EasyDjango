@@ -1,7 +1,7 @@
 TODO list
 =========
 
-  * simple chat system
+  * simple chat system as example
   * notification system
   * test with Python 3
   * utiliser uwsgi
