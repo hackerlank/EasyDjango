@@ -7,12 +7,9 @@ from django.template import Context
 from django.templatetags.static import PrefixNode, StaticNode
 from django.urls import reverse
 from django.utils.encoding import force_text
-# noinspection PyProtectedMember
 from django.utils.html import _js_escapes
 from django.utils.safestring import mark_safe
-# noinspection PyUnresolvedReferences
 from django.utils.six.moves.urllib.parse import urljoin
-
 from easydjango.websockets.wsgi_server import signer
 
 __author__ = 'Matthieu Gallet'
@@ -120,9 +117,17 @@ def ed_messages(context, style='banner'):
                 return tag
         return 'info'
     result = '<script type="text/javascript">\n'
-    for message in context['messages']:
+    for message in context.get('messages', []):
         result += '$.ed.call("notify", {style: "%s", level: "%s", content: "%s"});\n' \
                   % (style, message_level(message), force_text(message).translate(_js_escapes))
-
+    get_notifications = context.get('ed_get_notifications', lambda: [])
+    values = get_notifications()
+    for notification in values:
+        result += '$.ed.call("notify", {style: "%s", level: "%s", content: "%s", timeout: %s, title: "%s"});\n' \
+                  % (notification.display_mode,
+                     notification.level,
+                     notification.content.translate(_js_escapes),
+                     notification.auto_hide_seconds * 1000,
+                     notification.title)
     result += '</script>'
     return mark_safe(result)

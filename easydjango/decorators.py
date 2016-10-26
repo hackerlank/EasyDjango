@@ -20,18 +20,18 @@ REGISTERED_FUNCTIONS = {}
 
 
 # noinspection PyUnusedLocal
-def server_side(request):
+def server_side(window_info):
     """does not allow a signal to be called from WebSockets
 
     >>> @signal(is_allowed_to=server_side)
-    >>> def my_signal(request, arg1=None):
-    >>>     print(request, arg1)
+    >>> def my_signal(window_info, arg1=None):
+    >>>     print(window_info, arg1)
     """
     return False
 
 
 # noinspection PyUnusedLocal
-def everyone(request):
+def everyone(window_info):
     """allow everyone to call a WS signal or function
 
     >>> @signal(is_allowed_to=everyone)
@@ -41,28 +41,28 @@ def everyone(request):
     return True
 
 
-def is_authenticated(request):
+def is_authenticated(window_info):
     """restrict a WS signal or a WS function to authenticated users
 
     >>> @signal(is_allowed_to=is_authenticated)
     >>> def my_signal(request, arg1=None):
     >>>     print(request, arg1)
     """
-    return request.is_authenticated()
+    return window_info.is_authenticated()
 
 
-def is_anonymous(request):
+def is_anonymous(window_info):
     """restrict a WS signal or a WS function to anonymous users
 
     >>> @signal(is_allowed_to=is_anonymous)
     >>> def my_signal(request, arg1=None):
     >>>     print(request, arg1)
     """
-    return request.is_anonymous()
+    return window_info.is_anonymous()
 
 
-def is_staff(request):
-    return request.is_staff
+def is_staff(window_info):
+    return window_info.is_staff
 
 
 # noinspection PyPep8Naming
@@ -172,10 +172,10 @@ class FormValidator(FunctionConnection):
     def signature_check(self, fn):
         if not isinstance(fn, type) or not issubclass(fn, forms.BaseForm):
             raise ValueError('validate_form only apply to Django Forms')
-        self.required_arguments_names = ['request']
+        self.required_arguments_names = ['window_info']
         self.optional_arguments_names = ['data']
 
-    def __call__(self, request, data=None):
+    def __call__(self, window_info, data=None):
         form = SerializedForm(self.function)(data)
         valid = form.is_valid()
         return {'valid': valid, 'errors': {f: e.get_json_data(escape_html=False) for f, e in form.errors.items()},
@@ -207,7 +207,7 @@ class RE(object):
     .. code-block:: python
 
         @signal(path='myproject.signals.test')
-        def test(request, value: RE("\d{3}a\d{3}")):
+        def test(window_info, value: RE("\d{3}a\d{3}")):
             pass
 
     Your code wan't be called if value has not the right form.
@@ -240,7 +240,7 @@ class Choice(object):
     .. code-block:: python
 
         @signal(path='myproject.signals.test')
-        def test(request, value: Choice([True, False])):
+        def test(window_info, value: Choice([True, False])):
             pass
 
     Your code wan't be called if value is not True or False.
@@ -278,7 +278,7 @@ class SerializedForm(object):
     .. code-block:: python
 
         @signal(path='myproject.signals.test')
-        def test(request, value: SerializedForm(SimpleForm), other: int):
+        def test(window_info, value: SerializedForm(SimpleForm), other: int):
             print(value.is_valid())
 
     How to use it with Python2:
@@ -286,7 +286,7 @@ class SerializedForm(object):
     .. code-block:: python
 
         @signal(path='myproject.signals.test')
-        def test(request, value, other):
+        def test(window_info, value, other):
             value = SerializedForm(SimpleForm)(value)
             print(value.is_valid())
 

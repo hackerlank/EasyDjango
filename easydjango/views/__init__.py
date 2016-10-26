@@ -15,7 +15,7 @@ from django.utils.lru_cache import lru_cache
 from django.utils.six import binary_type
 
 from easydjango.decorators import REGISTERED_SIGNALS, REGISTERED_FUNCTIONS
-from easydjango.request import SignalRequest
+from easydjango.request import WindowInfo
 from easydjango.tasks import import_signals_and_functions
 
 __author__ = 'Matthieu Gallet'
@@ -57,7 +57,7 @@ def read_file_in_chunks(fileobj, chunk_size=32768):
 
 
 def signals(request):
-    signal_request = SignalRequest.from_request(request)
+    signal_request = WindowInfo.from_request(request)
     import_signals_and_functions()
     if settings.WS4REDIS_PUBLIC_WS_LIST:
         valid_signal_names = list(REGISTERED_SIGNALS.keys())

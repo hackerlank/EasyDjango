@@ -9,17 +9,21 @@ from easydjango.tasks import BROADCAST, USER, WINDOW
 __author__ = 'Matthieu Gallet'
 
 
-def serialize_topic(request, obj):
+def serialize_topic(window_info, obj):
     if obj is BROADCAST:
         return '-broadcast'
     elif obj is WINDOW:
-        return '-window.%s' % request.window_key
+        if window_info is None:
+            return None
+        return '-window.%s' % window_info.window_key
     elif isinstance(obj, Model):
         # noinspection PyProtectedMember
         meta = obj._meta
         return '-%s.%s.%s' % (meta.app_label, meta.model_name, obj.pk)
     elif obj is USER:
+        if window_info is None:
+            return None
         # noinspection PyProtectedMember
         meta = get_user_model()._meta
-        return '-%s.%s.%s' % (meta.app_label, meta.model_name, request.user_pk)
+        return '-%s.%s.%s' % (meta.app_label, meta.model_name, window_info.user_pk)
     return '-%s.%s' % (obj.__class__.__name__, hash(obj))

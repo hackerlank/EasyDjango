@@ -23,7 +23,7 @@ from django.utils.six.moves import http_client
 from easydjango.decorators import REGISTERED_FUNCTIONS
 from redis import StrictRedis
 
-from easydjango.request import SignalRequest
+from easydjango.request import WindowInfo
 # noinspection PyProtectedMember
 from easydjango.tasks import _call_signal, SERVER, _server_function_call, import_signals_and_functions
 
@@ -100,13 +100,13 @@ class WebsocketWSGIServer(object):
             engine = import_module(settings.SESSION_ENGINE)
             request.session = engine.SessionStore(session_key)
             request.user = get_user(request)
-        signal_request = SignalRequest.from_request(request)
+        window_info = WindowInfo.from_request(request)
         signed_token = request.GET.get('token', '')
         try:
-            signal_request.window_key = signer.unsign(signed_token)
+            window_info.window_key = signer.unsign(signed_token)
         except signing.BadSignature:
             pass
-        return signal_request
+        return window_info
 
     # noinspection PyMethodMayBeStatic
     def process_subscriptions(self, request):
@@ -115,7 +115,7 @@ class WebsocketWSGIServer(object):
         return channels, echo_message
 
     # noinspection PyMethodMayBeStatic
-    def publish_message(self, request, message):
+    def publish_message(self, window_info, message):
         if message == settings.WS4REDIS_HEARTBEAT:
             return
         try:
@@ -126,7 +126,7 @@ class WebsocketWSGIServer(object):
                 eta = int(unserialized_message.get('eta', 0)) or None
                 expires = int(unserialized_message.get('expires', 0)) or None
                 countdown = int(unserialized_message.get('countdown', 0)) or None
-                _call_signal(request, signal_name, to=[SERVER], kwargs=kwargs, from_client=True, eta=eta,
+                _call_signal(window_info, signal_name, to=[SERVER], kwargs=kwargs, from_client=True, eta=eta,
                              expires=expires, countdown=countdown)
             elif 'func' in unserialized_message:
                 function_name = unserialized_message['func']
@@ -134,10 +134,11 @@ class WebsocketWSGIServer(object):
                 import_signals_and_functions()
                 if function_name in REGISTERED_FUNCTIONS:
                     fn = REGISTERED_FUNCTIONS[function_name]
-                    _server_function_call.apply_async([function_name, request.to_dict(), result_id, kwargs],
+                    _server_function_call.apply_async([function_name, window_info.to_dict(), result_id, kwargs],
                                                       queue=fn.queue or settings.CELERY_DEFAULT_QUEUE)
                 else:
-                    logger.warning('Unknown function "%s" called by client "%s"' % (function_name, request.window_key))
+                    logger.warning('Unknown function "%s" called by client "%s"' %
+                                   (function_name, window_info.window_key))
         except TypeError:
             pass
         except KeyError:
@@ -155,7 +156,7 @@ class WebsocketWSGIServer(object):
             self.assure_protocol_requirements(environ)
             request = WSGIRequest(environ)
             # noinspection PyTypeChecker
-            signal_request = self.process_request(request)
+            window_info = self.process_request(request)
             websocket = self.upgrade_websocket(environ, start_response)
 
             websocket_fd = websocket.get_file_descriptor()
@@ -181,7 +182,7 @@ class WebsocketWSGIServer(object):
                 for fd in ready:
                     if fd == websocket_fd:
                         message = websocket.receive()
-                        self.publish_message(signal_request, message)
+                        self.publish_message(window_info, message)
                     elif fd == redis_fd:
                         kind, topic, message = pubsub.parse_response()
                         if kind == 'message':

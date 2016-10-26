@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 from django.conf import settings
+from easydjango.models import Notification
 
 __author__ = 'Matthieu Gallet'
 
@@ -32,6 +33,7 @@ def context_base(request):
         'ed_project_name': settings.PROJECT_NAME,
         'ed_remote_username': getattr(request, 'remote_username'),
         'ed_user': getattr(request, 'user', None),
+        'ed_get_notifications': lambda: Notification.get_notifications(request),
         'ed_user_agent': request.META.get('HTTP_USER_AGENT', ''),
         'ed_ws_token': getattr(request, 'window_key', None),
     }

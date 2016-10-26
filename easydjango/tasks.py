@@ -12,7 +12,7 @@ from django.utils.six import text_type
 from redis import StrictRedis
 
 from easydjango.decorators import REGISTERED_SIGNALS, SignalConnection, REGISTERED_FUNCTIONS, FunctionConnection
-from easydjango.request import SignalRequest
+from easydjango.request import WindowInfo
 from easydjango.utils import import_module
 from easydjango.websockets.exceptions import NoWindowKeyException
 
@@ -39,7 +39,7 @@ def set_websocket_topics(request, *topics):
         raise NoWindowKeyException('You should use the EasyDjangoMiddleware middleware')
     token = request.window_key
     prefix = settings.WS4REDIS_PREFIX
-    request = SignalRequest.from_request(request)
+    request = WindowInfo.from_request(request)
     topic_strings = {prefix + _topic_serializer(request, x) for x in topics if x is not SERVER}
     # noinspection PyUnresolvedReferences
     if request.user and request.user.is_authenticated():
@@ -54,16 +54,16 @@ def set_websocket_topics(request, *topics):
     connection.expire(redis_key, settings.WS4REDIS_EXPIRE)
 
 
-def scall(request, signal_name, to=None, **kwargs):
-    return _call_signal(request, signal_name, to=to, kwargs=kwargs, from_client=False)
+def scall(window_info, signal_name, to=None, **kwargs):
+    return _call_signal(window_info, signal_name, to=to, kwargs=kwargs, from_client=False)
 
 
-def call(request, signal_name, to=None, kwargs=None, countdown=None, expires=None, eta=None):
-    return _call_signal(request, signal_name, to=to, kwargs=kwargs, countdown=countdown, expires=expires,
+def call(window_info, signal_name, to=None, kwargs=None, countdown=None, expires=None, eta=None):
+    return _call_signal(window_info, signal_name, to=to, kwargs=kwargs, countdown=countdown, expires=expires,
                         eta=eta, from_client=False)
 
 
-def _call_signal(request, signal_name, to=None, kwargs=None, countdown=None, expires=None, eta=None,
+def _call_signal(window_info, signal_name, to=None, kwargs=None, countdown=None, expires=None, eta=None,
                  from_client=False):
     if kwargs is None:
         kwargs = {}
@@ -78,7 +78,7 @@ def _call_signal(request, signal_name, to=None, kwargs=None, countdown=None, exp
         if serialized_topic is SERVER:
             to_server = True
         else:
-            serialized_client_topics.append(_topic_serializer(request, serialized_topic))
+            serialized_client_topics.append(_topic_serializer(window_info, serialized_topic))
     celery_kwargs = {}
     if expires:
         celery_kwargs['expires'] = expires
@@ -93,12 +93,12 @@ def _call_signal(request, signal_name, to=None, kwargs=None, countdown=None, exp
             queues.add(settings.CELERY_DEFAULT_QUEUE)
         for queue in queues:
             topics = serialized_client_topics if queue == settings.CELERY_DEFAULT_QUEUE else []
-            _server_signal_call.apply_async([signal_name, request.to_dict(), kwargs, from_client, topics,
+            _server_signal_call.apply_async([signal_name, window_info.to_dict(), kwargs, from_client, topics,
                                              to_server, queue], queue=queue, **celery_kwargs)
     else:
         if to_server:
             for queue in queues:
-                _server_signal_call.apply_async([signal_name, request.to_dict(), kwargs, from_client, [],
+                _server_signal_call.apply_async([signal_name, window_info.to_dict(), kwargs, from_client, [],
                                                  to_server, queue], queue=queue)
         if serialized_client_topics:
             signal_id = str(uuid.uuid4())
@@ -115,7 +115,7 @@ def _call_ws_signal(signal_name, signal_id, serialized_topic, kwargs):
     connection.publish(topic, serialized_message.encode('utf-8'))
 
 
-def _return_ws_function_result(request, result_id, result, exception=None):
+def _return_ws_function_result(window_info, result_id, result, exception=None):
     """
 
     :param result_id:
@@ -127,7 +127,7 @@ def _return_ws_function_result(request, result_id, result, exception=None):
     connection = StrictRedis(**settings.WS4REDIS_CONNECTION)
     json_msg = {'result_id': result_id, 'result': result, 'exception': text_type(exception) if exception else None}
     serialized_message = json.dumps(json_msg, cls=_signal_encoder)
-    serialized_topic = _topic_serializer(request, WINDOW)
+    serialized_topic = _topic_serializer(window_info, WINDOW)
     topic = settings.WS4REDIS_PREFIX + serialized_topic
     connection.publish(topic, serialized_message.encode('utf-8'))
 
@@ -148,7 +148,7 @@ def import_signals_and_functions():
 
 
 @shared_task(serializer='json')
-def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=False, serialized_client_topics=None,
+def _server_signal_call(signal_name, window_info_dict, kwargs=None, from_client=False, serialized_client_topics=None,
                         to_server=False, queue=None):
     if kwargs is None:
         kwargs = {}
@@ -156,32 +156,32 @@ def _server_signal_call(signal_name, request_dict, kwargs=None, from_client=Fals
         signal_id = str(uuid.uuid4())
         for topic in serialized_client_topics:
             _call_ws_signal(signal_name, signal_id, topic, kwargs)
-    request = SignalRequest.from_dict(request_dict)
+    window_info = WindowInfo.from_dict(window_info_dict)
     import_signals_and_functions()
     if not to_server or signal_name not in REGISTERED_SIGNALS:
         return
     for connection in REGISTERED_SIGNALS[signal_name]:
         assert isinstance(connection, SignalConnection)
-        if connection.queue != queue or (from_client and not connection.is_allowed_to(request)):
+        if connection.queue != queue or (from_client and not connection.is_allowed_to(window_info)):
             continue
         kwargs = connection.check(kwargs)
         if kwargs is None:
             continue
-        connection(request, **kwargs)
+        connection(window_info, **kwargs)
 
 
 @shared_task(serializer='json')
-def _server_function_call(function_name, request_dict, result_id, kwargs=None):
+def _server_function_call(function_name, window_info_dict, result_id, kwargs=None):
     if kwargs is None:
         kwargs = {}
-    request = SignalRequest.from_dict(request_dict)
+    window_info = WindowInfo.from_dict(window_info_dict)
     import_signals_and_functions()
     connection = REGISTERED_FUNCTIONS[function_name]
     assert isinstance(connection, FunctionConnection)
     # noinspection PyBroadException
     try:
-        result = connection(request, **kwargs)
+        result = connection(window_info, **kwargs)
         e = None
     except Exception as e:
         result = None
-    _return_ws_function_result(request, result_id, result, exception=e)
+    _return_ws_function_result(window_info, result_id, result, exception=e)

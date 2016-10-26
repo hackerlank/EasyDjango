@@ -102,101 +102,102 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
         return remote_username.partition('@')[0]
 
 
-class SignalRequestMiddleware(object):
-    def from_request(self, src_request, dst_request):
+class WindowInfoMiddleware(object):
+    def from_request(self, request, window_info):
         pass
 
-    def new_request(self, request):
+    def new_window_info(self, window_info):
         pass
 
-    def to_dict(self, request):
+    def to_dict(self, window_info):
         return {}
 
-    def from_dict(self, request, values):
+    def from_dict(self, window_info, values):
         pass
 
-    def get_context(self, request):
+    def get_context(self, window_info):
         return {}
 
-    def install_methods(self, signal_request_cls):
+    def install_methods(self, window_info_cls):
         pass
 
 
-class WindowKeyMiddleware(SignalRequestMiddleware):
-    def from_request(self, src_request, dst_request):
+class WindowKeyMiddleware(WindowInfoMiddleware):
+    def from_request(self, request, window_info):
         # noinspection PyTypeChecker
-        dst_request.window_key = getattr(src_request, 'window_key', None)
+        window_info.window_key = getattr(request, 'window_key', None)
 
-    def new_request(self, request):
-        request.window_key = None
+    def new_window_info(self, window_info):
+        window_info.window_key = None
 
-    def to_dict(self, request):
-        return {'window_key': request.window_key}
+    def to_dict(self, window_info):
+        return {'window_key': window_info.window_key}
 
-    def from_dict(self, request, values):
-        request.window_key = values.get('window_key')
+    def from_dict(self, window_info, values):
+        window_info.window_key = values.get('window_key')
 
-    def get_context(self, request):
+    def get_context(self, window_info):
         # noinspection PyTypeChecker
-        return {'ed_ws_token': getattr(request, 'window_key')}
+        return {'ed_ws_token': getattr(window_info, 'window_key')}
 
 
-class DjangoAuthMiddleware(SignalRequestMiddleware):
-    def from_request(self, src_request, dst_request):
-        assert isinstance(src_request, HttpRequest)
+class DjangoAuthMiddleware(WindowInfoMiddleware):
+    def from_request(self, request, window_info):
+        assert isinstance(request, HttpRequest)
         # auth and perms part
         # noinspection PyTypeChecker
-        user = getattr(src_request, 'user', None)
-        dst_request._user = user
-        dst_request._perms = None
-        dst_request._template_perms = None
-        dst_request.user_agent = src_request.META.get('HTTP_USER_AGENT', '')
+        user = getattr(request, 'user', None)
+        window_info._user = user
+        window_info._perms = None
+        window_info._template_perms = None
+        window_info.user_agent = request.META.get('HTTP_USER_AGENT', '')
         if user and user.is_authenticated():
-            dst_request.user_pk = user.pk
-            dst_request.username = user.get_username()
-            dst_request.is_superuser = user.is_superuser
-            dst_request.is_staff = user.is_staff
-            dst_request.is_active = user.is_active
+            window_info.user_pk = user.pk
+            window_info.username = user.get_username()
+            window_info.is_superuser = user.is_superuser
+            window_info.is_staff = user.is_staff
+            window_info.is_active = user.is_active
         else:
-            dst_request.user_pk = None
-            dst_request.username = None
-            dst_request.is_superuser = False
-            dst_request.is_staff = False
-            dst_request.is_active = False
+            window_info.user_pk = None
+            window_info.username = None
+            window_info.is_superuser = False
+            window_info.is_staff = False
+            window_info.is_active = False
 
-    def new_request(self, request):
-        request._user = None
-        request._perms = None
-        request._template_perms = None
-        request.user_agent = ''
-        request.user_pk = None
-        request.username = None
-        request.is_superuser = False
-        request.is_staff = False
-        request.is_active = False
+    def new_window_info(self, window_info):
+        window_info._user = None
+        window_info._perms = None
+        window_info._template_perms = None
+        window_info.user_agent = ''
+        window_info.user_pk = None
+        window_info.username = None
+        window_info.is_superuser = False
+        window_info.is_staff = False
+        window_info.is_active = False
 
-    def to_dict(self, request):
+    def to_dict(self, window_info):
         # noinspection PyProtectedMember
-        return {'user_pk': request.user_pk, 'username': request.username, 'is_superuser': request.is_superuser,
-                'is_staff': request.is_staff, 'is_active': request.is_active,
-                'perms': list(request._perms) if isinstance(request._perms, set) else None,
-                'user_agent': request.user_agent}
+        return {'user_pk': window_info.user_pk, 'username': window_info.username,
+                'is_superuser': window_info.is_superuser,
+                'is_staff': window_info.is_staff, 'is_active': window_info.is_active,
+                'perms': list(window_info._perms) if isinstance(window_info._perms, set) else None,
+                'user_agent': window_info.user_agent}
 
-    def from_dict(self, request, values):
-        request._user = None
-        request.user_pk = values.get('user_pk')
-        request.username = values.get('username')
-        request.is_superuser = values.get('is_superuser')
-        request.is_staff = values.get('is_staff')
-        request.is_active = values.get('is_active')
-        request._perms = set(values['perms']) if values.get('perms') is not None else None
-        request._template_perms = None
-        request.user_agent = values.get('user_agent')
+    def from_dict(self, window_info, values):
+        window_info._user = None
+        window_info.user_pk = values.get('user_pk')
+        window_info.username = values.get('username')
+        window_info.is_superuser = values.get('is_superuser')
+        window_info.is_staff = values.get('is_staff')
+        window_info.is_active = values.get('is_active')
+        window_info._perms = set(values['perms']) if values.get('perms') is not None else None
+        window_info._template_perms = None
+        window_info.user_agent = values.get('user_agent')
 
-    def get_context(self, request):
-        return {'ed_user': request.user, 'ed_user_agent': request.META.get('HTTP_USER_AGENT', ''), }
+    def get_context(self, window_info):
+        return {'ed_user': window_info.user, 'ed_user_agent': window_info.META.get('HTTP_USER_AGENT', ''),}
 
-    def install_methods(self, signal_request_cls):
+    def install_methods(self, window_info_cls):
         def get_user(req):
             # noinspection PyProtectedMember
             if req._user or req.user_pk is None:
@@ -211,12 +212,12 @@ class DjangoAuthMiddleware(SignalRequestMiddleware):
         def has_perm(req, perm):
             """ return true is the user has the required perm.
 
-            >>> from easydjango.request import SignalRequest
-            >>> r = SignalRequest.from_dict({'username': 'username', 'perms':['app_label.codename']})
+            >>> from easydjango.request import WindowInfo
+            >>> r = WindowInfo.from_dict({'username': 'username', 'perms':['app_label.codename']})
             >>> r.has_perm('app_label.codename')
             True
 
-            :param req: SignalRequest
+            :param req: WindowInfo
             :param perm: name of the permission  ("app_label.codename")
             :return: True if the user has the required perm
             :rtype: :class:`bool`
@@ -258,27 +259,27 @@ class DjangoAuthMiddleware(SignalRequestMiddleware):
             req._template_perms = result
             return result
 
-        signal_request_cls.user = property(get_user)
-        signal_request_cls.has_perm = has_perm
-        signal_request_cls.perms = property(get_perms)
-        signal_request_cls.template_perms = property(get_template_perms)
+        window_info_cls.user = property(get_user)
+        window_info_cls.has_perm = has_perm
+        window_info_cls.perms = property(get_perms)
+        window_info_cls.template_perms = property(get_template_perms)
 
 
-class Djangoi18nMiddleware(SignalRequestMiddleware):
+class Djangoi18nMiddleware(WindowInfoMiddleware):
 
-    def from_request(self, src_request, dst_request):
-        dst_request.language_code = get_language_from_request(src_request)
+    def from_request(self, request, window_info):
+        window_info.language_code = get_language_from_request(request)
 
-    def new_request(self, request):
-        request.language_code = None
+    def new_window_info(self, window_info):
+        window_info.language_code = None
 
-    def to_dict(self, request):
-        return {'language_code': request.language_code}
+    def to_dict(self, window_info):
+        return {'language_code': window_info.language_code}
 
-    def from_dict(self, request, values):
-        request.language_code = values.get('language_code')
+    def from_dict(self, window_info, values):
+        window_info.language_code = values.get('language_code')
 
-    def get_context(self, request):
+    def get_context(self, window_info):
         return {'LANGUAGES': settings.LANGUAGES,
-                'LANGUAGE_CODE': request.language_code,
+                'LANGUAGE_CODE': window_info.language_code,
                 'LANGUAGE_BIDI': translation.get_language_bidi(), }

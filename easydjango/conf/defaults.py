@@ -182,7 +182,7 @@ EASYDJANGO_SYSTEM_CHECKS = ['easydjango.views.monitoring.RequestCheck',
                             'easydjango.views.monitoring.System',
                             'easydjango.views.monitoring.CeleryStats',
                             'easydjango.views.monitoring.Packages', ]
-SIGNAL_REQUEST_MIDDLEWARES = [
+WINDOW_INFO_MIDDLEWARES = [
     'easydjango.middleware.WindowKeyMiddleware',
     'easydjango.middleware.DjangoAuthMiddleware',
     'easydjango.middleware.Djangoi18nMiddleware', ]

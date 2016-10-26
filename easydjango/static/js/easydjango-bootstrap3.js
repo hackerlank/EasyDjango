@@ -33,6 +33,9 @@
                 htmlContent += '<div class="modal-body"><p>' + content + '</p></div>';
             }
             $.ed.call('modal.show', {html: htmlContent});
+            if (timeout > 0) {
+                setTimeout(function () { $.ed.call('modal.hide'); }, timeout);
+            }
        }
         else if (style === "system") {
             $.ed._systemNotification(notificationId, level, content, title, icon, timeout);
@@ -58,12 +61,14 @@
         }
         baseModal.modal('show');
     });
+
     jQ.ed.connect('modal.hide', function () {
         "use strict";
         var baseModal = $('#edModal');
         baseModal.modal('hide');
         baseModal.removeData('bs.modal');
     });
+
     jQ.ed.validateForm = function (form, fn) {
         $.edws[fn]({data: $(form).serializeArray()}).then(function(data) {
             var index, formGroup, formInput, key, helpText;

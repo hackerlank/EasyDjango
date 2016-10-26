@@ -2,6 +2,9 @@ TODO list
 =========
 
   * notification system
+    * push new notifications through websockets?
+    * new admin page
+  * serialize_topics -> ignore None values
   * test with Python 3
   * utiliser uwsgi
   * write doc
