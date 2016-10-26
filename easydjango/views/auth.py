@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, login as auth_login
 from django.contrib.auth.decorators import login_required
@@ -13,7 +12,6 @@ from django.urls import reverse
 from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import TemplateView
-
 from easydjango.decorators import validate_form, everyone
 from easydjango.tasks import set_websocket_topics
 

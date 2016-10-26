@@ -7,8 +7,10 @@ from django.template import Context
 from django.templatetags.static import PrefixNode, StaticNode
 from django.urls import reverse
 from django.utils.encoding import force_text
+# noinspection PyProtectedMember
 from django.utils.html import _js_escapes
 from django.utils.safestring import mark_safe
+# noinspection PyUnresolvedReferences
 from django.utils.six.moves.urllib.parse import urljoin
 from easydjango.websockets.wsgi_server import signer
 

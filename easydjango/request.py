@@ -24,6 +24,8 @@ class WindowInfo(object):
 
     @classmethod
     def from_dict(cls, values):
+        if values is None:
+            return None
         window_info = cls(init=False)
         for mdw in middlewares:
             mdw.from_dict(window_info, values=values)
@@ -68,8 +70,9 @@ for mdw_ in middlewares:
 
 def get_window_context(window_info):
     context = {}
-    for mdw in middlewares:
-        context.update(mdw.get_context(window_info))
+    if window_info:
+        for mdw in middlewares:
+            context.update(mdw.get_context(window_info))
     return context
 
 

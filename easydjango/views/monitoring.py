@@ -63,7 +63,7 @@ class Packages(MonitoringCheck):
             for r in settings.EASYDJANGO_CHECKED_REQUIREMENTS:
                 for p in parse_requirements(r):
                     requirements.setdefault(p.key, [p.key, None, 'danger', 'remove', [], []])
-                    requirements[p.key][4] += [' '.join(x) for x in p.specs]
+                    requirements[p.key][4] += [' '.join(y) for y in p.specs]
                     requirements[p.key][5].append(p)
             for r in raw_installed_distributions:
                 if r.key not in requirements:
@@ -80,8 +80,8 @@ class Packages(MonitoringCheck):
             installed_distributions = list(sorted(requirements.values(),
                                                   key=lambda k: k[0].lower()))
         else:
-            installed_distributions = [[x.key, x.version, 'success', 'ok', ['== %s' % x.version], []]
-                                       for x in raw_installed_distributions]
+            installed_distributions = [[y.key, y.version, 'success', 'ok', ['== %s' % y.version], []]
+                                       for y in raw_installed_distributions]
         return installed_distributions
 
 
@@ -92,13 +92,13 @@ class System(MonitoringCheck):
         if psutil is None:
             return {'cpu_count': None, 'memory': None, 'cpu_average_usage': None,
                     'cpu_current_usage': None, 'swap': None, 'disks': None}
-        x = psutil.cpu_times()
-        cpu_average_usage = int((x.user + x.system) / (x.idle + x.user + x.system) * 100.)
+        y = psutil.cpu_times()
+        cpu_average_usage = int((y.user + y.system) / (y.idle + y.user + y.system) * 100.)
         cpu_current_usage = int(psutil.cpu_percent(interval=0.1))
         cpu_count = psutil.cpu_count(logical=True), psutil.cpu_count(logical=False)
         memory = psutil.virtual_memory()
         swap = psutil.swap_memory()
-        disks = [(x.mountpoint, psutil.disk_usage(x.mountpoint)) for x in psutil.disk_partitions(all=True)]
+        disks = [(y.mountpoint, psutil.disk_usage(y.mountpoint)) for y in psutil.disk_partitions(all=True)]
         return {'cpu_count': cpu_count, 'memory': memory, 'cpu_average_usage': cpu_average_usage,
                 'cpu_current_usage': cpu_current_usage, 'swap': swap, 'disks': disks}
 
@@ -132,7 +132,7 @@ class CeleryStats(MonitoringCheck):
             if infos['broker'].get('virtual_host'):
                 url += infos['broker']['virtual_host']
             worker['broker'] = url
-            pids = [text_type(infos['pid'])] + [text_type(x) for x in infos['pool']['processes']]
+            pids = [text_type(infos['pid'])] + [text_type(y) for y in infos['pool']['processes']]
             worker['pid'] = ', '.join(pids)
             worker['threads'] = infos['pool']['max-concurrency']
             worker['timeouts'] = sum(infos['pool']['timeouts'])
@@ -201,7 +201,7 @@ system_checks = [import_string(x)() for x in settings.EASYDJANGO_SYSTEM_CHECKS]
 def system_state(request):
     if not request.user or not request.user.is_staff:
         raise Http404
-    components_values = [x.render(request) for x in system_checks]
+    components_values = [y.render(request) for y in system_checks]
     template_values = {'components': components_values}
     set_websocket_topics(request)
     return TemplateResponse(request, template='easydjango/bootstrap3/system_state.html',

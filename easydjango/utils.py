@@ -97,6 +97,7 @@ def generate_log_configuration(root_directory=None, project_name=None, script_na
                 'django.request': {'handlers': [], 'level': 'DEBUG', 'propagate': True},
                 'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
                 'django.server': {'handlers': ['django.server'], 'level': 'INFO', 'propagate': False},
+                'pip.vcs': {'handlers': [], 'level': 'WARN', 'propagate': True},
                 'py.warnings': {'handlers': [], 'level': 'INFO', 'propagate': True},
             },
             'root': {
@@ -124,6 +125,7 @@ def generate_log_configuration(root_directory=None, project_name=None, script_na
                 'django.request': {'handlers': [], 'level': 'WARN', 'propagate': True},
                 'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
                 'django.server': {'handlers': ['django.server'], 'level': 'INFO', 'propagate': False},
+                'pip.vcs': {'handlers': [], 'level': 'WARN', 'propagate': True},
                 'py.warnings': {'handlers': [], 'level': 'WARN', 'propagate': True},
             },
             'root': {
@@ -160,6 +162,7 @@ def generate_log_configuration(root_directory=None, project_name=None, script_na
             'django.request': {'handlers': [], 'level': 'INFO', 'propagate': True},
             'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
             'django.server': {'handlers': [], 'level': 'INFO', 'propagate': True},
+            'pip.vcs': {'handlers': [], 'level': 'WARN', 'propagate': True},
             'py.warnings': {'handlers': [], 'level': 'WARN', 'propagate': True},
         },
         'root': {

@@ -48,7 +48,7 @@ def is_authenticated(window_info):
     >>> def my_signal(request, arg1=None):
     >>>     print(request, arg1)
     """
-    return window_info.is_authenticated()
+    return window_info and window_info.is_authenticated()
 
 
 def is_anonymous(window_info):
@@ -58,11 +58,15 @@ def is_anonymous(window_info):
     >>> def my_signal(request, arg1=None):
     >>>     print(request, arg1)
     """
-    return window_info.is_anonymous()
+    return window_info and window_info.is_anonymous()
 
 
 def is_staff(window_info):
-    return window_info.is_staff
+    return window_info and window_info.is_staff
+
+
+def is_superuser(window_info):
+    return window_info and window_info.is_superuser
 
 
 # noinspection PyPep8Naming
@@ -77,7 +81,7 @@ class has_perm(object):
         self.perm = perm
 
     def __call__(self, window_info):
-        return window_info.has_perm(self.perm)
+        return window_info and window_info.has_perm(self.perm)
 
 
 class Connection(object):

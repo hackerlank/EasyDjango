@@ -40,17 +40,18 @@ def set_websocket_topics(request, *topics):
     token = request.window_key
     prefix = settings.WS4REDIS_PREFIX
     request = WindowInfo.from_request(request)
-    topic_strings = {prefix + _topic_serializer(request, x) for x in topics if x is not SERVER}
-    # noinspection PyUnresolvedReferences
-    if request.user and request.user.is_authenticated():
-        topic_strings.add(prefix + _topic_serializer(request, USER))
-    topic_strings.add(prefix + _topic_serializer(request, WINDOW))
-    topic_strings.add(prefix + _topic_serializer(request, BROADCAST))
+    topic_strings = {_topic_serializer(request, x) for x in topics if x is not SERVER}
+    # noinspection PyUnresolvedReferences,PyTypeChecker
+    if getattr(request, 'user', None) and request.user.is_authenticated():
+        topic_strings.add(_topic_serializer(request, USER))
+    topic_strings.add(_topic_serializer(request, WINDOW))
+    topic_strings.add(_topic_serializer(request, BROADCAST))
     connection = _get_redis_connection()
     redis_key = '%s%s' % (prefix, token)
     connection.delete(redis_key)
     for topic in topic_strings:
-        connection.rpush(redis_key, topic)
+        if topic is not None:
+            connection.rpush(redis_key, prefix + topic)
     connection.expire(redis_key, settings.WS4REDIS_EXPIRE)
 
 
@@ -74,11 +75,13 @@ def _call_signal(window_info, signal_name, to=None, kwargs=None, countdown=None,
         to = [USER]
     serialized_client_topics = []
     to_server = False
-    for serialized_topic in to:
-        if serialized_topic is SERVER:
+    for topic in to:
+        if topic is SERVER:
             to_server = True
         else:
-            serialized_client_topics.append(_topic_serializer(window_info, serialized_topic))
+            serialized_topic = _topic_serializer(window_info, topic)
+            if serialized_topic is not None:
+                serialized_client_topics.append(serialized_topic)
     celery_kwargs = {}
     if expires:
         celery_kwargs['expires'] = expires
@@ -88,17 +91,20 @@ def _call_signal(window_info, signal_name, to=None, kwargs=None, countdown=None,
         celery_kwargs['countdown'] = countdown
     import_signals_and_functions()
     queues = {x.queue for x in REGISTERED_SIGNALS.get(signal_name, [])}
+    window_info_as_dict = None
+    if window_info:
+        window_info_as_dict = window_info.to_dict()
     if celery_kwargs:
         if serialized_client_topics:
             queues.add(settings.CELERY_DEFAULT_QUEUE)
         for queue in queues:
             topics = serialized_client_topics if queue == settings.CELERY_DEFAULT_QUEUE else []
-            _server_signal_call.apply_async([signal_name, window_info.to_dict(), kwargs, from_client, topics,
+            _server_signal_call.apply_async([signal_name, window_info_as_dict, kwargs, from_client, topics,
                                              to_server, queue], queue=queue, **celery_kwargs)
     else:
         if to_server:
             for queue in queues:
-                _server_signal_call.apply_async([signal_name, window_info.to_dict(), kwargs, from_client, [],
+                _server_signal_call.apply_async([signal_name, window_info_as_dict, kwargs, from_client, [],
                                                  to_server, queue], queue=queue)
         if serialized_client_topics:
             signal_id = str(uuid.uuid4())
@@ -128,8 +134,9 @@ def _return_ws_function_result(window_info, result_id, result, exception=None):
     json_msg = {'result_id': result_id, 'result': result, 'exception': text_type(exception) if exception else None}
     serialized_message = json.dumps(json_msg, cls=_signal_encoder)
     serialized_topic = _topic_serializer(window_info, WINDOW)
-    topic = settings.WS4REDIS_PREFIX + serialized_topic
-    connection.publish(topic, serialized_message.encode('utf-8'))
+    if serialized_topic:
+        topic = settings.WS4REDIS_PREFIX + serialized_topic
+        connection.publish(topic, serialized_message.encode('utf-8'))
 
 
 @lru_cache()
