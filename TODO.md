@@ -4,10 +4,11 @@ TODO list
   * simple chat system as example
   * notification system
     * push new notifications through websockets?
-    * new admin page
+    * complete admin page
+  * check kwargs
   * serialize_topics -> ignore None values
   * test with Python 3
-  * utiliser uwsgi
+  * use uwsgi
   * write doc
   * write ctl command
   * autoconfig pour DjangoRestFramework

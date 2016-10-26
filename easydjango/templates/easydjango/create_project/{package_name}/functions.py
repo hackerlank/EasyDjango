@@ -17,6 +17,6 @@ class TestForm(forms.Form):
 
 # noinspection PyUnusedLocal
 @function(path='test_function', is_allowed_to=everyone)
-def test_function(request):
+def test_function(window_info):
     # TODO to remove before release
     return 'Coucou : %d' % random.randint(0, 100)

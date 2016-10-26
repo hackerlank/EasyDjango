@@ -76,8 +76,8 @@ class has_perm(object):
     def __init__(self, perm):
         self.perm = perm
 
-    def __call__(self, request):
-        return request.has_perm(self.perm)
+    def __call__(self, window_info):
+        return window_info.has_perm(self.perm)
 
 
 class Connection(object):
@@ -99,10 +99,10 @@ class Connection(object):
     def signature_check(self, fn):
         # fetch signature to analyze arguments
         sig = signature(fn)
-        request_present = False
+        window_info_is_present = False
         for key, param in sig.parameters.items():
-            if key in ('request',):
-                request_present = True
+            if key in ('window_info', ):
+                window_info_is_present = True
                 continue
             if param.kind == param.VAR_KEYWORD:  # corresponds to "fn(**kwargs)"
                 self.accept_kwargs = True
@@ -116,14 +116,14 @@ class Connection(object):
                 self.optional_arguments_names.append(key)
                 if param.annotation != param.empty and callable(param.annotation):
                     self.argument_types[key] = param.annotation
-        if not request_present:
-            raise ValueError('Your signal must takes "request" as first argument')
+        if not window_info_is_present:
+            raise ValueError('Your signal %s must takes "window_info" as first argument' % self.path)
 
     def check(self, kwargs):
         return kwargs
 
-    def __call__(self, request, **kwargs):
-        return self.function(request, **kwargs)
+    def __call__(self, window_info, **kwargs):
+        return self.function(window_info, **kwargs)
 
     def register(self):
         raise NotImplementedError
