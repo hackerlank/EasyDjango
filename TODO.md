@@ -1,6 +1,7 @@
 TODO list
 =========
 
+  * simple chat system as example
   * notification system
     * push new notifications through websockets?
     * new admin page
