@@ -2,9 +2,7 @@ TODO list
 =========
 
   * simple chat system as example
-  * notification system
-    * push new notifications through websockets?
-  * check kwargs
+  * translation in JSONEncoder
   * serialize_topics -> ignore None values
   * test with Python 3
   * use uwsgi

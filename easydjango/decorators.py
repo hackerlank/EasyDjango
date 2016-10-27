@@ -6,6 +6,8 @@ import re
 from django import forms
 from django.conf import settings
 from django.http import QueryDict
+from django.utils.six import text_type
+from django.utils.translation import ugettext_lazy as _
 
 try:
     from inspect import signature
@@ -124,6 +126,13 @@ class Connection(object):
             raise ValueError('Your signal %s must takes "window_info" as first argument' % self.path)
 
     def check(self, kwargs):
+        for k, v in self.argument_types.items():
+            try:
+                if k in kwargs:
+                    kwargs[k] = v(kwargs[k])
+            except ValueError:
+                raise ValueError(text_type(_('Invalid value %(value)s for argument %(arg)s.')) %
+                                     {'arg': k, 'value': v})
         return kwargs
 
     def __call__(self, window_info, **kwargs):
