@@ -4,7 +4,6 @@ TODO list
   * simple chat system as example
   * notification system
     * push new notifications through websockets?
-    * complete admin page
   * check kwargs
   * serialize_topics -> ignore None values
   * test with Python 3

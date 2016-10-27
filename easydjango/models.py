@@ -45,8 +45,7 @@ class Notification(models.Model):
                                             help_text=_('Automatically hide after this number of seconds, '
                                                         '0 meaning no auto-hide'))
     author = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, db_index=True,
-                                    related_name='notification_author',
-                                    verbose_name=_('Users that should read this message'))
+                                    related_name='notification_author')
     display_mode = models.CharField(_('Display mode'), max_length=20, default=NOTIFICATION,
                                     choices=(
                                         (NOTIFICATION, _('HTML notification')),

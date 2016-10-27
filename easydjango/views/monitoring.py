@@ -199,7 +199,7 @@ system_checks = [import_string(x)() for x in settings.EASYDJANGO_SYSTEM_CHECKS]
 @never_cache
 @login_required(login_url='login')
 def system_state(request):
-    if not request.user or not request.user.is_staff:
+    if not request.user or not request.user.is_superuser:
         raise Http404
     components_values = [y.render(request) for y in system_checks]
     template_values = {'components': components_values}
