@@ -2,10 +2,11 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 # noinspection PyUnresolvedReferences
-from easydemo.views import cache_60, cache_nevercache, cache_private, cache_vary_on_headers
+from easydemo.views import cache_60, cache_nevercache, cache_private, cache_vary_on_headers, chat
 from django.conf.urls import url
 
 urlpatterns = [
+    url(r'^chat/', chat, name='chat'),
     url(r'^demo/cache_60/', cache_60, name='cache_60'),
     url(r'^demo/cache_vary_on_headers/', cache_vary_on_headers, name='cache_vary_on_headers'),
     url(r'^demo/cache_private/', cache_private, name='cache_private'),

@@ -13,7 +13,7 @@
         Test slow Signals (specific Celery queue)
     </button>
 </div>
-<form id="testForm" onchange="$.ed.validateForm(this, 'validate');" action="?" method="post">
+<form id="testForm" onchange="$.ed.validateForm(this, 'validate.test');" action="?" method="post">
     {% csrf_token %}
     {% bootstrap_form form %}
     <input type="submit" class="btn btn-success" value="Valider">
@@ -21,6 +21,7 @@
 <h3>Cached pages ({% cache 60 sidebar %}Cached template value: {% demo_template_tag 1 %}{% endcache %})</h3>
 <small>Non-cached template value: {% demo_template_tag %}</small>
 <ul>
+    <li><a href="{% url 'chat' %}">Simple chat system</a></li>
     <li><a href="{% url 'cache_60' %}">Cached during 60s</a></li>
     <li><a href="{% url 'cache_vary_on_headers' %}">Cached vary on headers</a></li>
     <li><a href="{% url 'cache_private' %}">Cached for authenticated users</a></li>

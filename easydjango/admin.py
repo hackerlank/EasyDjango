@@ -15,7 +15,7 @@ class NotificationAdmin(admin.ModelAdmin):
 
     # noinspection PyMethodMayBeStatic
     def activate(self, request, queryset):
-        n = queryset.filter(is_active=True).update(is_active=False)
+        n = queryset.filter(is_active=False).update(is_active=True)
         if n == 0:
             messages.info(request, _('No notification has been activated.'))
         elif n == 1:
@@ -26,7 +26,7 @@ class NotificationAdmin(admin.ModelAdmin):
 
     # noinspection PyMethodMayBeStatic
     def deactivate(self, request, queryset):
-        n = queryset.filter(is_active=False).update(is_active=True)
+        n = queryset.filter(is_active=True).update(is_active=False)
         if n == 0:
             messages.info(request, _('No notification has been deactivated.'))
         elif n == 1:

@@ -3,8 +3,10 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 import logging
 import time
+
+import re
 from easydjango.decorators import signal, everyone
-from easydjango.tasks import scall, BROADCAST, SERVER
+from easydjango.tasks import scall, BROADCAST, SERVER, WINDOW
 
 __author__ = 'Matthieu Gallet'
 logger = logging.getLogger('django.request')
@@ -32,3 +34,13 @@ def print_sig1(window_info, content=''):
 def print_sig2(window_info, content=''):
     scall(window_info, 'notify', to=[BROADCAST, SERVER], content="Server notification [%r]" % content,
           level='warning', timeout=2, style='notification')
+
+
+@signal(is_allowed_to=everyone, path='demo.chat.receive')
+def chat_receive(window_info, content=''):
+    matcher = re.match('^@([\w\-_]+).*', content)
+    if matcher:
+        dest = 'chat-%s' % matcher.group(1)
+    else:
+        dest = BROADCAST
+    scall(window_info, 'demo.chat.send', to=[WINDOW, dest], content=content)

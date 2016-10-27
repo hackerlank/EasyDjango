@@ -2,8 +2,6 @@ TODO list
 =========
 
   * simple chat system as example
-  * translation in JSONEncoder
-  * serialize_topics -> ignore None values
   * test with Python 3
   * use uwsgi
   * write doc

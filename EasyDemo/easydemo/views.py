@@ -4,14 +4,14 @@ from __future__ import unicode_literals, print_function, absolute_import
 import logging
 
 # noinspection PyUnresolvedReferences
-from easydemo.forms import TestForm
+from easydemo.forms import TestForm, ChatLoginForm
 from django.contrib import messages
 from django.template.response import TemplateResponse
 from django.views.decorators.cache import cache_control, cache_page
 from django.views.decorators.cache import never_cache
 from django.views.decorators.vary import vary_on_headers
 from django.views.generic import TemplateView
-from easydjango.tasks import set_websocket_topics
+from easydjango.tasks import set_websocket_topics, WINDOW
 
 logger = logging.getLogger('django.request')
 __author__ = 'Matthieu Gallet'
@@ -62,3 +62,19 @@ def cache_private(request):
 def cache_nevercache(request):
     logger.warn("compute never_cache page")
     return TemplateResponse(request, 'easydemo/index.html', {'form': TestForm(), 'title': 'Never cache'})
+
+
+def chat(request):
+    name = None
+    if request.method == 'POST':
+        form = ChatLoginForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            form = None
+            set_websocket_topics(request, WINDOW, 'chat-%s' % name)
+    else:
+        form = ChatLoginForm()
+        set_websocket_topics(request, WINDOW)
+
+    template_values = {'form': form, 'name': name}
+    return TemplateResponse(request, 'easydemo/chat.html', template_values)
