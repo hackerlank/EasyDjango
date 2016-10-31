@@ -7,14 +7,12 @@ Define "main" functions for your scripts using the Django `manage.py` system or 
 from __future__ import unicode_literals, absolute_import, print_function
 
 import codecs
-import glob
 import os
 import re
 import shutil
 import subprocess
 import sys
 from argparse import ArgumentParser
-from collections import OrderedDict
 
 from easydjango.conf.merger import SettingMerger
 from easydjango.conf.providers import PythonModuleProvider, PythonFileProvider, IniConfigProvider, \
@@ -121,6 +119,32 @@ def load_celery():
 def control():
     """Main user function, with commands for deploying, migrating data, backup or running services
     """
+    set_env()
+    import django as base_django
+    if base_django.VERSION[:2] >= (1, 7):
+        base_django.setup()
+    from django.conf import settings
+    from django.utils.translation import ugettext as _
+    command_commands = settings.COMMON_COMMANDS
+    cmd = sys.argv[1] if len(sys.argv) > 1 else ''
+    script, command = command_commands.get(cmd, (None, None))
+    invalid_script = _('Invalid script name: %(cmd)s') % {'cmd': script}
+    invalid_command = _('Usage: %(name)s %(cmd)s') % {'name': sys.argv[0], 'cmd': '|'.join(command_commands)}
+
+    if len(sys.argv) == 1 or sys.argv[1] not in command_commands:
+        print(invalid_command)
+        return 1
+    scripts = {'django': django, 'gunicorn': gunicorn, 'celery': celery, 'uwsgi': uwsgi}
+    if script not in scripts:
+        print(invalid_script)
+        return 1
+    project_name, sep, __ = os.environ['EASYDJANGO_CONF_NAME'].partition(':')
+    os.environ['EASYDJANGO_CONF_NAME'] = '%s:%s' % (project_name, script)
+    if command:
+        sys.argv[1] = command
+    else:
+        sys.argv[1:2] = []
+    return scripts[script]()
 
 
 def django():
@@ -143,7 +167,6 @@ def gunicorn():
     :return:
     """
     from gunicorn.app.wsgiapp import run
-
     set_env()
     from django.conf import settings
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
@@ -151,7 +174,7 @@ def gunicorn():
     options, extra_args = parser.parse_known_args()
     sys.argv[1:] = extra_args
     __set_default_option(options, 'bind')
-    application = 'djangofloor.wsgi_http:application'
+    application = 'easydjango.wsgi:application'
     if application not in sys.argv:
         sys.argv.append(application)
     return run()

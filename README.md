@@ -30,7 +30,6 @@ Creating a working new project only requires a couple lines:
 
   * extensible config system
 
-  
   * images @2x retina
   * language
   * cache (server/client-side): new decorator?
@@ -48,39 +47,14 @@ Creating a working new project only requires a couple lines:
   * easy initial conf
   * create favicon
 
-myproject-ctl command
-    celery worker
-    celery purge
-    celery status
-    celery events
-    django migrate
-    django collectstatic
-    django config
-    django dumpdata
-    django loaddata
-    django dbshell
-    django check
-    django sendtestemail
-    django shell
-    django createsuperuser
-    django changepassword
-    gunicorn 
-    uwsgi
-    
-  
-session in Redis
 
 python3-redis - Persistent key-value database with network interface (Python 3 library)
-python3-aioredis - asyncio (PEP 3156) Redis support
-python3-hiredis - redis protocol reader for Python using hiredis
 
 base templates:
     - search button
     - create account window
     - logo
     - footer
-    
-New (production-ready) log system
     
 WebSocket:
   - on génère un ID de fenêtre avec une liste de topics associés et une expiration

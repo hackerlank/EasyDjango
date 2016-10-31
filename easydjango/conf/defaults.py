@@ -17,6 +17,7 @@ __author__ = 'Matthieu Gallet'
 # ######################################################################################################################
 try:
     import django_redis  # does not work with is_package_present (???)
+
     USE_DJANGO_REDIS = True
 except ImportError:
     django_redis = None
@@ -26,6 +27,7 @@ USE_DJANGO_REDIS_SESSION = is_package_present('redis_sessions')
 USE_SCSS = is_package_present('scss')
 USE_PIPELINE = is_package_present('pipeline')
 USE_DEBUG_TOOLBAR = is_package_present('debug_toolbar')
+USE_REST_FRAMEWORK = is_package_present('rest_framework')
 
 # ######################################################################################################################
 #
@@ -73,6 +75,8 @@ if USE_DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
 if USE_PIPELINE:
     INSTALLED_APPS.append('pipeline')
+if USE_REST_FRAMEWORK:
+    INSTALLED_APPS.append('rest_framework')
 INSTALLED_APPS.append('easydjango')
 LOGGING = CallableSetting(lambda x:
                           generate_log_configuration(root_directory=x['LOG_DIRECTORY'], project_name=x['PROJECT_NAME'],
@@ -168,10 +172,17 @@ NPM_EXECUTABLE_PATH = 'npm'
 NPM_ROOT_PATH = AutocreateDirectory('{LOCAL_PATH}/npm')
 NPM_STATIC_FILES_PREFIX = 'vendor'
 
+# django-rest-framework
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
+
 # easydjango
 DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
 SERVER_NAME = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).hostname, 'SERVER_BASE_URL')
-SERVER_PORT = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).port or (USE_SSL and 443) or 80, 
+SERVER_PORT = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).port or (USE_SSL and 443) or 80,
                               'SERVER_BASE_URL', 'USE_SSL')
 USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
 USE_SSL = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).scheme == 'https', 'SERVER_BASE_URL')
@@ -186,6 +197,29 @@ WINDOW_INFO_MIDDLEWARES = [
     'easydjango.middleware.WindowKeyMiddleware',
     'easydjango.middleware.DjangoAuthMiddleware',
     'easydjango.middleware.Djangoi18nMiddleware', ]
+COMMON_COMMANDS = {
+    'queue-events': ('celery', 'events'),
+    'purge-queue': ('celery', 'purge'),
+    'queue-status': ('celery', 'status'),
+    'worker': ('celery', 'worker'),
+    'staticfiles': ('django', 'collectstatic'),
+    'changepassword': ('django', 'changepassword'),
+    'check': ('django', 'check'),
+    'config': ('django', 'config'),
+    'createsuperuser': ('django', 'createsuperuser'),
+    'dbshell': ('django', 'dbshell'),
+    'dumpdata': ('django', 'dumpdata'),
+    'loaddata': ('django', 'loaddata'),
+    'migrate': ('django', 'migrate'),
+    'server-dev': ('django', 'runserver'),
+    'sendtestemail': ('django', 'sendtestemail'),
+    'shell': ('django', 'shell'),
+    'server-gunicorn': ('gunicorn', ''),
+    'server-uwgsi': ('uwgsi', ''),
+}
+# COMMON_COMMANDS["command_name"] = ("django", "command")
+# COMMON_COMMANDS["other_command_name"] = ("celery", "other_command")
+
 # ws4redis
 WEBSOCKET_URL = '/ws/'
 WS4REDIS_CONNECTION = {'host': '{WS4REDIS_SERVER}', 'port': SettingReference('WS4REDIS_PORT'),
@@ -231,7 +265,7 @@ PIPELINE_CSS = {
 }
 PIPELINE_JS = {
     'default': {
-        'source_filenames': ['vendor/jquery/dist/jquery.min.js',  'js/easydjango.js', ExpandIterable('EASYDJANGO_JS')],
+        'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'js/easydjango.js', ExpandIterable('EASYDJANGO_JS')],
         'output_filename': 'js/default.js',
     },
     'bootstrap3': {
@@ -254,10 +288,10 @@ PIPELINE_ENABLED = True
 PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
 PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
 if USE_SCSS:
-    PIPELINE_COMPILERS = ('djangofloor.middleware.PyScssCompiler', )
+    PIPELINE_COMPILERS = ('djangofloor.middleware.PyScssCompiler',)
 
 # Django-Debug-Toolbar
-DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js', }
+DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js',}
 
 # Django-Bootstrap3
 BOOTSTRAP3 = {
@@ -274,7 +308,7 @@ BOOTSTRAP3 = {
 # ######################################################################################################################
 #
 # settings that should be customized for each project
-# of course, you can define or override any setting
+# of course, you can redefine or override any setting
 #
 # ######################################################################################################################
 # easydjango

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 import json
+import logging
 import uuid
 
 from celery import shared_task
@@ -25,6 +26,7 @@ BROADCAST = [[]]
 
 _signal_encoder = import_string(settings.WS4REDIS_SIGNAL_ENCODER)
 _topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
+logger = logging.getLogger('easydjango.websockets')
 
 
 # noinspection PyCallingNonCallable
@@ -118,6 +120,7 @@ def _call_ws_signal(signal_name, signal_id, serialized_topic, kwargs):
     serialized_message = json.dumps({'signal': signal_name, 'opts': kwargs, 'signal_id': signal_id},
                                     cls=_signal_encoder)
     topic = settings.WS4REDIS_PREFIX + serialized_topic
+    logger.debug("send message to topic %r" % topic)
     connection.publish(topic, serialized_message.encode('utf-8'))
 
 
@@ -136,6 +139,7 @@ def _return_ws_function_result(window_info, result_id, result, exception=None):
     serialized_topic = _topic_serializer(window_info, WINDOW)
     if serialized_topic:
         topic = settings.WS4REDIS_PREFIX + serialized_topic
+        logger.debug("send function result to topic %r" % topic)
         connection.publish(topic, serialized_message.encode('utf-8'))
 
 

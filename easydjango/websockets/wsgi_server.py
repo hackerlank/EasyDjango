@@ -31,7 +31,7 @@ from django.contrib.auth import get_user
 from django.core.handlers.wsgi import WSGIRequest, logger
 from django.core.exceptions import PermissionDenied
 from django import http
-from django.utils.encoding import force_str
+from django.utils.encoding import force_str, force_text
 from easydjango.websockets.exceptions import WebSocketError, HandshakeError, UpgradeRequiredError
 
 try:
@@ -64,7 +64,7 @@ def get_websocket_topics(request):
     redis_key = '%s%s' % (settings.WS4REDIS_PREFIX, token)
     connection = _get_redis_connection()
     topics = connection.lrange(redis_key, 0, -1)
-    return topics
+    return [x.decode('utf-8') for x in topics]
 
 
 class WebsocketWSGIServer(object):
@@ -167,7 +167,7 @@ class WebsocketWSGIServer(object):
             if channels:
                 pubsub = self._redis_connection.pubsub()
                 pubsub.subscribe(*channels)
-                logger.debug('Subscribed to channels: {0}'.format(', '.join(channels)))
+                logger.debug('Subscribed to channels: {0}'.format(', '.join(map(repr, channels))))
                 # noinspection PyProtectedMember
                 redis_fd = pubsub.connection._sock.fileno()
                 if redis_fd:
@@ -185,6 +185,7 @@ class WebsocketWSGIServer(object):
                         self.publish_message(window_info, message)
                     elif fd == redis_fd:
                         kind, topic, message = pubsub.parse_response()
+                        kind = kind.decode('utf-8')
                         if kind == 'message':
                             websocket.send(message)
                     else:

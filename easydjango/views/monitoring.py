@@ -113,9 +113,13 @@ class CeleryStats(MonitoringCheck):
         for connections in REGISTERED_SIGNALS.values():
             expected_queues.update({y.queue: ('danger', 'remove') for y in connections})
         queue_stats = app.control.inspect().active_queues()
+        if queue_stats is None:
+            queue_stats = {}
         for stats in queue_stats.values():
             for queue_data in stats:
+                # noinspection PyTypeChecker
                 if queue_data['name'] in expected_queues:
+                    # noinspection PyTypeChecker
                     expected_queues[queue_data['name']] = ('success', 'ok')
 
         workers = []
@@ -139,6 +143,7 @@ class CeleryStats(MonitoringCheck):
             worker['state'] = ('success', 'ok')
             if worker['timeouts'] > 0:
                 worker['state'] = ('danger', 'remove')
+            # noinspection PyTypeChecker
             worker['queues'] = list({y['name'] for y in queue_stats.get(key, [])})
             worker['queues'].sort()
             workers.append(worker)

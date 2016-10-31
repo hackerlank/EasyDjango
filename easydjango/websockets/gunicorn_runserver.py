@@ -1,21 +1,41 @@
 # -*- coding: utf-8 -*-
+"""
+WSGI config for djangofloor project.
+
+This module contains the WSGI application used by Django's development server
+and any production WSGI deployments. It should expose a module-level variable
+named ``application``. Django's ``runserver`` and ``runfcgi`` commands discover
+this application via the ``WSGI_APPLICATION`` setting.
+
+Usually you will have the standard Django WSGI application here, but it also
+might make sense to replace the whole Django WSGI application with a custom one
+that later delegates to the Django one. For example, you could introduce WSGI
+middleware here, or combine a Django application with an application of another
+framework.
+
+"""
+from __future__ import unicode_literals, print_function, absolute_import
+
 import base64
 import logging
+import socket
 import select
-from hashlib import sha1
-from wsgiref import util
 
-from django.core.management.commands import runserver
-from django.core.servers.basehttp import WSGIServer, WSGIRequestHandler, ServerHandler
+import django
+import re
+from hashlib import md5, sha1
+
+import errno
+
+import six
 from django.utils.encoding import force_str
-from django.utils import six
-# noinspection PyUnresolvedReferences
-from django.utils.six.moves import socketserver
-
+from easydjango.websockets.exceptions import HandshakeError, UpgradeRequiredError
 from easydjango.websockets.websocket import WebSocket
-from easydjango.websockets.wsgi_server import WebsocketWSGIServer, HandshakeError, UpgradeRequiredError
+from easydjango.websockets.wsgi_server import WebsocketWSGIServer
+from gunicorn.workers.async import ALREADY_HANDLED
 
-util._hoppish = {}.__contains__
+__author__ = 'Matthieu Gallet'
+
 logger = logging.getLogger('django.request')
 
 
@@ -56,25 +76,8 @@ class WebsocketRunServer(WebsocketWSGIServer):
         logger.debug('WebSocket request accepted, switching protocols')
         start_response(force_str('101 Switching Protocols'), headers)
         print(environ)
-        six.get_method_self(start_response).finish_content()
+        # six.get_method_self(start_response).finish_content()
         return WebSocket(environ['wsgi.input'])
 
     def select(self, rlist, wlist, xlist, timeout=None):
         return select.select(rlist, wlist, xlist, timeout)
-
-
-def run(addr, port, wsgi_handler, ipv6=False, threading=False):
-    """
-    Function to monkey patch the internal Django command: manage.py runserver
-    """
-    logger.info('Websocket support is enabled.')
-    server_address = (addr, port)
-    if not threading:
-        raise Exception("Django's Websocket server must run with threading enabled")
-
-    ServerHandler.http_version = '1.1'
-    httpd_cls = type('WSGIServer', (socketserver.ThreadingMixIn, WSGIServer), {'daemon_threads': True})
-    httpd = httpd_cls(server_address, WSGIRequestHandler, ipv6=ipv6)
-    httpd.set_app(wsgi_handler)
-    httpd.serve_forever()
-runserver.run = run

@@ -33,11 +33,13 @@ urlpatterns = [url(r'^admin/', include(admin.site.urls)),
 if settings.EASYDJANGO_LOGIN_VIEW:
     login_view = import_string(settings.EASYDJANGO_LOGIN_VIEW)
     urlpatterns += [url(r'^%s' % settings.LOGIN_URL[1:], login_view.as_view(), name='login')]
-
+if settings.USE_REST_FRAMEWORK:
+    urlpatterns += [
+        url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    ]
 if settings.EASYDJANGO_INDEX_VIEW:
     index_view = import_string(settings.EASYDJANGO_INDEX_VIEW)
     urlpatterns += [url(r'^$', index_view.as_view(), name='index')]
-
 if settings.DEBUG and settings.USE_DEBUG_TOOLBAR:
     import debug_toolbar
     urlpatterns += [url(r'^__debug__/', include(debug_toolbar.urls)), ]
