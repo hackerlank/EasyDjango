@@ -45,6 +45,18 @@ Overview:
 :doc:`settings`
     Settings system
 
+:doc:`signals`
+    Working with signals
+
+:doc:`websockets`
+    Using websockets and shortcut functions
+
+:doc:`monitoring`
+    Default monitoring view
+
+:doc:`notification`
+    Simple user notification system
+
 :doc:`features`
     Complete feature list
 

@@ -10,9 +10,11 @@ from easydjango.websockets.exceptions import WebSocketError, FrameTooLargeExcept
 
 
 if six.PY3:
+    # noinspection PyShadowingBuiltins
     xrange = range
 
 
+# noinspection PyMethodMayBeStatic
 class WebSocket(object):
     __slots__ = ('_closed', 'stream', 'utf8validator', 'utf8validate_last')
 
@@ -30,6 +32,7 @@ class WebSocket(object):
         self.utf8validate_last = None
 
     def __del__(self):
+        # noinspection PyBroadException
         try:
             self.close()
         except:
@@ -92,6 +95,7 @@ class WebSocket(object):
         :param payload: The bytestring payload associated with the close frame.
         """
         if not payload:
+            # noinspection PyTypeChecker
             self.close(1000, None)
             return
         if len(payload) < 2:
@@ -108,8 +112,10 @@ class WebSocket(object):
                 raise UnicodeError
         if not self._is_valid_close_code(code):
             raise WebSocketError('Invalid close code {0}'.format(code))
+        # noinspection PyTypeChecker
         self.close(code, payload)
 
+    # noinspection PyUnusedLocal
     def handle_ping(self, header, payload):
         self.send_frame(payload, self.OPCODE_PONG)
 
@@ -134,7 +140,7 @@ class WebSocket(object):
             payload = self.stream.read(header.length)
         except socket_error:
             payload = ''
-        except Exception:
+        except Exception as e:
             logger.debug("{}: {}".format(type(e), six.text_type(e)))
             payload = ''
         if len(payload) != header.length:
@@ -167,7 +173,8 @@ class WebSocket(object):
             if f_opcode in (self.OPCODE_TEXT, self.OPCODE_BINARY):
                 # a new frame
                 if opcode:
-                    raise WebSocketError("The opcode in non-fin frame is expected to be zero, got {0!r}".format(f_opcode))
+                    raise WebSocketError("The opcode in non-fin frame is "
+                                         "expected to be zero, got {0!r}".format(f_opcode))
                 # Start reading a new message, reset the validator
                 self.utf8validator.reset()
                 self.utf8validate_last = (True, True, 0, 0)
@@ -284,6 +291,7 @@ class Stream(object):
 
     __slots__ = ('read', 'write', 'fileno')
 
+    # noinspection PyProtectedMember
     def __init__(self, wsgi_input):
         if six.PY2:
             self.read = wsgi_input._sock.recv
@@ -344,7 +352,7 @@ class Header(object):
 
         data = read(2)
         if len(data) != 2:
-            raise WebSocketError("Unexpected EOF while decoding header")
+            raise WebSocketError("Unexpected EOF while decoding header (1)")
         first_byte, second_byte = struct.unpack('!BB', data)
         header = cls(
             fin=first_byte & cls.FIN_MASK == cls.FIN_MASK,
@@ -362,18 +370,18 @@ class Header(object):
             # 16 bit length
             data = read(2)
             if len(data) != 2:
-                raise WebSocketError('Unexpected EOF while decoding header')
+                raise WebSocketError('Unexpected EOF while decoding header (2)')
             header.length = struct.unpack('!H', data)[0]
         elif header.length == 127:
             # 64 bit length
             data = read(8)
             if len(data) != 8:
-                raise WebSocketError('Unexpected EOF while decoding header')
+                raise WebSocketError('Unexpected EOF while decoding header (3)')
             header.length = struct.unpack('!Q', data)[0]
         if has_mask:
             mask = read(4)
             if len(mask) != 4:
-                raise WebSocketError('Unexpected EOF while decoding header')
+                raise WebSocketError('Unexpected EOF while decoding header (4)')
             header.mask = mask
         return header
 

@@ -48,9 +48,16 @@ class Command(BaseCommand):
                 for provider_name, raw_value in merger.raw_settings[setting_name].items():
                     self.stdout.write(self.style.WARNING('#   %s -> %r' % (provider_name or 'built-in', raw_value)))
         elif action == 'ini':
-            if verbosity > 1:
+            if verbosity >= 3:
                 provider = merger.fields_provider
                 self.stdout.write(self.style.NOTICE('; list of fields in %s "%s"' % (provider.name, provider)))
+            for provider in merger.providers:
+                if not isinstance(provider, IniConfigProvider):
+                    continue
+                elif provider.is_valid():
+                    self.stdout.write(self.style.NOTICE('#  - %s "%s"' % (provider.name, provider)))
+                elif verbosity >= 2:
+                    self.stdout.write(self.style.ERROR('#  - %s "%s"' % (provider.name, provider)))
             provider = IniConfigProvider()
             for config_field in merger.fields_provider.get_config_fields():
                 assert isinstance(config_field, ConfigField)

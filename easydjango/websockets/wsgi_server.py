@@ -72,7 +72,7 @@ class WebsocketWSGIServer(object):
         """
         redis_connection can be overriden by a mock object.
         """
-        self._redis_connection = redis_connection and redis_connection or _get_redis_connection()
+        self._redis_connection = redis_connection or _get_redis_connection()
 
     def upgrade_websocket(self, environ, start_reponse):
         raise NotImplementedError
@@ -114,8 +114,8 @@ class WebsocketWSGIServer(object):
         echo_message = bool(request.GET.get('echo', ''))
         return channels, echo_message
 
-    # noinspection PyMethodMayBeStatic
-    def publish_message(self, window_info, message):
+    @staticmethod
+    def publish_message(window_info, message):
         if message == settings.WS4REDIS_HEARTBEAT:
             return
         try:
@@ -151,49 +151,14 @@ class WebsocketWSGIServer(object):
         """
         response = http.HttpResponse(status=200, content='Websocket Closed')
         websocket = None
-
         try:
             self.assure_protocol_requirements(environ)
             request = WSGIRequest(environ)
             # noinspection PyTypeChecker
             window_info = self.process_request(request)
             websocket = self.upgrade_websocket(environ, start_response)
-
-            websocket_fd = websocket.get_file_descriptor()
-            listening_fds = [websocket_fd]
-
             channels, echo_message = self.process_subscriptions(request)
-            redis_fd, pubsub = None, None
-            if channels:
-                pubsub = self._redis_connection.pubsub()
-                pubsub.subscribe(*channels)
-                logger.debug('Subscribed to channels: {0}'.format(', '.join(map(repr, channels))))
-                # noinspection PyProtectedMember
-                redis_fd = pubsub.connection._sock.fileno()
-                if redis_fd:
-                    listening_fds.append(redis_fd)
-            # subscriber.send_persited_messages(websocket)
-            while websocket and not websocket.closed:
-                selected_fds = self.select(listening_fds, [], [], 10.0)
-                ready = selected_fds[0]
-                if not ready:
-                    # flush empty socket
-                    websocket.flush()
-                for fd in ready:
-                    if fd == websocket_fd:
-                        message = websocket.receive()
-                        self.publish_message(window_info, message)
-                    elif fd == redis_fd:
-                        kind, topic, message = pubsub.parse_response()
-                        kind = kind.decode('utf-8')
-                        if kind == 'message':
-                            websocket.send(message)
-                    else:
-                        logger.error('Invalid file descriptor: {0}'.format(fd))
-                # Check again that the websocket is closed before sending the heartbeat,
-                # because the websocket can closed previously in the loop.
-                if settings.WS4REDIS_HEARTBEAT and not websocket.closed and not ready:
-                    websocket.send(settings.WS4REDIS_HEARTBEAT)
+            self.process_websocket(window_info, websocket, channels)
         except WebSocketError as excpt:
             logger.warning('WebSocketError: {}'.format(excpt), exc_info=sys.exc_info())
             response = http.HttpResponse(status=1001, content='Websocket Closed')
@@ -226,3 +191,38 @@ class WebsocketWSGIServer(object):
                 start_response(force_str(status), headers)
                 logger.info('Finish non-websocket response with status code: {}'.format(response.status_code))
         return response
+
+    def process_websocket(self, window_info, websocket, channels):
+        websocket_fd = websocket.get_file_descriptor()
+        listening_fds = [websocket_fd]
+        redis_fd, pubsub = None, None
+        if channels:
+            pubsub = self._redis_connection.pubsub()
+            pubsub.subscribe(*channels)
+            logger.debug('Subscribed to channels: {0}'.format(', '.join(map(repr, channels))))
+            # noinspection PyProtectedMember
+            redis_fd = pubsub.connection._sock.fileno()
+            if redis_fd:
+                listening_fds.append(redis_fd)
+        # subscriber.send_persited_messages(websocket)
+        while websocket and not websocket.closed:
+            selected_fds = self.select(listening_fds, [], [], 10.0)
+            ready = selected_fds[0]
+            if not ready:
+                # flush empty socket
+                websocket.flush()
+            for fd in ready:
+                if fd == websocket_fd:
+                    message = websocket.receive()
+                    self.publish_message(window_info, message)
+                elif fd == redis_fd:
+                    kind, topic, message = pubsub.parse_response()
+                    kind = kind.decode('utf-8')
+                    if kind == 'message':
+                        websocket.send(message)
+                else:
+                    logger.error('Invalid file descriptor: {0}'.format(fd))
+            # Check again that the websocket is closed before sending the heartbeat,
+            # because the websocket can closed previously in the loop.
+            if settings.WS4REDIS_HEARTBEAT and not websocket.closed and not ready:
+                websocket.send(settings.WS4REDIS_HEARTBEAT)

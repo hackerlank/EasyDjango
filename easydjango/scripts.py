@@ -174,7 +174,7 @@ def gunicorn():
     options, extra_args = parser.parse_known_args()
     sys.argv[1:] = extra_args
     __set_default_option(options, 'bind')
-    application = 'easydjango.wsgi:application'
+    application = 'easydjango.wsgi:gunicorn_application'
     if application not in sys.argv:
         sys.argv.append(application)
     return run()
@@ -194,12 +194,13 @@ def celery():
 def uwsgi():
     set_env()
     from django.conf import settings
-    parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
-    parser.add_argument('--mode', default='both', choices=('both', 'http', 'websockets'))
-    parser.add_argument('-b', '--bind', action='store', default=settings.BIND_ADDRESS, help=settings.BIND_ADDRESS_HELP)
-    options, extra_args = parser.parse_known_args()
-    sys.argv[1:] = extra_args
-    argv = list(sys.argv)
+    # parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
+    # parser.add_argument('--mode', default='both', choices=('both', 'http', 'websockets'))
+    # parser.add_argument('-b', '--bind', action='store',
+    #  default=settings.BIND_ADDRESS, help=settings.BIND_ADDRESS_HELP)
+    # options, extra_args = parser.parse_known_args()
+    # sys.argv[1:] = extra_args
+    # argv = list(sys.argv)
     # websocket + http
     # uwsgi --virtualenv /path/to/virtualenv --http :80 --gevent 100 --http-websockets --module wsgi
     # http only
@@ -208,18 +209,24 @@ def uwsgi():
     # websockets only
     # uwsgi --virtualenv /path/to/virtualenv --http-socket /path/to/web.socket --gevent 1000 --http-websockets
     # --workers=2 --master --module wsgi_websocket
-
-    if options.mode == 'both':
-        argv += ['--module', 'djangofloor.wsgi']
-        argv += ['--http', options.bind]
-    elif options.mode == 'http':
-        argv += ['--module', 'djangofloor.wsgi_http']
-    elif options.mode == 'websocket':
-        argv += ['--module', 'djangofloor.wsgi_websockets']
+    #
+    #
+    # if options.mode == 'both':
+    #     argv += ['--module', 'easydjango.wsgi']
+    #     argv += ['--http', options.bind]
+    # elif options.mode == 'http':
+    #     argv += ['--module', 'easydjango.wsgi_http']
+    # elif options.mode == 'websocket':
+    #     argv += ['--module', 'easydjango.wsgi_websockets']
 
     # ok, we can now run uwsgi
-    argv[0] = 'uwsgi'
-    p = subprocess.Popen(argv)
+    # argv[0] = 'uwsgi'
+    # p = subprocess.Popen(argv)
+    cmd = ['uwsgi', '--master', '--processes', '%s' % settings.UWSGI_PROCESSES,
+           '--offload-threads', '%s' % settings.UWSGI_THREADS,
+           '--plugin', 'python', '--module', 'easydjango.wsgi', '--http-socket', ':9091', '--http-websockets',
+           '--enable-threads', '-H', 'easydjango35']
+    p = subprocess.Popen(cmd)
     p.wait()
     sys.exit(p.returncode)
 

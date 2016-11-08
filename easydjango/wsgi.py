@@ -7,19 +7,25 @@ from django.core.wsgi import get_wsgi_application
 __author__ = 'Matthieu Gallet'
 
 http_application = get_wsgi_application()
-ws_application = None
+django_ws_application = None
+gunicorn_ws_application = None
+uwsgi_ws_application = None
 
 if settings.USE_CELERY:
     # noinspection PyPackageRequirements,PyUnresolvedReferences
     import gevent.socket
     # noinspection PyPackageRequirements,PyUnresolvedReferences
     import redis.connection
+    from easydjango.websockets.django_runserver import WebsocketRunServer
+    from easydjango.websockets.gunicorn_runserver import GunicornWebsocketServer
     try:
-        from easydjango.websockets.uwsgi_runserver import uWSGIWebsocketServer as WebsocketServer
+        from easydjango.websockets.uwsgi_runserver import uWSGIWebsocketServer
         redis.connection.socket = gevent.socket
+        uwsgi_ws_application = uWSGIWebsocketServer()
     except ImportError:
-        from easydjango.websockets.django_runserver import WebsocketRunServer as WebsocketServer
-    ws_application = WebsocketServer()
+        uWSGIWebsocketServer = None
+    django_ws_application = WebsocketRunServer()
+    gunicorn_ws_application = GunicornWebsocketServer()
 
 
 def application(environ, start_response):
@@ -28,6 +34,29 @@ def application(environ, start_response):
 
     :return: a HTTP app, or a WS app (depending on the URL path)
     """
-    if settings.USE_CELERY and environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
-        return ws_application(environ, start_response)
+    print('++', environ.get('PATH_INFO', ''))
+    if environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
+        return uwsgi_ws_application(environ, start_response)
+    return http_application(environ, start_response)
+
+
+def django_application(environ, start_response):
+    """
+    Return a WSGI application which is patched to be used with websockets.
+
+    :return: a HTTP app, or a WS app (depending on the URL path)
+    """
+    if environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
+        return django_ws_application(environ, start_response)
+    return http_application(environ, start_response)
+
+
+def gunicorn_application(environ, start_response):
+    """
+    Return a WSGI application which is patched to be used with websockets.
+
+    :return: a HTTP app, or a WS app (depending on the URL path)
+    """
+    if environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
+        return gunicorn_ws_application(environ, start_response)
     return http_application(environ, start_response)

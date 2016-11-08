@@ -131,7 +131,7 @@ USE_L10N = True
 USE_THOUSAND_SEPARATOR = True
 USE_TZ = True
 USE_X_FORWARDED_HOST = True  # X-Forwarded-Host
-WSGI_APPLICATION = 'easydjango.wsgi.application'
+WSGI_APPLICATION = 'easydjango.wsgi.django_application'
 
 # django.contrib.auth
 AUTHENTICATION_BACKENDS = (
@@ -184,6 +184,14 @@ DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
 SERVER_NAME = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).hostname, 'SERVER_BASE_URL')
 SERVER_PORT = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).port or (USE_SSL and 443) or 80,
                               'SERVER_BASE_URL', 'USE_SSL')
+
+
+def url_prefix(values):
+    p = urlparse(values['SERVER_BASE_URL']).path
+    if not p.endswith('/'):
+        p += '/'
+    return p
+URL_PREFIX = CallableSetting(url_prefix, 'SERVER_BASE_URL')
 USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
 USE_SSL = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).scheme == 'https', 'SERVER_BASE_URL')
 USE_X_FORWARDED_FOR = True  # X-Forwarded-For
@@ -229,6 +237,7 @@ WS4REDIS_HEARTBEAT = '--HEARTBEAT--'
 WS4REDIS_SIGNAL_DECODER = 'json.JSONDecoder'
 WS4REDIS_SIGNAL_ENCODER = 'django.core.serializers.json.DjangoJSONEncoder'
 WS4REDIS_PREFIX = 'ws'
+WS4REDIS_THREAD_COUNT = 2
 
 # django-pipeline
 PIPELINE = {
@@ -379,7 +388,7 @@ __split_path = __file__.split(os.path.sep)
 if 'lib' in __split_path:
     prefix = os.path.join(*__split_path[:__split_path.index('lib')])
     LOCAL_PATH = AutocreateDirectory('/%s/var/{PROJECT_NAME}' % prefix)
-SERVER_BASE_URL = 'http://localhost:9000'
+SERVER_BASE_URL = 'http://localhost:9000/'
 LOG_DIRECTORY = '{LOCAL_PATH}/logs'
 
 # django_redis
@@ -407,3 +416,6 @@ CELERY_DB = 13
 CELERY_SERVER = 'localhost'
 CELERY_PORT = 6379
 CELERY_PASSWORD = ''
+
+UWSGI_PROCESSES = 4
+UWSGI_THREADS = 2
