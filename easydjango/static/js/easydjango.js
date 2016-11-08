@@ -84,10 +84,8 @@
             }
             var msg = JSON.stringify({signal: signal, opts: opts});
             if ($.ed._wsConnection) {
-                console.error("on envoie le message");
                 $.ed._wsConnection.send(msg);
             } else {
-                console.error("on ajoute au buffer");
                 $.ed._wsBuffer.push(msg);
             }
         };

@@ -34,7 +34,6 @@ def application(environ, start_response):
 
     :return: a HTTP app, or a WS app (depending on the URL path)
     """
-    print('++', environ.get('PATH_INFO', ''))
     if environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
         return uwsgi_ws_application(environ, start_response)
     return http_application(environ, start_response)

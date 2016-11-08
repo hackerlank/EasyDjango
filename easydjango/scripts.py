@@ -224,8 +224,9 @@ def uwsgi():
     # p = subprocess.Popen(argv)
     cmd = ['uwsgi', '--master', '--processes', '%s' % settings.UWSGI_PROCESSES,
            '--offload-threads', '%s' % settings.UWSGI_THREADS,
-           '--plugin', 'python', '--module', 'easydjango.wsgi', '--http-socket', ':9091', '--http-websockets',
-           '--enable-threads', '-H', 'easydjango35']
+           '--plugin', 'python', '--module', 'easydjango.wsgi', '--http-socket', settings.LISTEN_ADDRESS,
+           '--http-websockets', '--reload-mercy', '5', '--mule-reload-mercy', '5', '--worker-reload-mercy', '5',
+           '--enable-threads', '-H', 'easydjango27']
     p = subprocess.Popen(cmd)
     p.wait()
     sys.exit(p.returncode)

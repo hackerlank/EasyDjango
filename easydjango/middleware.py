@@ -268,7 +268,11 @@ class DjangoAuthMiddleware(WindowInfoMiddleware):
 class Djangoi18nMiddleware(WindowInfoMiddleware):
 
     def from_request(self, request, window_info):
-        window_info.language_code = get_language_from_request(request)
+        # noinspection PyTypeChecker
+        if getattr(request, 'session', None):
+            window_info.language_code = get_language_from_request(request)
+        else:
+            window_info.language_code = settings.LANGUAGE_CODE
 
     def new_window_info(self, window_info):
         window_info.language_code = None

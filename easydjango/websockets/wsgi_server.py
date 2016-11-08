@@ -116,6 +116,7 @@ class WebsocketWSGIServer(object):
 
     @staticmethod
     def publish_message(window_info, message):
+        print('message: %r' % message)
         if message == settings.WS4REDIS_HEARTBEAT:
             return
         try:
