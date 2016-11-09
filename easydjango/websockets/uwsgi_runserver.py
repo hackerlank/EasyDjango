@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+import logging
+
 import uwsgi
 import gevent.select
 from easydjango.websockets.exceptions import WebSocketError
 from easydjango.websockets.wsgi_server import WebsocketWSGIServer
+
+logger = logging.getLogger('django.request')
 
 
 class uWSGIWebsocket(object):

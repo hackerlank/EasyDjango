@@ -14,6 +14,7 @@ import subprocess
 import sys
 from argparse import ArgumentParser
 
+from django.utils.six import text_type
 from easydjango.conf.merger import SettingMerger
 from easydjango.conf.providers import PythonModuleProvider, PythonFileProvider, IniConfigProvider, \
     PythonConfigFieldsProvider
@@ -194,48 +195,60 @@ def celery():
 def uwsgi():
     set_env()
     from django.conf import settings
-    # parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
-    # parser.add_argument('--mode', default='both', choices=('both', 'http', 'websockets'))
-    # parser.add_argument('-b', '--bind', action='store',
-    #  default=settings.BIND_ADDRESS, help=settings.BIND_ADDRESS_HELP)
-    # options, extra_args = parser.parse_known_args()
-    # sys.argv[1:] = extra_args
-    # argv = list(sys.argv)
-    # websocket + http
-    # uwsgi --virtualenv /path/to/virtualenv --http :80 --gevent 100 --http-websockets --module wsgi
-    # http only
-    # uwsgi --virtualenv /path/to/virtualenv --socket /path/to/django.socket --buffer-size=32768 --workers=5 --master
-    # --module wsgi_django
-    # websockets only
-    # uwsgi --virtualenv /path/to/virtualenv --http-socket /path/to/web.socket --gevent 1000 --http-websockets
-    # --workers=2 --master --module wsgi_websocket
-    #
-    #
-    # if options.mode == 'both':
-    #     argv += ['--module', 'easydjango.wsgi']
-    #     argv += ['--http', options.bind]
-    # elif options.mode == 'http':
-    #     argv += ['--module', 'easydjango.wsgi_http']
-    # elif options.mode == 'websocket':
-    #     argv += ['--module', 'easydjango.wsgi_websockets']
-
-    # ok, we can now run uwsgi
-    # argv[0] = 'uwsgi'
-    # p = subprocess.Popen(argv)
-    cmd = ['uwsgi', '--master', '--processes', '%s' % settings.UWSGI_PROCESSES,
-           '--offload-threads', '%s' % settings.UWSGI_THREADS,
-           '--plugin', 'python', '--module', 'easydjango.wsgi', '--http-socket', settings.LISTEN_ADDRESS,
-           '--http-websockets', '--reload-mercy', '5', '--mule-reload-mercy', '5', '--worker-reload-mercy', '5',
-           '--enable-threads', '-H', 'easydjango27']
+    parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
+    cmd = ['uwsgi', '--plugin', 'python', '--module', 'easydjango.wsgi']
+    parser.add_argument('--no-master', default=False, action='store_true',
+                        help='disable master process')
+    parser.add_argument('--no-http-websockets', default=False, action='store_true',
+                        help='do not automatically detect websockets connections and put the session in raw mode')
+    parser.add_argument('--no-enable-threads', default=False, action='store_true',
+                        help='do not run each worker in prethreaded mode with the specified number of threads')
+    parser.add_argument('-p', '--processes', default=settings.UWSGI_PROCESSES, type=int,
+                        help='spawn the specified number of workers/processes')
+    parser.add_argument('--workers', default=None, type=int,
+                        help='spawn the specified number of workers/processes')
+    parser.add_argument('--threads', default=settings.UWSGI_THREADS, type=int,
+                        help='run each worker in prethreaded mode with the specified number of threads')
+    parser.add_argument('--http-socket', default=settings.LISTEN_ADDRESS,
+                        help='bind to the specified UNIX/TCP socket using HTTP protocol')
+    parser.add_argument('--reload-mercy', default=5, type=int,
+                        help='set the maximum time (in seconds) we wait for workers and other processes '
+                             'to die during reload/shutdown')
+    parser.add_argument('--worker-reload-mercy', default=5, type=int,
+                        help='set the maximum time (in seconds) a worker can take to reload/shutdown (default is 5)')
+    parser.add_argument('--mule-reload-mercy', default=5, type=int,
+                        help='set the maximum time (in seconds) a mule can take to reload/shutdown (default is 5)')
+    args = [x for x in sys.argv[1:] if x != '-h']
+    options, extra_args = parser.parse_known_args(args=args)
+    if not options.no_master:
+        cmd += ['--master']
+    if not options.no_http_websockets:
+        cmd += ['--http-websockets']
+    if not options.no_enable_threads:
+        cmd += ['--enable-threads']
+    if options.workers:
+        cmd += ['--workers', text_type(options.workers)]
+    elif options.processes:
+        cmd += ['--processes', text_type(options.processes)]
+    cmd += ['--threads', text_type(options.threads)]
+    cmd += ['--http-socket', options.http_socket]
+    cmd += ['--reload-mercy', text_type(options.reload_mercy)]
+    cmd += ['--worker-reload-mercy', text_type(options.worker_reload_mercy)]
+    cmd += ['--mule-reload-mercy', text_type(options.mule_reload_mercy)]
+    if '-h' in sys.argv:
+        cmd += ['-h']
+    cmd += list(extra_args)
     p = subprocess.Popen(cmd)
     p.wait()
     sys.exit(p.returncode)
 
 
+# noinspection PyUnresolvedReferences
 def create_project():
     import easydjango
     inp = input
     if sys.version_info[0] == 2:
+        # noinspection PyUnresolvedReferences
         inp = raw_input
     base_path = os.path.dirname(easydjango.__file__)
     template_base_path = os.path.join(base_path, 'templates', 'easydjango', 'create_project')

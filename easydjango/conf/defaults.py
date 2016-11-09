@@ -223,7 +223,7 @@ COMMON_COMMANDS = {
     'sendtestemail': ('django', 'sendtestemail'),
     'shell': ('django', 'shell'),
     'server-gunicorn': ('gunicorn', ''),
-    'server-uwgsi': ('uwgsi', ''),
+    'server-uwsgi': ('uwsgi', ''),
 }
 # COMMON_COMMANDS["command_name"] = ("django", "command")
 # COMMON_COMMANDS["other_command_name"] = ("celery", "other_command")
@@ -417,5 +417,5 @@ CELERY_SERVER = 'localhost'
 CELERY_PORT = 6379
 CELERY_PASSWORD = ''
 
-UWSGI_PROCESSES = 4
-UWSGI_THREADS = 2
+UWSGI_PROCESSES = 3
+UWSGI_THREADS = 20

@@ -8,6 +8,7 @@ Structure of the redis database, with `prefix = settings.WS4REDIS_PREFIX`:
 
 """
 import json
+import logging
 import sys
 
 import django
@@ -28,7 +29,7 @@ from easydjango.request import WindowInfo
 from easydjango.tasks import _call_signal, SERVER, _server_function_call, import_signals_and_functions
 
 from django.contrib.auth import get_user
-from django.core.handlers.wsgi import WSGIRequest, logger
+from django.core.handlers.wsgi import WSGIRequest
 from django.core.exceptions import PermissionDenied
 from django import http
 from django.utils.encoding import force_str, force_text
@@ -44,6 +45,7 @@ except ImportError:
     from django.utils.importlib import import_module
 
 
+logger = logging.getLogger('django.request')
 signer = signing.Signer()
 topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
 signal_decoder = import_string(settings.WS4REDIS_SIGNAL_DECODER)
@@ -116,8 +118,7 @@ class WebsocketWSGIServer(object):
 
     @staticmethod
     def publish_message(window_info, message):
-        print('message: %r' % message)
-        if message == settings.WS4REDIS_HEARTBEAT:
+        if message == settings.WS4REDIS_HEARTBEAT or not message:
             return
         try:
             unserialized_message = json.loads(message)
@@ -141,6 +142,9 @@ class WebsocketWSGIServer(object):
                     logger.warning('Unknown function "%s" called by client "%s"' %
                                    (function_name, window_info.window_key))
         except TypeError:
+            pass
+        except ValueError:
+            logger.error('Invalid Websocket JSON message %r' % message)
             pass
         except KeyError:
             pass
