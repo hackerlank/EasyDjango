@@ -33,6 +33,7 @@ class EasyDjangoMiddleware(RemoteUserMiddleware):
     # noinspection PyMethodMayBeStatic
     def process_request(self, request):
         request.window_key = get_random_string(32, VALID_KEY_CHARS)
+        request.has_websocket_topics = False
         request.remote_username = None
 
         if settings.USE_X_FORWARDED_FOR and 'HTTP_X_FORWARDED_FOR' in request.META:

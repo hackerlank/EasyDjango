@@ -36,4 +36,5 @@ def context_base(request):
         'ed_get_notifications': lambda: Notification.get_notifications(request),
         'ed_user_agent': request.META.get('HTTP_USER_AGENT', ''),
         'ed_ws_token': getattr(request, 'window_key', None),
+        'ed_has_ws_topics': getattr(request, 'has_websocket_topics', False),
     }

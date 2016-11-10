@@ -118,7 +118,10 @@ class WebsocketWSGIServer(object):
 
     @staticmethod
     def publish_message(window_info, message):
-        if message == settings.WS4REDIS_HEARTBEAT or not message:
+        if not message:
+            return
+        message = message.decode('utf-8')
+        if message == settings.WS4REDIS_HEARTBEAT:
             return
         try:
             unserialized_message = json.loads(message)

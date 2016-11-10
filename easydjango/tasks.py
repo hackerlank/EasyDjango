@@ -40,6 +40,7 @@ def set_websocket_topics(request, *topics):
     if not hasattr(request, 'window_key'):
         raise NoWindowKeyException('You should use the EasyDjangoMiddleware middleware')
     token = request.window_key
+    request.has_websocket_topics = True
     prefix = settings.WS4REDIS_PREFIX
     request = WindowInfo.from_request(request)
     topic_strings = {_topic_serializer(request, x) for x in topics if x is not SERVER}

@@ -33,7 +33,7 @@ def __get_extra_option(name, default, *argnames):
 def __set_default_option(options, name):
     option_name = name.replace('_', '-')
     if getattr(options, name):
-        sys.argv += ['--%s' % option_name, getattr(options, name)]
+        sys.argv += ['--%s' % option_name, text_type(getattr(options, name))]
 
 
 def get_merger_from_env():
@@ -172,9 +172,11 @@ def gunicorn():
     from django.conf import settings
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
     parser.add_argument('-b', '--bind', action='store', default=settings.LISTEN_ADDRESS)
+    parser.add_argument('-k', '--worker-class', default='gunicorn.workers.async.AsyncWorker')
     options, extra_args = parser.parse_known_args()
     sys.argv[1:] = extra_args
     __set_default_option(options, 'bind')
+    # __set_default_option(options, 'worker_class')
     application = 'easydjango.wsgi:gunicorn_application'
     if application not in sys.argv:
         sys.argv.append(application)
@@ -230,14 +232,14 @@ def uwsgi():
         cmd += ['--workers', text_type(options.workers)]
     elif options.processes:
         cmd += ['--processes', text_type(options.processes)]
-    cmd += ['--threads', text_type(options.threads)]
-    cmd += ['--http-socket', options.http_socket]
-    cmd += ['--reload-mercy', text_type(options.reload_mercy)]
-    cmd += ['--worker-reload-mercy', text_type(options.worker_reload_mercy)]
-    cmd += ['--mule-reload-mercy', text_type(options.mule_reload_mercy)]
+    # cmd += ['--threads', text_type(options.threads)]
+    cmd += ['--http-socket', options.http_socket, '--reload-mercy', text_type(options.reload_mercy),
+            '--worker-reload-mercy', text_type(options.worker_reload_mercy),
+            '--mule-reload-mercy', text_type(options.mule_reload_mercy)]
     if '-h' in sys.argv:
         cmd += ['-h']
     cmd += list(extra_args)
+    print(' '.join(cmd))
     p = subprocess.Popen(cmd)
     p.wait()
     sys.exit(p.returncode)

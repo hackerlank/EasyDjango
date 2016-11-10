@@ -20,6 +20,8 @@ register = template.Library()
 
 @register.simple_tag(takes_context=True)
 def init_websocket(context):
+    if not context.get('ed_has_ws_topics'):
+        return ''
     ws_token = context['ed_ws_token']
     signed_token = signer.sign(ws_token)
     protocol = 'wss' if settings.USE_SSL else 'ws'

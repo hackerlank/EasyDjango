@@ -41,7 +41,6 @@ from django.utils.six.moves import http_client
 from easydjango.websockets.exceptions import UpgradeRequiredError, WebSocketError, HandshakeError
 # noinspection PyProtectedMember
 from easydjango.websockets.wsgi_server import WebsocketWSGIServer, _get_redis_connection
-from gunicorn.workers.async import ALREADY_HANDLED
 
 __author__ = 'Matthieu Gallet'
 
@@ -51,7 +50,8 @@ if six.PY3:
     # noinspection PyShadowingBuiltins
     xrange = range
 
-WS_KEY = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+# WS_KEY = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+#
 
 
 class WebSocket(object):
@@ -86,6 +86,8 @@ class WebSocket(object):
         self.protocol = environ.get('HTTP_WEBSOCKET_PROTOCOL')
         self.path = environ.get('PATH_INFO')
         self.environ = environ
+        if isinstance(version, binary_type):
+            version = version.decode('utf-8')
         self.version = version
         self.closed = False
         self._buf = b""
@@ -193,21 +195,18 @@ class WebSocket(object):
                 of2 = full_len - l
                 c = b''
                 for i in range(0, l):
-                    mask = struct.unpack('B', buf[of1 + i])[0]
-                    data = struct.unpack('B', buf[of2 + i])[0]
-                    c += chr(data ^ mask)
+                    mask = struct.unpack('B', buf[of1 + i:of1 + i + 1])[0]
+                    data = struct.unpack('B', buf[of2 + i:of2 + i + 1])[0]
+                    c += chr(data ^ mask).encode('utf-8')
 
             f['payload'] = b + c
         else:
-            print("Unmasked frame: %s" % repr(buf))
             f['payload'] = buf[(f['hlen'] + has_mask * 4):full_len]
 
         if use_base64 and f['opcode'] in [1, 2]:
             try:
                 f['payload'] = base64.b64decode(f['payload'])
             except:
-                print("Exception while b64decoding buffer: %s" %
-                      repr(buf))
                 raise
 
         if f['opcode'] == 0x08:
@@ -224,12 +223,12 @@ class WebSocket(object):
 
         As per the dataframing section (5.3) for the websocket spec
         """
-        if isinstance(message, unicode):
+        if isinstance(message, text_type):
             # noinspection PyTypeChecker
             message = message.encode('utf-8')
-        elif not isinstance(message, str):
-            message = str(message)
-        packed = "\x00%s\xFF" % message
+        elif not isinstance(message, binary_type):
+            message = text_type(message).encode('utf-8')
+        packed = b'\x00' + message + b'\xFF'
         return packed
 
     def _parse_messages(self):
@@ -242,7 +241,7 @@ class WebSocket(object):
         msgs = []
         buf = self._buf
         while buf:
-            if self.version in [b'7', b'8', b'13']:
+            if self.version in ['7', '8', '13']:
                 frame = self.decode_hybi(buf, use_base64=False)
                 # print("Received buf: %s, frame: %s" % (repr(buf), frame))
 
@@ -254,7 +253,7 @@ class WebSocket(object):
                         break
                     # elif frame['opcode'] == 0x1:
                     else:
-                        msgs.append(frame['payload']);
+                        msgs.append(frame['payload'])
                         # msgs.append(frame['payload'].decode('utf-8', 'replace'));
                         # buf = buf[-frame['left']:]
                         if frame['left']:
@@ -263,11 +262,13 @@ class WebSocket(object):
                             buf = b''
 
             else:
-                frame_type = ord(buf[0])
+                frame_type = buf[0]
+                if isinstance(frame_type, str):
+                    frame_type = ord(frame_type)
                 if frame_type == 0:
                     # Normal message.
                     # noinspection PyTypeChecker
-                    end_idx = buf.find("\xFF")
+                    end_idx = buf.find(b"\xFF")
                     if end_idx == -1:  # pragma NO COVER
                         break
                     msgs.append(buf[1:end_idx].decode('utf-8', 'replace'))
@@ -290,7 +291,7 @@ class WebSocket(object):
         (broken pipe) if the socket has already been closed by the client."""
         if isinstance(message, text_type):
             message = message.encode('utf-8')
-        if self.version in [b'7', b'8', b'13']:
+        if self.version in ['7', '8', '13']:
             packed, lenhead, lentail = self.encode_hybi(message, opcode=0x01, use_base64=False)
         else:
             packed = self._pack_message(message)
@@ -385,7 +386,7 @@ class GunicornWebsocketServer(WebsocketWSGIServer):
                            "Upgrade: websocket\r\n"
                            "Connection: Upgrade\r\n")
 
-        key = environ.get('HTTP_SEC_WEBSOCKET_KEY')
+        key = environ.get('HTTP_SEC_WEBSOCKET_KEY').encode('utf-8')
         if key:
             ws_key = base64.b64decode(key)
             if len(ws_key) != 16:
@@ -414,6 +415,7 @@ class GunicornWebsocketServer(WebsocketWSGIServer):
             if ws_extensions:
                 handshake_reply += 'Sec-WebSocket-Extensions: %s\r\n' % ', '.join(ws_extensions)
 
+            accepted = base64.b64encode(sha1(key + self.WS_GUID).digest())
             handshake_reply += (
                 "Sec-WebSocket-Origin: %s\r\n"
                 "Sec-WebSocket-Location: ws://%s%s\r\n"
@@ -424,7 +426,7 @@ class GunicornWebsocketServer(WebsocketWSGIServer):
                     environ.get('HTTP_HOST'),
                     ws.path,
                     version,
-                    base64.b64encode(sha1(key + WS_KEY).digest())
+                    accepted.decode('utf-8')
                 ))
 
         else:
@@ -435,6 +437,7 @@ class GunicornWebsocketServer(WebsocketWSGIServer):
                     environ.get('HTTP_ORIGIN'),
                     environ.get('HTTP_HOST'),
                     ws.path))
+        logger.error("ok, websocket accepted [%r]" % handshake_reply)
         sock.sendall(handshake_reply.encode('utf-8'))
         return ws
 
@@ -444,136 +447,136 @@ class GunicornWebsocketServer(WebsocketWSGIServer):
     def verify_client(self, ws):
         pass
 
-    def __call__(self, environ, start_response):
-        """
-        Hijack the main loop from the original thread and listen on events on the Redis
-        and the Websocket filedescriptors.
-        """
-        response = http.HttpResponse(status=200, content='Websocket Closed')
-        websocket = None
-        try:
-            self.assure_protocol_requirements(environ)
-            request = WSGIRequest(environ)
-            # noinspection PyTypeChecker
-            window_info = self.process_request(request)
-            websocket = self.upgrade_websocket(environ, start_response)
-            channels, echo_message = self.process_subscriptions(request)
-            websocket_thread = random.choice(websocket_threads)
-            websocket_thread.add_websocket(window_info, websocket, channels)
-            print('----', start_response.im_self)
-            response = start_response.im_self
-
-            def close_response(response):
-                print('closing response', response)
-            response.close = close_response
-            return []
-        except WebSocketError as excpt:
-            logger.warning('WebSocketError: {}'.format(excpt), exc_info=sys.exc_info())
-            response = http.HttpResponse(status=1001, content='Websocket Closed')
-        except UpgradeRequiredError as excpt:
-            logger.info('Websocket upgrade required')
-            response = http.HttpResponseBadRequest(status=426, content=excpt)
-        except HandshakeError as excpt:
-            logger.warning('HandshakeError: {}'.format(excpt), exc_info=sys.exc_info())
-            response = http.HttpResponseBadRequest(content=excpt)
-        except PermissionDenied as excpt:
-            logger.warning('PermissionDenied: {}'.format(excpt), exc_info=sys.exc_info())
-            response = http.HttpResponseForbidden(content=excpt)
-        except Exception as excpt:
-            logger.error('Other Exception: {}'.format(excpt), exc_info=sys.exc_info())
-            response = http.HttpResponseServerError(content=excpt)
-        finally:
-            # pubsub.release()
-            if websocket:
-                websocket.close()
-            else:
-                logger.warning('Starting late response on websocket')
-                status_text = http_client.responses.get(response.status_code, 'UNKNOWN STATUS CODE')
-                status = '{0} {1}'.format(response.status_code, status_text)
-                # noinspection PyProtectedMember
-                headers = response._headers.values()
-                if six.PY3:
-                    headers = list(headers)
-                start_response(force_str(status), headers)
-                logger.info('Finish non-websocket response with status code: {}'.format(response.status_code))
-        return response
-
-
-class WebsocketThread(object):
-    def __init__(self):
-        self.listening_fds = []
-        self.redis_fd_to_data = {}
-        self.websocket_fd_to_data = {}
-        self._redis_connection = _get_redis_connection()
-        self.lock = Lock()
-
-    def add_websocket(self, window_info, websocket, channels):
-        if not channels:
-            return
-        websocket_fd = websocket.get_file_descriptor()
-        pubsub = self._redis_connection.pubsub()
-        pubsub.subscribe(*channels)
-        logger.debug('Subscribed to channels: {0}'.format(', '.join(map(repr, channels))))
-        # noinspection PyProtectedMember
-        redis_fd = pubsub.connection._sock.fileno()
-        socket_data = [websocket, pubsub, window_info, time.time(), websocket_fd, redis_fd]
-        print(socket_data[2:])
-        self.lock.acquire()
-        self.websocket_fd_to_data[websocket_fd] = socket_data
-        self.redis_fd_to_data[redis_fd] = socket_data
-        self.listening_fds.append(websocket_fd)
-        # self.listening_fds.append(redis_fd)
-        self.lock.release()
-
-    def remove_websocket(self, websocket):
-        websocket_fd = websocket.get_file_descriptor()
-        if websocket_fd not in self.websocket_fd_to_data:
-            return
-        socket_data = self.websocket_fd_to_data[websocket_fd]
-        redis_fd = socket_data[5]
-        self.lock.acquire()
-        index = self.listening_fds.index(websocket_fd)
-        del self.listening_fds[index]
-        index = self.listening_fds.index(redis_fd)
-        del self.listening_fds[index]
-        del self.redis_fd_to_data[redis_fd]
-        del self.websocket_fd_to_data[websocket_fd]
-        self.lock.release()
-
-    def loop(self):
-        while True:
-            if not self.listening_fds:
-                time.sleep(0.3)
-                continue
-            selected_fds = select.select(self.listening_fds, [], [], 10.0)
-            ready_fds = selected_fds[0]
-            current_time = time.time()
-            for fd in ready_fds:
-                print(fd, fd in self.websocket_fd_to_data, fd in self.redis_fd_to_data)
-                if fd in self.websocket_fd_to_data:
-                    socket_data = self.websocket_fd_to_data[fd]
-                    socket_data[3] = current_time
-                    message = socket_data[0].receive()
-                    WebsocketWSGIServer.publish_message(socket_data[2], message)
-                elif fd in self.redis_fd_to_data:
-                    socket_data = self.redis_fd_to_data[fd]
-                    socket_data[3] = current_time
-                    kind, topic, message = socket_data[1].parse_response()
-                    kind = kind.decode('utf-8')
-                    if kind == 'message':
-                        socket_data[0].send(message)
-            websocket_fds = list(self.websocket_fd_to_data)
-            for websocket_fd in websocket_fds:
-                socket_data = self.websocket_fd_to_data[websocket_fd]
-                if socket_data[0].closed:
-                    self.remove_websocket(socket_data[0])
-                elif socket_data[3] + 10 < current_time:
-                    socket_data[3] = current_time
-                    socket_data[0].flush()
-                    if settings.WS4REDIS_HEARTBEAT:
-                        socket_data[0].send(settings.WS4REDIS_HEARTBEAT)
-
-
-websocket_threads = [WebsocketThread() for x in range(settings.WS4REDIS_THREAD_COUNT)]
-threads = [Thread(target=x.loop) for x in websocket_threads]
-[x.start() for x in threads]
+#     def __call__2(self, environ, start_response):
+#         """
+#         Hijack the main loop from the original thread and listen on events on the Redis
+#         and the Websocket filedescriptors.
+#         """
+#         response = http.HttpResponse(status=200, content='Websocket Closed')
+#         websocket = None
+#         try:
+#             self.assure_protocol_requirements(environ)
+#             request = WSGIRequest(environ)
+#             # noinspection PyTypeChecker
+#             window_info = self.process_request(request)
+#             websocket = self.upgrade_websocket(environ, start_response)
+#             channels, echo_message = self.process_subscriptions(request)
+#             websocket_thread = random.choice(websocket_threads)
+#             websocket_thread.add_websocket(window_info, websocket, channels)
+#             print('----', start_response.im_self)
+#             response = start_response.im_self
+#
+#             def close_response(response):
+#                 print('closing response', response)
+#             response.close = close_response
+#             return []
+#         except WebSocketError as excpt:
+#             logger.warning('WebSocketError: {}'.format(excpt), exc_info=sys.exc_info())
+#             response = http.HttpResponse(status=1001, content='Websocket Closed')
+#         except UpgradeRequiredError as excpt:
+#             logger.info('Websocket upgrade required')
+#             response = http.HttpResponseBadRequest(status=426, content=excpt)
+#         except HandshakeError as excpt:
+#             logger.warning('HandshakeError: {}'.format(excpt), exc_info=sys.exc_info())
+#             response = http.HttpResponseBadRequest(content=excpt)
+#         except PermissionDenied as excpt:
+#             logger.warning('PermissionDenied: {}'.format(excpt), exc_info=sys.exc_info())
+#             response = http.HttpResponseForbidden(content=excpt)
+#         except Exception as excpt:
+#             logger.error('Other Exception: {}'.format(excpt), exc_info=sys.exc_info())
+#             response = http.HttpResponseServerError(content=excpt)
+#         finally:
+#             # pubsub.release()
+#             if websocket:
+#                 websocket.close()
+#             else:
+#                 logger.warning('Starting late response on websocket')
+#                 status_text = http_client.responses.get(response.status_code, 'UNKNOWN STATUS CODE')
+#                 status = '{0} {1}'.format(response.status_code, status_text)
+#                 # noinspection PyProtectedMember
+#                 headers = response._headers.values()
+#                 if six.PY3:
+#                     headers = list(headers)
+#                 start_response(force_str(status), headers)
+#                 logger.info('Finish non-websocket response with status code: {}'.format(response.status_code))
+#         return response
+#
+#
+# class WebsocketThread(object):
+#     def __init__(self):
+#         self.listening_fds = []
+#         self.redis_fd_to_data = {}
+#         self.websocket_fd_to_data = {}
+#         self._redis_connection = _get_redis_connection()
+#         self.lock = Lock()
+#
+#     def add_websocket(self, window_info, websocket, channels):
+#         if not channels:
+#             return
+#         websocket_fd = websocket.get_file_descriptor()
+#         pubsub = self._redis_connection.pubsub()
+#         pubsub.subscribe(*channels)
+#         logger.debug('Subscribed to channels: {0}'.format(', '.join(map(repr, channels))))
+#         # noinspection PyProtectedMember
+#         redis_fd = pubsub.connection._sock.fileno()
+#         socket_data = [websocket, pubsub, window_info, time.time(), websocket_fd, redis_fd]
+#         print(socket_data[2:])
+#         self.lock.acquire()
+#         self.websocket_fd_to_data[websocket_fd] = socket_data
+#         self.redis_fd_to_data[redis_fd] = socket_data
+#         self.listening_fds.append(websocket_fd)
+#         # self.listening_fds.append(redis_fd)
+#         self.lock.release()
+#
+#     def remove_websocket(self, websocket):
+#         websocket_fd = websocket.get_file_descriptor()
+#         if websocket_fd not in self.websocket_fd_to_data:
+#             return
+#         socket_data = self.websocket_fd_to_data[websocket_fd]
+#         redis_fd = socket_data[5]
+#         self.lock.acquire()
+#         index = self.listening_fds.index(websocket_fd)
+#         del self.listening_fds[index]
+#         index = self.listening_fds.index(redis_fd)
+#         del self.listening_fds[index]
+#         del self.redis_fd_to_data[redis_fd]
+#         del self.websocket_fd_to_data[websocket_fd]
+#         self.lock.release()
+#
+#     def loop(self):
+#         while True:
+#             if not self.listening_fds:
+#                 time.sleep(0.3)
+#                 continue
+#             selected_fds = select.select(self.listening_fds, [], [], 10.0)
+#             ready_fds = selected_fds[0]
+#             current_time = time.time()
+#             for fd in ready_fds:
+#                 print(fd, fd in self.websocket_fd_to_data, fd in self.redis_fd_to_data)
+#                 if fd in self.websocket_fd_to_data:
+#                     socket_data = self.websocket_fd_to_data[fd]
+#                     socket_data[3] = current_time
+#                     message = socket_data[0].receive()
+#                     WebsocketWSGIServer.publish_message(socket_data[2], message)
+#                 elif fd in self.redis_fd_to_data:
+#                     socket_data = self.redis_fd_to_data[fd]
+#                     socket_data[3] = current_time
+#                     kind, topic, message = socket_data[1].parse_response()
+#                     kind = kind.decode('utf-8')
+#                     if kind == 'message':
+#                         socket_data[0].send(message)
+#             websocket_fds = list(self.websocket_fd_to_data)
+#             for websocket_fd in websocket_fds:
+#                 socket_data = self.websocket_fd_to_data[websocket_fd]
+#                 if socket_data[0].closed:
+#                     self.remove_websocket(socket_data[0])
+#                 elif socket_data[3] + 10 < current_time:
+#                     socket_data[3] = current_time
+#                     socket_data[0].flush()
+#                     if settings.WS4REDIS_HEARTBEAT:
+#                         socket_data[0].send(settings.WS4REDIS_HEARTBEAT)
+#
+#
+# websocket_threads = [WebsocketThread() for x in range(settings.WS4REDIS_THREAD_COUNT)]
+# threads = [Thread(target=x.loop) for x in websocket_threads]
+# [x.start() for x in threads]
