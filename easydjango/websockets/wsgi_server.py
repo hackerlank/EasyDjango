@@ -120,7 +120,6 @@ class WebsocketWSGIServer(object):
     def publish_message(window_info, message):
         if not message:
             return
-        message = message.decode('utf-8')
         if message == settings.WS4REDIS_HEARTBEAT:
             return
         try:
@@ -234,3 +233,4 @@ class WebsocketWSGIServer(object):
             # because the websocket can closed previously in the loop.
             if settings.WS4REDIS_HEARTBEAT and not websocket.closed and not ready:
                 websocket.send(settings.WS4REDIS_HEARTBEAT)
+        logger.error('websocket closed')

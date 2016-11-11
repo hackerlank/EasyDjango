@@ -73,7 +73,7 @@
         connection.onclose = function(e) {
             console.log("connection closed");
             $.ed._wsConnection = null;
-            setTimeout(function () {$.ed._wsConnect(url);}, 5000);
+            setTimeout(function () {$.ed._wsConnect(url);}, 3000);
         }
     }
     $.ed._wsSignalConnect = function (signal) {

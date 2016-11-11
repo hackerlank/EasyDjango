@@ -171,12 +171,12 @@ def gunicorn():
     set_env()
     from django.conf import settings
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
-    parser.add_argument('-b', '--bind', action='store', default=settings.LISTEN_ADDRESS)
-    parser.add_argument('-k', '--worker-class', default='gunicorn.workers.async.AsyncWorker')
+    parser.add_argument('-b', '--bind', default=settings.LISTEN_ADDRESS)
+    parser.add_argument('-k', '--worker-class', default='gunicorn.workers.gthread.ThreadWorker')
     options, extra_args = parser.parse_known_args()
     sys.argv[1:] = extra_args
     __set_default_option(options, 'bind')
-    # __set_default_option(options, 'worker_class')
+    __set_default_option(options, 'worker_class')
     application = 'easydjango.wsgi:gunicorn_application'
     if application not in sys.argv:
         sys.argv.append(application)
@@ -220,8 +220,7 @@ def uwsgi():
                         help='set the maximum time (in seconds) a worker can take to reload/shutdown (default is 5)')
     parser.add_argument('--mule-reload-mercy', default=5, type=int,
                         help='set the maximum time (in seconds) a mule can take to reload/shutdown (default is 5)')
-    args = [x for x in sys.argv[1:] if x != '-h']
-    options, extra_args = parser.parse_known_args(args=args)
+    options, extra_args = parser.parse_known_args()
     if not options.no_master:
         cmd += ['--master']
     if not options.no_http_websockets:
@@ -236,10 +235,7 @@ def uwsgi():
     cmd += ['--http-socket', options.http_socket, '--reload-mercy', text_type(options.reload_mercy),
             '--worker-reload-mercy', text_type(options.worker_reload_mercy),
             '--mule-reload-mercy', text_type(options.mule_reload_mercy)]
-    if '-h' in sys.argv:
-        cmd += ['-h']
     cmd += list(extra_args)
-    print(' '.join(cmd))
     p = subprocess.Popen(cmd)
     p.wait()
     sys.exit(p.returncode)

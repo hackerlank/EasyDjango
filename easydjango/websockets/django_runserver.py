@@ -55,7 +55,6 @@ class WebsocketRunServer(WebsocketWSGIServer):
         ]
         logger.debug('WebSocket request accepted, switching protocols')
         start_response(force_str('101 Switching Protocols'), headers)
-        print(environ)
         six.get_method_self(start_response).finish_content()
         return WebSocket(environ['wsgi.input'])
 

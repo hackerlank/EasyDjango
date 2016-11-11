@@ -29,7 +29,7 @@ class uWSGIWebsocket(object):
         if self._closed:
             raise WebSocketError("Connection is already closed")
         try:
-            return uwsgi.websocket_recv_nb()
+            return uwsgi.websocket_recv_nb().decode('utf-8')
         except IOError as e:
             self.close()
             raise WebSocketError(e)

@@ -24,6 +24,7 @@ import socket
 import struct
 from hashlib import sha1
 
+import gevent.select
 from django.utils import six
 from django.utils.six import binary_type, text_type
 from easydjango.websockets.wsgi_server import WebsocketWSGIServer
@@ -68,16 +69,18 @@ class WebSocket(object):
         :param version: The WebSocket spec version to follow (default is 76)
         """
         self.socket = sock
+        sock.settimeout(5.0)
+        sock.setblocking(0)
         self.origin = environ.get('HTTP_ORIGIN')
         self.protocol = environ.get('HTTP_WEBSOCKET_PROTOCOL')
         self.path = environ.get('PATH_INFO')
-        self.environ = environ
+        # self.environ = environ
         if isinstance(version, binary_type):
             # noinspection PyUnresolvedReferences
             version = version.decode('utf-8')
         self.version = version
         self.closed = False
-        self._buf = b""
+        self._buf = b''
         self._msgs = collections.deque()
         # self._sendlock = semaphore.Semaphore()
 
@@ -287,37 +290,45 @@ class WebSocket(object):
         # on the same socket, sendlock prevents interleaving and corruption
         # self._sendlock.acquire()
         try:
+            print("send %r" % packed)
             self.socket.sendall(packed)
+        except Exception as e:
+            logger.exception(e)
+            self.closed = True
         finally:
             pass
             # self._sendlock.release()
 
-    def wait(self):
+    def receive(self):
         """Waits for and deserializes messages.
 
         Returns a single message; the oldest not yet processed. If the client
         has already closed the connection, returns None.  This is different
         from normal socket behavior because the empty string is a valid
         websocket message."""
+        print("receive data")
         while not self._msgs:
             # Websocket might be closed already.
             if self.closed:
                 return None
             # no parsed messages, must mean buf needs more data
             try:
-                delta = self.socket.recv(8096)
+                delta = self.socket.recv(4096)
             except ConnectionResetError:
                 self.closed = True
                 return None
+            except Exception as e:
+                logger.exception(e)
             if delta == b'':
                 return None
             self._buf += delta
             msgs = self._parse_messages()
             self._msgs.extend(msgs)
-        return self._msgs.popleft()
+        return self._msgs.popleft().decode('utf-8')
 
     def _send_closing_frame(self, ignore_send_errors=False):
         """Sends the closing frame to the client, if required."""
+        print('_send_closing_frame')
         if self.version in [b'7', b'8', b'13'] and not self.closed:
             msg = b''
             # if code != None:
@@ -341,14 +352,12 @@ class WebSocket(object):
         """Forcibly close the websocket; generally it is preferable to
         return from the handler method."""
         self._send_closing_frame()
+        print("close")
         self.socket.shutdown(True)
         self.socket.close()
 
     def get_file_descriptor(self):
         return self.socket.fileno()
-
-    def receive(self):
-        return self.wait()
 
     # noinspection PyMethodMayBeStatic
     def flush(self):
@@ -434,6 +443,7 @@ class GunicornWebsocketServer(WebsocketWSGIServer):
         return ws
 
     def select(self, rlist, wlist, xlist, timeout=None):
+        # return gevent.select.select(rlist, wlist, xlist, timeout)
         return select.select(rlist, wlist, xlist, timeout)
 
     def verify_client(self, ws):
