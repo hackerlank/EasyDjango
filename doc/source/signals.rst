@@ -1,7 +1,7 @@
 Working with signals
 ====================
 
-EasyDjango let you to define signals in both server (Python) and client (JavaScript) sides.
+DjangoFloor let you to define signals in both server (Python) and client (JavaScript) sides.
 Signals are just a name (a string) with some code related to it. When a signal is triggered by its name, each function is called elsewhere (in other processes).
 The same signal name can be attached to JavaScript and Python code, and called from JavaScript and Python code.
 

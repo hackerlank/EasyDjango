@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""EasyDjango documentation build configuration file, created by
+"""DjangoFloor documentation build configuration file, created by
 sphinx-quickstart on Wed Feb 13 11:51:12 2013.
 
 This file is execfile()d with the current directory set to its containing dir.
@@ -16,7 +16,7 @@ import sys
 import os.path
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from easydjango import __version__ as version_orig
+from djangofloor import __version__ as version_orig
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -48,7 +48,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'EasyDjango'
+project = 'DjangoFloor'
 copyright = '2016, Matthieu Gallet'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -172,7 +172,7 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'easydjangodoc'
+htmlhelp_basename = 'DjangoFloordoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -186,7 +186,7 @@ htmlhelp_basename = 'easydjangodoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'easydjango.tex', 'EasyDjango Documentation',
+    ('index', 'DjangoFloor.tex', 'DjangoFloor Documentation',
      'Matthieu Gallet', 'manual'),
 ]
 
@@ -219,7 +219,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'easydjango', 'EasyDjango Documentation',
+    ('index', 'DjangoFloor', 'DjangoFloor Documentation',
      ['Matthieu Gallet'], 1)
 ]
 
@@ -227,7 +227,7 @@ man_pages = [
 # -- Options for Epub output ---------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = 'EasyDjango'
+epub_title = 'DjangoFloor'
 epub_author = 'Matthieu Gallet'
 epub_publisher = '19pouces.net'
 epub_copyright = '2016, Matthieu Gallet'

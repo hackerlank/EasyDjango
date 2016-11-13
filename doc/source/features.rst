@@ -4,9 +4,9 @@ Comprehensive feature list
 Settings system
 ---------------
 
-EasyDjango allows to merge several files to define your settings:
+DjangoFloor allows to merge several files to define your settings:
 
-  * `easydjango.conf.defaults` that aims at providing good default values,
+  * `DjangoFloor.conf.defaults` that aims at providing good default values,
   * `yourproject.defaults` for your project-specific settings,
   * `/etc/yourproject/settings.ini` and `/etc/yourproject/settings.py` for installation-dependent settings,
   * `./local_config.py` and `./local_config.ini` setting files in the working directory.

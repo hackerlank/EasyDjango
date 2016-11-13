@@ -11,14 +11,14 @@ Settings can be split into three groups:
 You usually have to maintain at least two versions of the same file (dev and prod), with the risk of desynchronized files.
 
 
-On the contrary, EasyDjango allows to merge several files to define your settings:
+On the contrary, DjangoFloor allows to merge several files to define your settings:
 
-  * `easydjango.conf.defaults` that aims at providing good default values,
+  * `DjangoFloor.conf.defaults` that aims at providing good default values,
   * `yourproject.defaults` for your project-specific settings,
   * `/etc/yourproject/settings.py` for installation-dependent settings.
 
 You can define a list of settings that are read from a text configuration file (a `.ini` file).
-EasyDjango also searches for `local_config.py` and `local_config.ini` setting files in the working directory.
+DjangoFloor also searches for `local_config.py` and `local_config.ini` setting files in the working directory.
 
 
 You should define your project-wide settings in `yourproject.defaults` and the list of installation-specific settings in `yourproject.iniconf`.

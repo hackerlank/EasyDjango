@@ -1,14 +1,14 @@
 Installing
 ==========
 
-There are several ways to install EasyDjango.
+There are several ways to install DjangoFloor.
 
 Installing from pip
 -------------------
 
 .. code-block:: bash
 
-  pip install easydjango
+  pip install DjangoFloor
 
 Installing from source
 ----------------------
@@ -17,14 +17,14 @@ If you prefer install directly from the source:
 
 .. code-block:: bash
 
-  git clone https://github.com/d9pouces/EasyDjango.git EasyDjango
-  cd EasyDjango
+  git clone https://github.com/d9pouces/DjangoFloor.git DjangoFloor
+  cd DjangoFloor
   python setup.py install
 
 Dependencies
 ------------
 
-Of course, EasyDjango is not a standalone library and requires several (pure-Python) packages:
+Of course, DjangoFloor is not a standalone library and requires several (pure-Python) packages:
 
   * django >= 1.8,
   * celery,
@@ -45,7 +45,7 @@ You can install these optional dependencies:
 
 .. code-block:: bash
 
-  pip install easydjango[extra]
+  pip install DjangoFloor[extra]
 
 
 Virtualenvs

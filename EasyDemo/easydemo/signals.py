@@ -5,8 +5,8 @@ import logging
 import time
 
 import re
-from easydjango.decorators import signal, everyone
-from easydjango.tasks import scall, BROADCAST, SERVER, WINDOW
+from djangofloor.decorators import signal, everyone
+from djangofloor.tasks import scall, BROADCAST, SERVER, WINDOW
 
 __author__ = 'Matthieu Gallet'
 logger = logging.getLogger('django.request')

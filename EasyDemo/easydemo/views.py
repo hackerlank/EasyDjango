@@ -11,7 +11,7 @@ from django.views.decorators.cache import cache_control, cache_page
 from django.views.decorators.cache import never_cache
 from django.views.decorators.vary import vary_on_headers
 from django.views.generic import TemplateView
-from easydjango.tasks import set_websocket_topics, WINDOW
+from djangofloor.tasks import set_websocket_topics, WINDOW
 
 logger = logging.getLogger('django.request')
 __author__ = 'Matthieu Gallet'

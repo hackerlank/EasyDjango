@@ -4,7 +4,7 @@ from __future__ import unicode_literals, print_function, absolute_import
 import random
 # noinspection PyUnresolvedReferences
 import easydemo.forms
-from easydjango.decorators import function, everyone
+from djangofloor.decorators import function, everyone
 
 
 # noinspection PyUnusedLocal

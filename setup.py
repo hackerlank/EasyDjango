@@ -9,7 +9,7 @@ import re
 import sys
 from setuptools import setup, find_packages
 
-# avoid a from easydjango import __version__ as version (that compiles easydjango.__init__
+# avoid a from djangofloor import __version__ as version (that compiles easydjango.__init__
 #   and is not compatible with bdist_deb)
 version = None
 for line in codecs.open(os.path.join('easydjango', '__init__.py'), 'r', encoding='utf-8'):
@@ -28,20 +28,20 @@ if python_version < (3, 3):
     install_requirements.append('funcsigs')
 
 entry_points = {'console_scripts': [
-    'easydjango-ctl = easydjango.scripts:control',
-    'easydjango-celery = easydjango.scripts:celery',
-    'easydjango-django = easydjango.scripts:django',
-    'easydjango-uwsgi = easydjango.scripts:uwsgi',
-    'easydjango-gunicorn = easydjango.scripts:gunicorn',
-    'easydjango-createproject = easydjango.scripts:create_project'
+    'djangofloor-ctl = easydjango.scripts:control',
+    'djangofloor-celery = easydjango.scripts:celery',
+    'djangofloor-django = easydjango.scripts:django',
+    'djangofloor-uwsgi = easydjango.scripts:uwsgi',
+    'djangofloor-gunicorn = easydjango.scripts:gunicorn',
+    'djangofloor-createproject = easydjango.scripts:create_project'
                                      ]}
 extras_requirements['deb'] = ['stdeb>=0.8.5']
 extras_requirements['extra'] = ['django-pipeline', 'django-debug-toolbar', 'django-redis-sessions', 'psutil']
 
 setup(
-    name='easydjango',
+    name='djangofloor',
     version=version,
-    description='No description yet.',
+    description='Add configuration management and websockets to Django.',
     long_description=long_description,
     author='Matthieu Gallet',
     author_email='github@19pouces.net',
@@ -55,11 +55,11 @@ setup(
     install_requires=install_requirements,
     extras_require=extras_requirements,
     setup_requires=[],
-    classifiers=['Development Status :: 3 - Alpha', 'Operating System :: MacOS :: MacOS X',
-                 'Operating System :: Microsoft :: Windows', 'Operating System :: POSIX :: BSD',
+    classifiers=['Development Status :: 4 - Beta', 'Operating System :: MacOS :: MacOS X',
+                 'Operating System :: POSIX :: BSD',
                  'Operating System :: POSIX :: Linux', 'Operating System :: Unix',
                  'License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1 (CeCILL-2.1)',
-                 'Programming Language :: Python :: 2.6', 'Programming Language :: Python :: 2.7',
+                 'Programming Language :: Python :: 2.7',
                  'Programming Language :: Python :: 3.4', 'Programming Language :: Python :: 3.5',
                  'Programming Language :: Python :: 3.6'],
 )
