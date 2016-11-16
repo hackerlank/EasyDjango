@@ -66,4 +66,5 @@ class Command(BaseCommand):
                 config_field.value = merger.settings[config_field.setting_name]
                 provider.set_value(config_field)
             self.stdout.write(provider.to_str())
-
+        else:
+                self.stdout.write(self.style.WARNING('Please specify either "ini" or "python"'))

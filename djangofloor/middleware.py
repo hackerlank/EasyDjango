@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 import base64
+import warnings
 
 from django.conf import settings
 from django.contrib import auth
@@ -10,7 +11,7 @@ from django.contrib.auth.middleware import RemoteUserMiddleware as BaseRemoteUse
 from django.contrib.auth.models import Group
 from django.contrib.sessions.backends.base import VALID_KEY_CHARS
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import Q, warnings
+from django.db.models import Q
 from django.http import HttpRequest
 from django.utils import translation
 from django.utils.crypto import get_random_string
@@ -199,7 +200,7 @@ class DjangoAuthMiddleware(WindowInfoMiddleware):
         window_info.user_agent = values.get('user_agent')
 
     def get_context(self, window_info):
-        return {'df_user': window_info.user, 'df_user_agent': window_info.META.get('HTTP_USER_AGENT', ''),}
+        return {'df_user': window_info.user, 'df_user_agent': window_info.META.get('HTTP_USER_AGENT', '')}
 
     def install_methods(self, window_info_cls):
         def get_user(req):
@@ -292,9 +293,8 @@ class Djangoi18nMiddleware(WindowInfoMiddleware):
                 'LANGUAGE_CODE': window_info.language_code,
                 'LANGUAGE_BIDI': translation.get_language_bidi(), }
 
+
 # TODO remove these classes
-
-
 class IEMiddleware(object):
     def __init__(self):
         warnings.warn('djangofloor.middleware.IEMiddleware has been replaced by '
@@ -316,7 +316,7 @@ class RemoteUserMiddleware(BaseRemoteUserMiddleware):
         super(RemoteUserMiddleware, self).__init__()
         warnings.warn('djangofloor.middleware.IEMiddleware has been replaced by '
                       'djangofloor.middleware.DjangoFloorMiddleware', RemovedInDjangoFloor110Warning)
-    header = settings.FLOOR_AUTHENTICATION_HEADER
+    header = settings.DF_REMOTE_USER_HEADER
 
     def process_request(self, request):
         request.df_remote_authenticated = False
@@ -372,7 +372,7 @@ class FakeAuthenticationMiddleware(object):
 
     # noinspection PyMethodMayBeStatic
     def process_request(self, request):
-        username = settings.FLOOR_FAKE_AUTHENTICATION_USERNAME
+        username = settings.DF_FAKE_AUTHENTICATION_USERNAME
         if not settings.DEBUG or not username:
             return
         user = auth.authenticate(remote_user=username)

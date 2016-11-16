@@ -87,7 +87,7 @@ LOGGING = CallableSetting(lambda x:
 MANAGERS = SettingReference('ADMINS')
 MEDIA_ROOT = AutocreateDirectory('{LOCAL_PATH}/media')
 MEDIA_URL = '/media/'
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE_CLASSES = [
     'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -101,7 +101,9 @@ MIDDLEWARE_CLASSES = (
     'djangofloor.middleware.DjangoFloorMiddleware',
     ExpandIterable('DF_MIDDLEWARE_CLASSES'),
     'django.middleware.cache.FetchFromCacheMiddleware',
-)
+]
+if USE_DEBUG_TOOLBAR:
+    MIDDLEWARE_CLASSES.insert(-3, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
 ROOT_URLCONF = 'djangofloor.root_urls'
 SERVER_EMAIL = 'root@{SERVER_NAME}'
