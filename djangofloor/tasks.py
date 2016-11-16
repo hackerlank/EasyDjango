@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function, absolute_import
 import json
 import logging
 import uuid
+import warnings
 
 from celery import shared_task
 from django.conf import settings
@@ -14,7 +15,7 @@ from redis import StrictRedis
 
 from djangofloor.decorators import REGISTERED_SIGNALS, SignalConnection, REGISTERED_FUNCTIONS, FunctionConnection
 from djangofloor.request import WindowInfo
-from djangofloor.utils import import_module
+from djangofloor.utils import import_module, RemovedInDjangoFloor110Warning
 from djangofloor.websockets.exceptions import NoWindowKeyException
 
 __author__ = 'Matthieu Gallet'
@@ -27,7 +28,7 @@ BROADCAST = [[]]
 
 _signal_encoder = import_string(settings.WS4REDIS_SIGNAL_ENCODER)
 _topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
-logger = logging.getLogger('easydjango.websockets')
+logger = logging.getLogger('djangofloor.websockets')
 
 
 # noinspection PyCallingNonCallable
@@ -39,7 +40,7 @@ def _get_redis_connection():
 def set_websocket_topics(request, *topics):
     # noinspection PyTypeChecker
     if not hasattr(request, 'window_key'):
-        raise NoWindowKeyException('You should use the EasyDjangoMiddleware middleware')
+        raise NoWindowKeyException('You should use the DjangoFloorMiddleware middleware')
     token = request.window_key
     request.has_websocket_topics = True
     prefix = settings.WS4REDIS_PREFIX
@@ -63,7 +64,30 @@ def scall(window_info, signal_name, to=None, **kwargs):
     return _call_signal(window_info, signal_name, to=to, kwargs=kwargs, from_client=False)
 
 
-def call(window_info, signal_name, to=None, kwargs=None, countdown=None, expires=None, eta=None):
+def call(window_info, signal_name, to=None, kwargs=None, countdown=None, expires=None, eta=None, sharing=None,
+         request=None, **other_kwargs):
+    if sharing or request or other_kwargs:
+        warnings.warn('djangofloor.tasks.call prototype has been changed.', RemovedInDjangoFloor110Warning)
+        # noinspection PyProtectedMember
+        from djangofloor.df_ws4redis import _sharing_to_topics
+        window_info, signal_name = signal_name, window_info
+        if request:
+            window_info = request
+        if to:
+            other_kwargs['to'] = to
+            to = _sharing_to_topics(window_info, sharing) + [SERVER]
+        if kwargs:
+            other_kwargs['kwargs'] = kwargs
+        if countdown:
+            other_kwargs['countdown'] = countdown
+            countdown = None
+        if expires:
+            other_kwargs['expires'] = expires
+            expires = None
+        if eta:
+            other_kwargs['eta'] = eta
+            eta = None
+        kwargs = other_kwargs
     return _call_signal(window_info, signal_name, to=to, kwargs=kwargs, countdown=countdown, expires=expires,
                         eta=eta, from_client=False)
 
@@ -198,3 +222,49 @@ def _server_function_call(function_name, window_info_dict, result_id, kwargs=Non
     except Exception as e:
         result = None
     _return_ws_function_result(window_info, result_id, result, exception=e)
+
+
+# TODO remove the following functions
+def import_signals():
+    warnings.warn('djangofloor.tasks.import_signals() has been replaced by '
+                  'djangofloor.tasks.import_signals_and_functions()', RemovedInDjangoFloor110Warning)
+    return import_signals_and_functions()
+
+
+def get_signal_encoder():
+    warnings.warn('djangofloor.tasks.get_signal_encoder is deprecated', RemovedInDjangoFloor110Warning)
+    return _signal_encoder
+
+
+def get_signal_decoder():
+    warnings.warn('djangofloor.tasks.get_signal_decoder is deprecated', RemovedInDjangoFloor110Warning)
+    from djangofloor.websockets.wsgi_server import signal_decoder
+    return signal_decoder
+
+
+@shared_task(serializer='json')
+def signal_task(signal_name, request_dict, from_client, kwargs):
+    warnings.warn('djangofloor.tasks.signal_task is deprecated.', RemovedInDjangoFloor110Warning)
+    return _server_signal_call(signal_name, request_dict, kwargs=kwargs, from_client=from_client, to_server=True)
+
+
+@shared_task(serializer='json')
+def delayed_task(signal_name, request_dict, sharing, from_client, kwargs):
+    warnings.warn('djangofloor.tasks.delayed_task is deprecated.', RemovedInDjangoFloor110Warning)
+    import_signals()
+    window_info = WindowInfo.from_dict(request_dict)
+    # noinspection PyProtectedMember
+    from djangofloor.df_ws4redis import _sharing_to_topics
+    to = _sharing_to_topics(window_info, sharing) + [SERVER]
+    return _server_signal_call(signal_name, request_dict, kwargs=kwargs, from_client=from_client,
+                               serialized_client_topics=to, to_server=True)
+
+
+def df_call(signal_name, request, sharing=None, from_client=False, kwargs=None, countdown=None, expires=None, eta=None):
+    # noinspection PyUnusedLocal
+    from_client = from_client
+    warnings.warn('djangofloor.tasks.df_call is deprecated.', RemovedInDjangoFloor110Warning)
+    # noinspection PyProtectedMember
+    from djangofloor.df_ws4redis import _sharing_to_topics
+    to = _sharing_to_topics(request, sharing) + [SERVER]
+    call(signal_name, request, to=to, kwargs=kwargs, countdown=countdown, expires=expires, eta=eta)

@@ -29,6 +29,7 @@ USE_SCSS = is_package_present('scss')
 USE_PIPELINE = is_package_present('pipeline')
 USE_DEBUG_TOOLBAR = is_package_present('debug_toolbar')
 USE_REST_FRAMEWORK = is_package_present('rest_framework')
+USE_ALLAUTH = is_package_present('allauth')
 
 # ######################################################################################################################
 #
@@ -60,7 +61,7 @@ DEBUG = False
 DEFAULT_FROM_EMAIL = 'webmaster@{SERVER_NAME}'
 FILE_UPLOAD_TEMP_DIR = AutocreateDirectory('{LOCAL_PATH}/tmp-uploads')
 INSTALLED_APPS = [
-    ExpandIterable('EASYDJANGO_INSTALLED_APPS'),
+    ExpandIterable('DF_INSTALLED_APPS'),
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -78,7 +79,7 @@ if USE_PIPELINE:
     INSTALLED_APPS.append('pipeline')
 if USE_REST_FRAMEWORK:
     INSTALLED_APPS.append('rest_framework')
-INSTALLED_APPS.append('easydjango')
+INSTALLED_APPS.append('djangofloor')
 LOGGING = CallableSetting(lambda x:
                           generate_log_configuration(log_directory=x['LOG_DIRECTORY'], project_name=x['PROJECT_NAME'],
                                                      script_name=x['SCRIPT_NAME'], debug=x['DEBUG']),
@@ -97,14 +98,14 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'easydjango.middleware.EasyDjangoMiddleware',
-    ExpandIterable('EASYDJANGO_MIDDLEWARE_CLASSES'),
+    'djangofloor.middleware.DjangoFloorMiddleware',
+    ExpandIterable('DF_MIDDLEWARE_CLASSES'),
     'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
-ROOT_URLCONF = 'easydjango.root_urls'
+ROOT_URLCONF = 'djangofloor.root_urls'
 SERVER_EMAIL = 'root@{SERVER_NAME}'
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # X-Forwarded-Proto
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # X-Forwarded-Proto or None
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 TEMPLATES = [
@@ -123,8 +124,8 @@ TEMPLATE_CONTEXT_PROCESSORS = ['django.contrib.auth.context_processors.auth',
                                'django.template.context_processors.static',
                                'django.template.context_processors.tz',
                                'django.contrib.messages.context_processors.messages',
-                               ExpandIterable('EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS'),
-                               'easydjango.context_processors.context_base', ]
+                               ExpandIterable('DF_TEMPLATE_CONTEXT_PROCESSORS'),
+                               'djangofloor.context_processors.context_base', ]
 TEMPLATE_LOADERS = ('django.template.loaders.filesystem.Loader',
                     'django.template.loaders.app_directories.Loader')
 USE_I18N = True
@@ -132,11 +133,11 @@ USE_L10N = True
 USE_THOUSAND_SEPARATOR = True
 USE_TZ = True
 USE_X_FORWARDED_HOST = True  # X-Forwarded-Host
-WSGI_APPLICATION = 'easydjango.wsgi.django_application'
+WSGI_APPLICATION = 'djangofloor.wsgi.django_application'
 
 # django.contrib.auth
 AUTHENTICATION_BACKENDS = (
-    'easydjango.backends.DefaultGroupsRemoteUserBackend',
+    'djangofloor.backends.DefaultGroupsRemoteUserBackend',
     'django.contrib.auth.backends.ModelBackend',)
 
 # django.contrib.sessions
@@ -164,7 +165,7 @@ CELERY_DEFAULT_QUEUE = 'celery'
 CELERY_TIMEZONE = '{TIME_ZONE}'
 CELERY_RESULT_EXCHANGE = '{PROJECT_NAME}_results'
 CELERY_ACCEPT_CONTENT = ['json', 'yaml', 'msgpack']
-CELERY_APP = 'easydjango'
+CELERY_APP = 'djangofloor'
 CELERY_CREATE_DIRS = True
 CELERY_TASK_SERIALIZER = 'json'
 
@@ -180,7 +181,7 @@ REST_FRAMEWORK = {
     ]
 }
 
-# easydjango
+# djangofloor
 DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
 SERVER_NAME = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).hostname, 'SERVER_BASE_URL')
 SERVER_PORT = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).port or (USE_SSL and 443) or 80,
@@ -192,20 +193,22 @@ def url_prefix(values):
     if not p.endswith('/'):
         p += '/'
     return p
+
+
 URL_PREFIX = CallableSetting(url_prefix, 'SERVER_BASE_URL')
 USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
 USE_SSL = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).scheme == 'https', 'SERVER_BASE_URL')
 USE_X_FORWARDED_FOR = True  # X-Forwarded-For
 USE_X_SEND_FILE = False  # Apache module
 X_ACCEL_REDIRECT = []  # paths used by nginx
-EASYDJANGO_SYSTEM_CHECKS = ['easydjango.views.monitoring.RequestCheck',
-                            'easydjango.views.monitoring.System',
-                            'easydjango.views.monitoring.CeleryStats',
-                            'easydjango.views.monitoring.Packages', ]
+DF_SYSTEM_CHECKS = ['djangofloor.views.monitoring.RequestCheck',
+                    'djangofloor.views.monitoring.System',
+                    'djangofloor.views.monitoring.CeleryStats',
+                    'djangofloor.views.monitoring.Packages', ]
 WINDOW_INFO_MIDDLEWARES = [
-    'easydjango.middleware.WindowKeyMiddleware',
-    'easydjango.middleware.DjangoAuthMiddleware',
-    'easydjango.middleware.Djangoi18nMiddleware', ]
+    'djangofloor.middleware.WindowKeyMiddleware',
+    'djangofloor.middleware.DjangoAuthMiddleware',
+    'djangofloor.middleware.Djangoi18nMiddleware', ]
 COMMON_COMMANDS = {
     'queue-events': ('celery', 'events'),
     'purge-queue': ('celery', 'purge'),
@@ -233,7 +236,7 @@ COMMON_COMMANDS = {
 WEBSOCKET_URL = '/ws/'
 WS4REDIS_CONNECTION = {'host': '{WS4REDIS_SERVER}', 'port': SettingReference('WS4REDIS_PORT'),
                        'db': SettingReference('WS4REDIS_DB'), 'password': '{WS4REDIS_PASSWORD}'}
-WS4REDIS_TOPIC_SERIALIZER = 'easydjango.websockets.topics.serialize_topic'
+WS4REDIS_TOPIC_SERIALIZER = 'djangofloor.websockets.topics.serialize_topic'
 WS4REDIS_HEARTBEAT = '--HEARTBEAT--'
 WS4REDIS_SIGNAL_DECODER = 'json.JSONDecoder'
 WS4REDIS_SIGNAL_ENCODER = 'django.core.serializers.json.DjangoJSONEncoder'
@@ -250,14 +253,14 @@ PIPELINE = {
 }
 PIPELINE_CSS = {
     'default': {
-        'source_filenames': SettingReference('EASYDJANGO_CSS'),
+        'source_filenames': SettingReference('DF_CSS'),
         'output_filename': 'css/default-all.css', 'extra_context': {'media': 'all'},
     },
     'bootstrap3': {
         'source_filenames': ['vendor/bootstrap3/dist/css/bootstrap.min.css',
                              'vendor/bootstrap3/dist/css/bootstrap-theme.min.css',
                              'vendor/font-awesome/css/font-awesome.min.css',
-                             'css/easydjango-bootstrap3.css', ExpandIterable('EASYDJANGO_CSS')],
+                             'css/djangofloor-bootstrap3.css', ExpandIterable('DF_CSS')],
         'output_filename': 'css/bootstrap3-all.css', 'extra_context': {'media': 'all'},
     },
     'metro-ui': {
@@ -265,7 +268,7 @@ PIPELINE_CSS = {
                              'vendor/metro-ui/build/css/metro-icons.min.css',
                              'vendor/metro-ui/build/css/metro-responsive.min.css',
                              'vendor/font-awesome/css/font-awesome.min.css',
-                             'css/easydjango-metro-ui.css', ExpandIterable('EASYDJANGO_CSS')],
+                             'css/djangofloor-metro-ui.css', ExpandIterable('DF_CSS')],
         'output_filename': 'css/metro-ui-all.css', 'extra_context': {'media': 'all'},
     },
     'ie9': {
@@ -275,18 +278,18 @@ PIPELINE_CSS = {
 }
 PIPELINE_JS = {
     'default': {
-        'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'js/easydjango.js', ExpandIterable('EASYDJANGO_JS')],
+        'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'js/djangofloor.js', ExpandIterable('DF_JS')],
         'output_filename': 'js/default.js',
     },
     'bootstrap3': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/bootstrap3/dist/js/bootstrap.min.js',
-                             'js/easydjango.js', 'vendor/bootstrap-notify/bootstrap-notify.min.js',
-                             'js/easydjango-bootstrap3.js', ExpandIterable('EASYDJANGO_JS')],
+                             'js/djangofloor.js', 'vendor/bootstrap-notify/bootstrap-notify.min.js',
+                             'js/djangofloor-bootstrap3.js', ExpandIterable('DF_JS')],
         'output_filename': 'js/bootstrap3.js',
     },
     'metro-ui': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/metro-ui/build/js/metro.min.js',
-                             'js/easydjango.js', 'js/easydjango-metro-ui.js', ExpandIterable('EASYDJANGO_JS')],
+                             'js/djangofloor.js', 'js/djangofloor-metro-ui.js', ExpandIterable('DF_JS')],
         'output_filename': 'js/metro-ui.js',
     },
     'ie9': {
@@ -301,7 +304,7 @@ if USE_SCSS:
     PIPELINE_COMPILERS = ('djangofloor.middleware.PyScssCompiler',)
 
 # Django-Debug-Toolbar
-DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js',}
+DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js', }
 
 # Django-Bootstrap3
 BOOTSTRAP3 = {
@@ -321,22 +324,22 @@ BOOTSTRAP3 = {
 # of course, you can redefine or override any setting
 #
 # ######################################################################################################################
-# easydjango
-EASYDJANGO_CSS = []
-EASYDJANGO_JS = []
-EASYDJANGO_INDEX_VIEW = 'easydjango.views.index.IndexView'
-EASYDJANGO_SITE_SEARCH_VIEW = 'easydjango.views.search.UserSearchView'
-EASYDJANGO_LOGIN_VIEW = 'easydjango.views.auth.LoginView'
+# djangofloor
+DF_CSS = []
+DF_JS = []
+DF_INDEX_VIEW = 'djangofloor.views.index.IndexView'
+DF_SITE_SEARCH_VIEW = 'djangofloor.views.search.UserSearchView'
+DF_LOGIN_VIEW = 'djangofloor.views.auth.LoginView'
 
-EASYDJANGO_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
-EASYDJANGO_INSTALLED_APPS = ['{PROJECT_NAME}']
-EASYDJANGO_MIDDLEWARE_CLASSES = []
-EASYDJANGO_REMOTE_USER_HEADER = None  # HTTP-REMOTE-USER
-EASYDJANGO_FAKE_AUTHENTICATION_USERNAME = 'testuser'
-EASYDJANGO_DEFAULT_GROUPS = ['Users']
-EASYDJANGO_TEMPLATE_CONTEXT_PROCESSORS = []
-EASYDJANGO_CHECKED_REQUIREMENTS = ['django>=1.12', 'django<=1.13', 'celery', 'django-bootstrap3', 'redis', 'pip',
-                                   'psutil', 'django-redis-sessions']
+DF_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
+DF_INSTALLED_APPS = ['{PROJECT_NAME}']
+DF_MIDDLEWARE_CLASSES = []
+DF_REMOTE_USER_HEADER = None  # HTTP-REMOTE-USER
+DF_FAKE_AUTHENTICATION_USERNAME = 'testuser'
+DF_DEFAULT_GROUPS = ['Users']
+DF_TEMPLATE_CONTEXT_PROCESSORS = []
+DF_CHECKED_REQUIREMENTS = ['django>=1.12', 'django<=1.13', 'celery', 'django-bootstrap3', 'redis', 'pip',
+                           'psutil', 'django-redis-sessions']
 # django-npm
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],
@@ -382,7 +385,7 @@ SECRET_KEY = 'secret_key'
 SECURE_HSTS_SECONDS = 0
 TIME_ZONE = 'Europe/Paris'
 
-# easydjango
+# djangofloor
 LISTEN_ADDRESS = 'localhost:9000'
 LOCAL_PATH = './django_data'
 __split_path = __file__.split(os.path.sep)

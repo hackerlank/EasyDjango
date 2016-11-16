@@ -7,7 +7,7 @@ __author__ = 'Matthieu Gallet'
 
 
 class IndexView(TemplateView):
-    template_name = 'easydjango/bootstrap3/index.html'
+    template_name = 'djangofloor/bootstrap3/index.html'
 
     def get(self, request, *args, **kwargs):
         return self.render_to_response({})

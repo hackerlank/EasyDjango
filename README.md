@@ -1,9 +1,9 @@
-EasyDjango
+Djangofloor
 ==========
  
-EasyDjango helps you to quickly create Django applications that are also easy to deploy. To reach these goals, EasyDjango provides:
+Djangofloor helps you to quickly create Django applications that are also easy to deploy. To reach these goals, Djangofloor provides:
 
-  * an extension to the base Django's setting, allowing to split your configuration into several files (default values provided by EasyDjango, constants values for your project, deployement parameters, local values for development),
+  * an extension to the base Django's setting, allowing to split your configuration into several files (default values provided by Djangofloor, constants values for your project, deployement parameters, local values for development),
   * an unified signal dispatcher, using bi-directionnal websockets through Celery and Redis. You can call Python and Javascript signals from the Python or the Javascript side, 
   * auto-configuration for a few widespread Django apps (Django-Debug-Toolbar, Django-Redis-Sessions, Django-Pipeline) if they are present,
   * a base template using the well-known Bootstrap3 (but of course you can use any other templates),
@@ -15,8 +15,8 @@ Creating a new project
 
 Creating a working new project only requires a couple lines:
 
-    pip install easydjango
-    easydjango-createproject
+    pip install djangofloor
+    djangofloor-createproject
       Your new project name [MyProject] NewProject
       Python package name [newproject]
       Initial version [0.1]

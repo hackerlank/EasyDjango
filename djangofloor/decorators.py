@@ -2,12 +2,14 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 import re
+import warnings
 
 from django import forms
 from django.conf import settings
 from django.http import QueryDict
 from django.utils.six import text_type
 from django.utils.translation import ugettext_lazy as _
+from djangofloor.utils import RemovedInDjangoFloor110Warning
 
 try:
     from inspect import signature
@@ -152,9 +154,9 @@ class FunctionConnection(Connection):
         REGISTERED_FUNCTIONS[self.path] = self
 
 
-def signal(fn=None, path=None, is_allowed_to=server_side, queue=None):
+def signal(fn=None, path=None, is_allowed_to=server_side, queue=None, cls=SignalConnection):
     def wrapped(fn_):
-        wrapper = SignalConnection(fn=fn_, path=path, is_allowed_to=is_allowed_to, queue=queue)
+        wrapper = cls(fn=fn_, path=path, is_allowed_to=is_allowed_to, queue=queue)
         wrapper.register()
         return fn_
 
@@ -171,14 +173,7 @@ def function(fn=None, path=None, is_allowed_to=server_side, queue=None):
     $.edws.path({}).then(function(x) { alert(x); });
 
      """
-    def wrapped(fn_):
-        wrapper = FunctionConnection(fn=fn_, path=path, is_allowed_to=is_allowed_to, queue=queue)
-        wrapper.register()
-        return fn_
-
-    if fn is not None:
-        wrapped = wrapped(fn)
-    return wrapped
+    return signal(fn=fn, path=path, is_allowed_to=is_allowed_to, queue=queue, cls=FunctionConnection)
 
 
 class FormValidator(FunctionConnection):
@@ -328,3 +323,27 @@ class SerializedForm(object):
         for obj in value:
             query_dict.update({obj['name']: obj['value']})
         return self.form_cls(query_dict, *args, **kwargs)
+
+
+class LegacySignalConnection(SignalConnection):
+    def __call__(self, window_info, **kwargs):
+        result = super(LegacySignalConnection, self).__call__(window_info, **kwargs)
+        if result:
+            # noinspection PyUnresolvedReferences
+            from djangofloor.tasks import df_call
+            for data in result:
+                df_call(data['signal'], window_info, sharing=data.get('sharing'), from_client=False,
+                        kwargs=data['options'])
+
+
+def connect(fn=None, path=None, delayed=False, allow_from_client=True, auth_required=True):
+    delayed = delayed
+    if not delayed:
+        warnings.warn('The "delayed" argument is deprecated and useless.', RemovedInDjangoFloor110Warning)
+    if allow_from_client and auth_required:
+        is_allowed_to = is_authenticated
+    elif allow_from_client:
+        is_allowed_to = everyone
+    else:
+        is_allowed_to = server_side
+    return signal(fn=fn, path=path, is_allowed_to=is_allowed_to)

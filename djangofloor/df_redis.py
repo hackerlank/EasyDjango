@@ -12,9 +12,11 @@ __author__ = 'Matthieu Gallet'
 warnings.warn('djangofloor.df_redis module and its functions will be removed', RemovedInDjangoFloor110Warning)
 
 
+# noinspection PyUnusedLocal
 def push_signal_call(request, signal_name, kwargs, sharing=SESSION):
     pass
 
 
+# noinspection PyUnusedLocal
 def fetch_signal_calls(request):
     return []

@@ -1,4 +1,4 @@
-{% extends 'easydjango/bootstrap3/base.html' %}
+{% extends 'djangofloor/bootstrap3/base.html' %}
 {% load bootstrap3 i18n %}
 
 {% block content %}
@@ -22,7 +22,7 @@
             {% bootstrap_form authentication_form %}
             <input type="submit" class="btn btn-success" value="{% trans 'Login' %}">
         </form>
-        <p class="text-warning"><a href="{% url 'ed:password_reset' %}">{% trans 'Forgot your password?' %}</a></p>
+        <p class="text-warning"><a href="{% url 'df:password_reset' %}">{% trans 'Forgot your password?' %}</a></p>
     </div>
     <div class="col-md-2 col-sm-2 hidden-xs">&nbsp;</div>
 </div>

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import warnings
+
 from django import template
 from django.conf import settings
 from django.template import Context
@@ -11,7 +13,8 @@ from django.utils.encoding import force_text
 from django.utils.html import _js_escapes
 from django.utils.safestring import mark_safe
 # noinspection PyUnresolvedReferences
-from django.utils.six.moves.urllib.parse import urljoin
+from django.utils.six.moves.urllib.parse import urljoin, urlparse
+from djangofloor.utils import RemovedInDjangoFloor110Warning
 from djangofloor.websockets.wsgi_server import signer
 
 __author__ = 'Matthieu Gallet'
@@ -19,7 +22,7 @@ register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
-def init_websocket(context):
+def df_init_websocket(context):
     if not context.get('df_has_ws_topics'):
         return ''
     ws_token = context['df_window_key']
@@ -29,7 +32,7 @@ def init_websocket(context):
     script = '$(document).ready(function() { $.ed._wsConnect("%s://%s%s?token=%s"); });' % \
              (protocol, site_name, settings.WEBSOCKET_URL, signed_token)
     init_value = '<script type="application/javascript">%s</script>' % script
-    init_value += '<script type="text/javascript" src="%s" charset="utf-8"></script>' % reverse('ed:signals')
+    init_value += '<script type="text/javascript" src="%s" charset="utf-8"></script>' % reverse('df:signals')
     return mark_safe(init_value)
 
 
@@ -83,8 +86,8 @@ def fontawesome_icon(name, large=False, fixed=False, spin=False, li=False, rotat
     ))
 
 
-@register.filter(name='ed_level')
-def ed_level(value, bounds='80:95'):
+@register.filter(name='df_level')
+def df_level(value, bounds='80:95'):
     # noinspection PyTypeChecker
     warning, error = [float(x) for x in bounds.split(':')]
     if value < warning <= error or error <= warning < value:
@@ -95,7 +98,7 @@ def ed_level(value, bounds='80:95'):
 
 
 @register.simple_tag(takes_context=True)
-def ed_messages(context, style='banner'):
+def df_messages(context, style='banner'):
     """
     Show django.contrib.messages Messages in Metro alert containers.
     In order to make the alerts dismissable (with the close button),
@@ -135,3 +138,35 @@ def ed_messages(context, style='banner'):
                      notification.title)
     result += '</script>'
     return mark_safe(result)
+
+
+# TODO remove the following functions
+@register.simple_tag(takes_context=True)
+def df_window_key(context):
+    warnings.warn('df_window_key template tag has been replaced by df_init_websocket', RemovedInDjangoFloor110Warning)
+    return df_init_websocket(context)
+
+
+@register.filter
+def df_underline(value, kind='='):
+    warnings.warn('df_underline template tag will be removed', RemovedInDjangoFloor110Warning)
+    return kind * len(value)
+
+
+@register.filter
+def df_urlparse(value, component='hostname'):
+    warnings.warn('df_urlparse template tag will be removed', RemovedInDjangoFloor110Warning)
+    x, sep, y = value.partition('://')
+    if sep != '://':
+        value = 'scheme://%s' % value
+    elif not x:
+        value = 'scheme%s' % value
+    return getattr(urlparse(value), component)
+
+
+@register.filter
+def df_inivalue(value):
+    warnings.warn('df_inivalue template tag will be removed', RemovedInDjangoFloor110Warning)
+    if not value:
+        return ''
+    return mark_safe('\n    '.join(value.splitlines()))

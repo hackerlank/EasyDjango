@@ -18,11 +18,11 @@ python_version = (sys.version_info[0], sys.version_info[1])
 with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as fd:
     long_description = fd.read()
 
-entry_points = dict(console_scripts=['{package_name}-ctl = easydjango.scripts:control',
-                                     '{package_name}-celery = easydjango.scripts:celery',
-                                     '{package_name}-django = easydjango.scripts:django',
-                                     '{package_name}-uwsgi = easydjango.scripts:uwsgi',
-                                     '{package_name}-gunicorn = easydjango.scripts:gunicorn', ])
+entry_points = dict(console_scripts=['{package_name}-ctl = djangofloor.scripts:control',
+                                     '{package_name}-celery = djangofloor.scripts:celery',
+                                     '{package_name}-django = djangofloor.scripts:django',
+                                     '{package_name}-uwsgi = djangofloor.scripts:uwsgi',
+                                     '{package_name}-gunicorn = djangofloor.scripts:gunicorn', ])
 
 setup(
     name='{project_name}',
@@ -35,7 +35,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=['easydjango'],
+    install_requires=['djangofloor'],
     classifiers=['Development Status :: 3 - Alpha', 'Operating System :: MacOS :: MacOS X',
                  'Operating System :: Microsoft :: Windows', 'Operating System :: POSIX :: BSD',
                  'Operating System :: POSIX :: Linux', 'Operating System :: Unix',

@@ -25,7 +25,7 @@ class SearchForm(forms.Form):
 
 
 class SiteSearchView(TemplateView):
-    template_name = 'easydjango/bootstrap3/search.html'
+    template_name = 'djangofloor/bootstrap3/search.html'
 
     def get(self, request, *args, **kwargs):
         return self.get_or_post(request, SearchForm(request.GET))
@@ -46,7 +46,7 @@ class SiteSearchView(TemplateView):
         except EmptyPage:
             # If page is out of range (e.g. 9999), deliver last page of results.
             paginated_results = paginator.page(paginator.num_pages)
-        context = {'form': form, 'paginated_url': '%s?%s' % (reverse('ed:site_search'), urlencode({'q': pattern})),
+        context = {'form': form, 'paginated_url': '%s?%s' % (reverse('df:site_search'), urlencode({'q': pattern})),
                    'paginated_results': paginated_results,
                    'formatted_results': self.formatted_results(paginated_results),
                    'formatted_header': self.formatted_header(), }

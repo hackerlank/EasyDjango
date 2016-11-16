@@ -28,7 +28,7 @@ class Command(BaseCommand):
         verbosity = options['verbosity']
         if action == 'python':
             self.stdout.write(self.style.NOTICE('# ' + '-' * 80))
-            self.stdout.write(self.style.NOTICE(_('# EasyDjango version %(version)s') % {'version': version, }))
+            self.stdout.write(self.style.NOTICE(_('# Djangofloor version %(version)s') % {'version': version, }))
             self.stdout.write(self.style.NOTICE('# Configuration providers:'))
             for provider in merger.providers:
                 if provider.is_valid():

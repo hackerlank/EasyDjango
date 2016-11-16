@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import warnings
+
 from django.contrib.auth import get_user_model
 from django.utils.lru_cache import lru_cache
 from django.utils.encoding import force_text
 from django.utils.six import binary_type
 from djangofloor.request import WindowInfo, Session
 from djangofloor.tasks import SESSION, WINDOW, BROADCAST, USER, call
+from djangofloor.utils import RemovedInDjangoFloor110Warning
 
 __author__ = 'Matthieu Gallet'
 
@@ -16,10 +19,18 @@ def get_pk(kind, value):
     if kind == 'user':
         return get_user_model().objects.get(username=value).pk
 
+warnings.warn('djangofloor.df_ws4redis module and its functions will be removed', RemovedInDjangoFloor110Warning)
+
 
 def ws_call(signal_name, request, sharing, kwargs):
     if isinstance(sharing, binary_type):
         sharing = force_text(sharing)
+    to = _sharing_to_topics(request, sharing)
+    window_info = WindowInfo.from_request(request)
+    call(window_info, signal_name, to=to, kwargs=kwargs)
+
+
+def _sharing_to_topics(request, sharing):
     to = []
     if sharing == SESSION:
         to = [Session(request.session_key)]
@@ -36,5 +47,4 @@ def ws_call(signal_name, request, sharing, kwargs):
             to.append(get_pk('user', username))
         for session in sharing.get(SESSION, []):
             to.append(Session(session))
-    window_info = WindowInfo.from_request(request)
-    call(window_info, signal_name, to=to, kwargs=kwargs)
+    return to

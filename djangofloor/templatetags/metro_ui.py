@@ -39,4 +39,4 @@ def metro_ui_messages(context, style='banner'):
     if context and isinstance(context, Context):
         context = context.flatten()
     context.update({'message_style': style})
-    return render_to_string('easydjango/metro-ui/messages.html', context=context)
+    return render_to_string('djangofloor/metro-ui/messages.html', context=context)

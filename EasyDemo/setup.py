@@ -18,11 +18,11 @@ python_version = (sys.version_info[0], sys.version_info[1])
 with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as fd:
     long_description = fd.read()
 
-entry_points = dict(console_scripts=['easydemo-ctl = easydjango.scripts:control',
-                                     'easydemo-celery = easydjango.scripts:celery',
-                                     'easydemo-django = easydjango.scripts:django',
-                                     'easydemo-uwsgi = easydjango.scripts:uwsgi',
-                                     'easydemo-gunicorn = easydjango.scripts:gunicorn', ])
+entry_points = dict(console_scripts=['easydemo-ctl = djangofloor.scripts:control',
+                                     'easydemo-celery = djangofloor.scripts:celery',
+                                     'easydemo-django = djangofloor.scripts:django',
+                                     'easydemo-uwsgi = djangofloor.scripts:uwsgi',
+                                     'easydemo-gunicorn = djangofloor.scripts:gunicorn', ])
 
 setup(
     name='EasyDemo',
@@ -35,7 +35,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=['easydjango'],
+    install_requires=['djangofloor'],
     classifiers=['Development Status :: 3 - Alpha', 'Operating System :: MacOS :: MacOS X',
                  'Operating System :: Microsoft :: Windows', 'Operating System :: POSIX :: BSD',
                  'Operating System :: POSIX :: Linux', 'Operating System :: Unix',

@@ -1,22 +1,31 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import json
 import mimetypes
 import os
+import warnings
 
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import add_domain
 from django.http import HttpResponse
 from django.http import HttpResponsePermanentRedirect
+from django.http import HttpResponseRedirect
+from django.http import JsonResponse
 from django.http import StreamingHttpResponse
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.lru_cache import lru_cache
 from django.utils.six import binary_type
-
+from django.views.decorators.cache import never_cache
 from djangofloor.decorators import REGISTERED_SIGNALS, REGISTERED_FUNCTIONS
+from djangofloor.exceptions import InvalidRequest
 from djangofloor.request import WindowInfo
-from djangofloor.tasks import import_signals_and_functions
+from djangofloor.tasks import import_signals_and_functions, get_signal_decoder, get_signal_encoder, SERVER
+# noinspection PyProtectedMember
+from djangofloor.tasks import _call_signal
+from djangofloor.utils import RemovedInDjangoFloor110Warning
 
 __author__ = 'Matthieu Gallet'
 
@@ -30,7 +39,7 @@ def robots(request):
     current_site = get_current_site(request)
     base_url = add_domain(current_site.domain, '/', request.is_secure())[:-1]
     template_values = {'base_url': base_url}
-    return TemplateResponse('easydjango/robots.txt', template_values, content_type='text/plain')
+    return TemplateResponse('djangofloor/robots.txt', template_values, content_type='text/plain')
 
 
 @lru_cache()
@@ -73,7 +82,7 @@ def signals(request):
                 valid_function_names.append(function_name)
     # noinspection PyTypeChecker
     csrf_header_name = getattr(settings, 'CSRF_HEADER_NAME', 'HTTP_X_CSRFTOKEN')
-    return TemplateResponse(request, 'easydjango/signals.html',
+    return TemplateResponse(request, 'djangofloor/signals.html',
                             {'SIGNALS': valid_signal_names,
                              'FUNCTIONS': valid_function_names,
                              'WS4REDIS_HEARTBEAT': settings.WS4REDIS_HEARTBEAT,
@@ -130,3 +139,51 @@ def send_file(filepath, mimetype=None, force_download=False):
     if force_download or not (mimetype.startswith('text') or mimetype.startswith('image')):
         response['Content-Disposition'] = 'attachment; filename={0}'.format(os.path.basename(filepath))
     return response
+
+
+# TODO remove the following functions
+
+@never_cache
+def signal_call(request, signal):
+    """ Called by JS code when websockets are not available. Allow to call Python signals from JS.
+    Arguments are passed in the request body, serialized as JSON.
+
+    :param request: Django HTTP request
+    :param signal: name of the called signal
+    :type signal: :class:`str`
+    """
+    warnings.warn('djangofloor.views.signal_call is deprecated. Use websockets instead.',
+                  RemovedInDjangoFloor110Warning)
+    request.window_key = request.GET.get('window_key')
+    if request.body:
+        kwargs = json.loads(request.body.decode('utf-8'), cls=get_signal_decoder())
+    else:
+        kwargs = {}
+    try:
+        _call_signal(WindowInfo.from_request(request), signal_name=signal, to=SERVER,
+                     kwargs=kwargs, from_client=True)
+    except InvalidRequest:
+        pass
+    return JsonResponse([], safe=False, encoder=get_signal_encoder())
+
+
+@never_cache
+def get_signal_calls(request):
+    """ Regularly called by JS code when websockets are not available. Allows Python code to call JS signals.
+
+    The polling frequency is set with `WS4REDIS_EMULATION_INTERVAL` (in milliseconds).
+
+    Return all signals called by Python code as a JSON-list
+    """
+    warnings.warn('djangofloor.views.get_signal_calls is deprecated. Use websockets instead.',
+                  RemovedInDjangoFloor110Warning)
+    return JsonResponse([], safe=False)
+
+
+def index(request):
+    warnings.warn('djangofloor.views.index is deprecated. Use class-based index view instead.',
+                  RemovedInDjangoFloor110Warning)
+    if settings.FLOOR_INDEX is not None:
+        return HttpResponseRedirect(reverse(settings.FLOOR_INDEX))
+    template_values = {}
+    return TemplateResponse(request, 'djangofloor/index.html', template_values)

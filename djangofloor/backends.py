@@ -19,7 +19,7 @@ class DefaultGroupsRemoteUserBackend(RemoteUserBackend):
 
         By default, returns the user unmodified; only add it to the default group.
         """
-        for group_name in settings.EASYDJANGO_DEFAULT_GROUPS:
+        for group_name in settings.DF_DEFAULT_GROUPS:
             if group_name not in _CACHED_GROUPS:
                 _CACHED_GROUPS[group_name] = Group.objects.get_or_create(name=str(group_name))[0]
             user.groups.add(_CACHED_GROUPS[group_name])

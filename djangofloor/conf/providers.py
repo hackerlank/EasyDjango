@@ -9,7 +9,6 @@ from collections import OrderedDict
 from django.utils.six import StringIO
 
 from djangofloor.conf.fields import ConfigField
-from djangofloor.utils import import_module
 
 try:
     # noinspection PyUnresolvedReferences,PyCompatibility
@@ -100,6 +99,7 @@ class PythonModuleProvider(ConfigProvider):
         self.module = None
         self.values = OrderedDict()
         if module_name is not None:
+            from djangofloor.utils import import_module
             try:
                 self.module = import_module(module_name, package=None)
             except ImportError:
@@ -147,7 +147,7 @@ class PythonFileProvider(PythonModuleProvider):
             return
         version = tuple(sys.version_info[0:1])
         md5 = hashlib.md5(module_filename.encode('utf-8')).hexdigest()
-        module_name = "easydjango.__private" + md5
+        module_name = "djangofloor.__private" + md5
         if version >= (3, 5):
             import importlib.util
             spec = importlib.util.spec_from_file_location(module_name, module_filename)
@@ -216,6 +216,7 @@ class PythonConfigFieldsProvider(ConfigFieldsProvider):
         self.attribute_name = attribute_name
         self.module = None
         if module_name is not None:
+            from djangofloor.utils import import_module
             try:
                 self.module = import_module(module_name, package=None)
             except ImportError:

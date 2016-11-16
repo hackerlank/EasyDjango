@@ -1,4 +1,4 @@
-<!DOCTYPE html>{% load pipeline staticfiles easydjango bootstrap3 i18n %}
+<!DOCTYPE html>{% load pipeline staticfiles djangofloor bootstrap3 i18n %}
 <html lang="{% block header-language %}{{ LANGUAGE_CODE }}{% endblock %}">
 <head>
     {% block header %}
@@ -38,7 +38,7 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             {% block navbar-search %}{% if df_has_site_search_view %}
-            <form class="navbar-form navbar-right" method="get" action="{% url 'ed:site_search' %}">
+            <form class="navbar-form navbar-right" method="get" action="{% url 'df:site_search' %}">
                 <input type="text" placeholder="{% trans 'search…' %}" class="form-control" name="q">
                 <button type="submit" class="btn btn-success">{% trans 'Search' %}</button>
             </form>{% endif %}{% endblock %}
@@ -50,13 +50,13 @@
                 {% elif df_remote_username %}
                 <li>{{ df_user }}</li>
                 {% else %}
-                <li><a href="{% url 'ed:logout' %}" title="{% trans 'Log out' %}">{{ df_user }} {% bootstrap_icon 'log-out' %}</a>
+                <li><a href="{% url 'df:logout' %}" title="{% trans 'Log out' %}">{{ df_user }} {% bootstrap_icon 'log-out' %}</a>
                 </li>
-                <li><a href="{% url 'ed:set_password' %}" title="{% trans 'Change your password' %}">{% bootstrap_icon 'edit' %}</a>
+                <li><a href="{% url 'df:set_password' %}" title="{% trans 'Change your password' %}">{% bootstrap_icon 'edit' %}</a>
  </li>
                 {% endif %}
                 {% if df_user and df_user.is_superuser %}
-                <li><a href="{% url 'ed:system_state' %}" title="{% trans 'Check system state' %}">{% bootstrap_icon 'eye-open' %}</a></li>
+                <li><a href="{% url 'df:system_state' %}" title="{% trans 'Check system state' %}">{% bootstrap_icon 'eye-open' %}</a></li>
                 {% endif %}
                 {% if df_user and df_user.is_staff %}
                 <li><a href="{% url 'admin:index' %}" title="{% trans 'Admin' %}">{% bootstrap_icon 'cog' %}</a></li>
@@ -104,7 +104,7 @@
 {% javascript 'bootstrap3' %}
 <!--[if lt IE 9 ]>{% javascript 'ie9' %}<![endif]-->
 {% stylesheet 'bootstrap3' %}
-{% init_websocket %}
-{% ed_messages style='banner' %}
+{% df_init_websocket %}
+{% df_messages style='banner' %}
 </body>
 </html>

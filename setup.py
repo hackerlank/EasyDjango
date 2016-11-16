@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Setup file for the EasyDjango project.
+"""Setup file for the Djangofloor project.
 """
 
 import codecs
@@ -9,10 +9,10 @@ import re
 import sys
 from setuptools import setup, find_packages
 
-# avoid a from djangofloor import __version__ as version (that compiles easydjango.__init__
+# avoid a from djangofloor import __version__ as version (that compiles djangofloor.__init__
 #   and is not compatible with bdist_deb)
 version = None
-for line in codecs.open(os.path.join('easydjango', '__init__.py'), 'r', encoding='utf-8'):
+for line in codecs.open(os.path.join('djangofloor', '__init__.py'), 'r', encoding='utf-8'):
     matcher = re.match(r"""^__version__\s*=\s*['"](.*)['"]\s*$""", line)
     version = version or matcher and matcher.group(1)
 python_version = (sys.version_info[0], sys.version_info[1])
@@ -28,12 +28,12 @@ if python_version < (3, 3):
     install_requirements.append('funcsigs')
 
 entry_points = {'console_scripts': [
-    'djangofloor-ctl = easydjango.scripts:control',
-    'djangofloor-celery = easydjango.scripts:celery',
-    'djangofloor-django = easydjango.scripts:django',
-    'djangofloor-uwsgi = easydjango.scripts:uwsgi',
-    'djangofloor-gunicorn = easydjango.scripts:gunicorn',
-    'djangofloor-createproject = easydjango.scripts:create_project'
+    'djangofloor-ctl = djangofloor.scripts:control',
+    'djangofloor-celery = djangofloor.scripts:celery',
+    'djangofloor-django = djangofloor.scripts:django',
+    'djangofloor-uwsgi = djangofloor.scripts:uwsgi',
+    'djangofloor-gunicorn = djangofloor.scripts:gunicorn',
+    'djangofloor-createproject = djangofloor.scripts:create_project'
                                      ]}
 extras_requirements['deb'] = ['stdeb>=0.8.5']
 extras_requirements['extra'] = ['django-pipeline', 'django-debug-toolbar', 'django-redis-sessions', 'psutil']
@@ -51,7 +51,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    test_suite='easydjango.tests',
+    test_suite='djangofloor.tests',
     install_requires=install_requirements,
     extras_require=extras_requirements,
     setup_requires=[],

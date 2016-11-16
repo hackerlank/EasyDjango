@@ -23,7 +23,7 @@ validate_form(form_cls=PasswordResetForm,
 
 
 class LoginView(TemplateView):
-    template_name = 'easydjango/bootstrap3/login.html'
+    template_name = 'djangofloor/bootstrap3/login.html'
     allow_account_creation = True
 
     def get(self, request, *args, **kwargs):
@@ -74,7 +74,7 @@ def password_reset(request):
         password_reset_form = PasswordResetForm()
     template_values = {'password_reset_form': password_reset_form}
     set_websocket_topics(request)
-    return TemplateResponse(request, 'easydjango/bootstrap3/password_reset.html', template_values)
+    return TemplateResponse(request, 'djangofloor/bootstrap3/password_reset.html', template_values)
 
 
 @login_required(login_url='login')
@@ -82,7 +82,7 @@ def set_password(request):
     if request.method == 'POST':
         set_password_form = SetPasswordForm(request.user, request.POST)
         if set_password_form.is_valid():
-            redirect_to = reverse('ed:set_password')
+            redirect_to = reverse('df:set_password')
             set_password_form.save()
             messages.success(request, _('Your password has been modified. Please log-in again.'))
             return HttpResponseRedirect(redirect_to)
@@ -90,4 +90,4 @@ def set_password(request):
         set_password_form = SetPasswordForm(request.user)
     template_values = {'set_password_form': set_password_form}
     set_websocket_topics(request)
-    return TemplateResponse(request, 'easydjango/bootstrap3/set_password.html', template_values)
+    return TemplateResponse(request, 'djangofloor/bootstrap3/set_password.html', template_values)

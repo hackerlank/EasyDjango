@@ -7,7 +7,7 @@ from djangofloor.decorators import signal, is_staff
 from djangofloor.tasks import scall, WINDOW
 
 __author__ = 'Matthieu Gallet'
-logger = logging.getLogger('easydjango.websocket')
+logger = logging.getLogger('djangofloor.websocket')
 
 
 @signal(path='ed.monitoring.check_ws', is_allowed_to=is_staff)

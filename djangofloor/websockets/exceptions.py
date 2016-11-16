@@ -16,7 +16,7 @@ class WebSocketError(socket_error):
 
 
 class NoWindowKeyException(ValueError):
-    """raise when the middleware EasyDjangoMiddleware is not used."""
+    """raise when the middleware DjangoFloorMiddleware is not used."""
 
 
 # noinspection PyClassHasNoInit

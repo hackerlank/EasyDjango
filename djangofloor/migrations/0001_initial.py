@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                 ('first_read_time', models.DateTimeField(auto_now_add=True, verbose_name='first read time')),
                 ('last_read_time', models.DateTimeField(auto_now=True, verbose_name='last read time')),
                 ('read_count', models.IntegerField(db_index=True, default=1, verbose_name='Read count')),
-                ('notification', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='easydjango.Notification')),
+                ('notification', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='djangofloor.Notification')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='User that read this notification')),
             ],
         ),

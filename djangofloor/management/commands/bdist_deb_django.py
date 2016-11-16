@@ -82,7 +82,7 @@ class BdistDebDjango(sdist_dsc):
 
             * create the source package with `sdist_dsc`
             * update the Python dependencies
-            * run specific EasyDjango command for extra Debian files (systemd, static files, …)
+            * run specific Djangofloor command for extra Debian files (systemd, static files, …)
             * add postinstall files
             * build  a .deb package from the modified `sdist_dsc`
         """
@@ -131,7 +131,7 @@ class BdistDebDjango(sdist_dsc):
         debian_project_name = project_name.replace('-', '_')
         conf_name = '%s.conf' % debian_project_name
         # prepare the use of the gen_install command
-        os.environ['EASYDJANGO_CONF_NAME'] = project_name
+        os.environ['DF_CONF_NAME'] = project_name
         set_env()
         collect_static_dir = os.path.join(target_dir, 'gen_install', 'var', project_name, 'static')
         etc_dir = os.path.join(target_dir, 'gen_install', 'etc')
@@ -177,7 +177,7 @@ class BdistDebDjango(sdist_dsc):
         with codecs.open(os.path.join(target_dir, 'debian/control'), 'w', encoding='utf-8') as control_fd:
             control_fd.write(control)
 
-        # rewrite rules file to append easydjango extra info
+        # rewrite rules file to append djangofloor extra info
         rules_filename = os.path.join(target_dir, 'debian', 'rules')
         new_rules_content = ''
         python2_re = re.compile(r'^\s*python setup.py install --force --root=debian/([^/\s]+) .*$')
@@ -215,7 +215,7 @@ class BdistDebDjango(sdist_dsc):
                 with codecs.open(extra_postinst[python_version], 'r', encoding='utf-8') as fd:
                     values['extra_postinst'] = fd.read()
             values.update({'python_version': python_version, 'debian_name': debian_names[python_version]})
-            content = render_to_string('easydjango/commands/deb_postinst.sh', values)
+            content = render_to_string('djangofloor/commands/deb_postinst.sh', values)
             python_postinst = os.path.join(target_dir, 'debian', debian_names[python_version] + '.postinst')
             with codecs.open(python_postinst, 'w', encoding='utf-8') as postinst_fd:
                 postinst_fd.write(content)

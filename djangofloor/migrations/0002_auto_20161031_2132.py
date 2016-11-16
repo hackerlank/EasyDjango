@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('easydjango', '0001_initial'),
+        ('djangofloor', '0001_initial'),
     ]
 
     operations = [

@@ -16,8 +16,8 @@ urlpatterns = [
     url(r'^password_reset/', auth.password_reset, name='password_reset'),
     url(r'^set_password/', auth.set_password, name='set_password'),
     url(r'^monitoring/system_state/', monitoring.system_state, name='system_state'),
-
 ]
-if settings.EASYDJANGO_SITE_SEARCH_VIEW:
-    search_view = import_string(settings.EASYDJANGO_SITE_SEARCH_VIEW)
+
+if settings.DF_SITE_SEARCH_VIEW:
+    search_view = import_string(settings.DF_SITE_SEARCH_VIEW)
     urlpatterns += [url(r'^search/', search_view.as_view(), name='site_search')]

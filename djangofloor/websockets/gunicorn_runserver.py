@@ -33,7 +33,7 @@ from gunicorn.workers.async import ALREADY_HANDLED
 
 __author__ = 'Matthieu Gallet'
 
-logger = logging.getLogger('easydjango.websocket')
+logger = logging.getLogger('djangofloor.websocket')
 
 if six.PY3:
     # noinspection PyShadowingBuiltins

@@ -50,7 +50,7 @@ class MonitoringCheck(object):
 
 
 class Packages(MonitoringCheck):
-    template = 'easydjango/bootstrap3/monitoring/packages.html'
+    template = 'djangofloor/bootstrap3/monitoring/packages.html'
 
     def get_context(self, request):
         return {'installed_distributions': self.get_installed_distributions()}
@@ -58,9 +58,9 @@ class Packages(MonitoringCheck):
     @staticmethod
     def get_installed_distributions():
         raw_installed_distributions = pip.get_installed_distributions()
-        if settings.EASYDJANGO_CHECKED_REQUIREMENTS:
+        if settings.DF_CHECKED_REQUIREMENTS:
             requirements = {}  # requirements[key] = [key, state="danger/warning/success", [specs_str], [parsed_req]]
-            for r in settings.EASYDJANGO_CHECKED_REQUIREMENTS:
+            for r in settings.DF_CHECKED_REQUIREMENTS:
                 for p in parse_requirements(r):
                     requirements.setdefault(p.key, [p.key, None, 'danger', 'remove', [], []])
                     requirements[p.key][4] += [' '.join(y) for y in p.specs]
@@ -86,7 +86,7 @@ class Packages(MonitoringCheck):
 
 
 class System(MonitoringCheck):
-    template = 'easydjango/bootstrap3/monitoring/system.html'
+    template = 'djangofloor/bootstrap3/monitoring/system.html'
 
     def get_context(self, request):
         if psutil is None:
@@ -104,7 +104,7 @@ class System(MonitoringCheck):
 
 
 class CeleryStats(MonitoringCheck):
-    template = 'easydjango/bootstrap3/monitoring/celery_stats.html'
+    template = 'djangofloor/bootstrap3/monitoring/celery_stats.html'
 
     def get_context(self, request):
         celery_stats = app.control.inspect().stats()
@@ -151,7 +151,7 @@ class CeleryStats(MonitoringCheck):
 
 
 class RequestCheck(MonitoringCheck):
-    template = 'easydjango/bootstrap3/monitoring/request_check.html'
+    template = 'djangofloor/bootstrap3/monitoring/request_check.html'
 
     def get_context(self, request):
         def django_fmt(y):
@@ -162,7 +162,7 @@ class RequestCheck(MonitoringCheck):
 
         context = {'remote_user': None, 'remote_address': request.META['REMOTE_ADDR'], 'use_x_forwarded_for': None,
                    'secure_proxy_ssl_header': None}
-        header = settings.EASYDJANGO_REMOTE_USER_HEADER
+        header = settings.DF_REMOTE_USER_HEADER
         if header:
             context['remote_user'] = (http_fmt(header), request.META.get(django_fmt(header)))
         header = settings.USE_X_FORWARDED_FOR and 'X_FORWARDED_FOR'
@@ -179,7 +179,7 @@ class RequestCheck(MonitoringCheck):
         context['request_host'] = host
         context['request_site'] = None
         # noinspection PyTypeChecker
-        context['fake_username'] = getattr(settings, 'EASYDJANGO_FAKE_AUTHENTICATION_USERNAME', None)
+        context['fake_username'] = getattr(settings, 'DF_FAKE_AUTHENTICATION_USERNAME', None)
         # noinspection PyTypeChecker
         if hasattr(request, 'site'):
             context['request_site'] = request.site
@@ -192,13 +192,13 @@ class RequestCheck(MonitoringCheck):
 
 
 class LogLastLines(MonitoringCheck):
-    template = 'easydjango/bootstrap3/monitoring/log_last_lines.html'
+    template = 'djangofloor/bootstrap3/monitoring/log_last_lines.html'
 
     def get_context(self, request):
         return {}
 
 
-system_checks = [import_string(x)() for x in settings.EASYDJANGO_SYSTEM_CHECKS]
+system_checks = [import_string(x)() for x in settings.DF_SYSTEM_CHECKS]
 
 
 @never_cache
@@ -209,5 +209,5 @@ def system_state(request):
     components_values = [y.render(request) for y in system_checks]
     template_values = {'components': components_values}
     set_websocket_topics(request)
-    return TemplateResponse(request, template='easydjango/bootstrap3/system_state.html',
+    return TemplateResponse(request, template='djangofloor/bootstrap3/system_state.html',
                             context=template_values)

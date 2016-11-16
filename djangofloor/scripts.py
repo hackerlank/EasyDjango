@@ -39,15 +39,15 @@ def __set_default_option(options, name):
 def get_merger_from_env():
     """ Should be used after set_env()
        determine all available settings in this order:
-        easydjango.defaults
-        {project_name}.defaults (overrides easydjango.defaults)
+        djangofloor.defaults
+        {project_name}.defaults (overrides djangofloor.defaults)
         {root}/etc/{project_name}/*.ini (overrides {project_name}.settings)
         {root}/etc/{project_name}/*.py (overrides {root}/etc/{project_name}/*.ini)
         ./local_config.ini (overrides {root}/etc/{project_name}/*.py)
         ./local_config.py (overrides ./local_config.ini)
     """
 
-    project_name, sep, script = os.environ['EASYDJANGO_CONF_NAME'].partition(':')
+    project_name, sep, script = os.environ['DF_CONF_NAME'].partition(':')
     project_name = project_name.replace('-', '_')
     if sep != ':':
         script = None
@@ -62,12 +62,12 @@ def get_merger_from_env():
         ini_filenames.sort()
         return [cls(x) for x in ini_filenames]
 
-    config_providers = [PythonModuleProvider('easydjango.conf.defaults')]
-    if project_name != 'easydjango':
+    config_providers = [PythonModuleProvider('djangofloor.conf.defaults')]
+    if project_name != 'djangofloor':
         config_providers.append(PythonModuleProvider('%s.defaults' % project_name))
         mapping = '%s.iniconf:INI_MAPPING' % project_name
     else:
-        mapping = 'easydjango.conf.mapping:INI_MAPPING'
+        mapping = 'djangofloor.conf.mapping:INI_MAPPING'
     config_providers += search_providers('settings', 'ini', IniConfigProvider)
     config_providers += search_providers('settings', 'py', PythonFileProvider)
     if script:
@@ -84,7 +84,7 @@ def get_merger_from_env():
 
 
 def set_env():
-    """Set the environment variable `EASYDJANGO_CONF_NAME` with the project name and the script name
+    """Set the environment variable `DF_CONF_NAME` with the project name and the script name
     The value looks like "project_name:celery" or "project_name:django"
 
     determine the project name
@@ -94,15 +94,15 @@ def set_env():
 
     """
     # django settings
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'easydjango.conf.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangofloor.conf.settings')
     # project name
     script_re = re.match(r'^([\w_\-.]+)-(ctl|gunicorn|celery|uwsgi|django)(\.py|\.pyc|)$',
                          os.path.basename(sys.argv[0]))
     if script_re:
         conf_name = '%s:%s' % (script_re.group(1), script_re.group(2))
     else:
-        conf_name = __get_extra_option('dfproject', 'easydjango', '--dfproject')
-    os.environ.setdefault('EASYDJANGO_CONF_NAME', conf_name)
+        conf_name = __get_extra_option('dfproject', 'djangofloor', '--dfproject')
+    os.environ.setdefault('DF_CONF_NAME', conf_name)
     return conf_name
 
 
@@ -139,8 +139,8 @@ def control():
     if script not in scripts:
         print(invalid_script)
         return 1
-    project_name, sep, __ = os.environ['EASYDJANGO_CONF_NAME'].partition(':')
-    os.environ['EASYDJANGO_CONF_NAME'] = '%s:%s' % (project_name, script)
+    project_name, sep, __ = os.environ['DF_CONF_NAME'].partition(':')
+    os.environ['DF_CONF_NAME'] = '%s:%s' % (project_name, script)
     if command:
         sys.argv[1] = command
     else:
@@ -177,7 +177,7 @@ def gunicorn():
     sys.argv[1:] = extra_args
     __set_default_option(options, 'bind')
     __set_default_option(options, 'worker_class')
-    application = 'easydjango.wsgi:gunicorn_application'
+    application = 'djangofloor.wsgi:gunicorn_application'
     if application not in sys.argv:
         sys.argv.append(application)
     return run()
@@ -187,7 +187,7 @@ def celery():
     set_env()
     from celery.bin.celery import main as celery_main
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
-    parser.add_argument('-A', '--app', action='store', default='easydjango')
+    parser.add_argument('-A', '--app', action='store', default='djangofloor')
     options, extra_args = parser.parse_known_args()
     sys.argv[1:] = extra_args
     __set_default_option(options, 'app')
@@ -198,7 +198,7 @@ def uwsgi():
     set_env()
     from django.conf import settings
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
-    cmd = ['uwsgi', '--plugin', 'python', '--module', 'easydjango.wsgi']
+    cmd = ['uwsgi', '--plugin', 'python', '--module', 'djangofloor.wsgi']
     parser.add_argument('--no-master', default=False, action='store_true',
                         help='disable master process')
     parser.add_argument('--no-http-websockets', default=False, action='store_true',
@@ -248,8 +248,8 @@ def create_project():
     if sys.version_info[0] == 2:
         # noinspection PyUnresolvedReferences
         inp = raw_input
-    base_path = os.path.dirname(easydjango.__file__)
-    template_base_path = os.path.join(base_path, 'templates', 'easydjango', 'create_project')
+    base_path = os.path.dirname(djangofloor.__file__)
+    template_base_path = os.path.join(base_path, 'templates', 'djangofloor', 'create_project')
     template_values = {}
     default_values = [('project_name', 'Your new project name', 'MyProject'),
                       ('package_name', 'Python package name', ''),

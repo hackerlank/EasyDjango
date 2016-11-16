@@ -7,7 +7,7 @@ __author__ = 'Matthieu Gallet'
 
 
 class ConfigValue(object):
-    """Base class for special setting values. When a setting is a :class:`easydjango.settings.ConfigValue`,
+    """Base class for special setting values. When a setting is a :class:`djangofloor.settings.ConfigValue`,
       then the method `get_value(merger)` is called for getting the definitive value.
     """
     def __init__(self, value):
@@ -46,6 +46,8 @@ class AutocreateDirectory(Path):
         value = merger.analyze_raw_value(self.value)
         if not os.path.isdir(value):
             os.makedirs(value)
+        if not value.endswith('/'):
+            value += '/'
         return value
 
 

@@ -7,7 +7,7 @@
         <div class="panel-body">
             {% if debug %}<div class="alert alert-danger">{% trans 'The DEBUG mode is activated. You should disable it for a production website.' %}</div>
             {% endif %}
-            {% if fake_username %}<div class="alert alert-danger">{% trans 'The EASYDJANGO_FAKE_AUTHENTICATION_USERNAME is set. You should disable it for a production website.' %}</div>
+            {% if fake_username %}<div class="alert alert-danger">{% trans 'The DF_FAKE_AUTHENTICATION_USERNAME is set. You should disable it for a production website.' %}</div>
             {% endif %}
             <ul>
                 <li><strong>{% trans 'Websockets: ' %}</strong>
