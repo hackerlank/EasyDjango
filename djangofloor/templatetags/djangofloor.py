@@ -29,7 +29,7 @@ def df_init_websocket(context):
     signed_token = signer.sign(ws_token)
     protocol = 'wss' if settings.USE_SSL else 'ws'
     site_name = '%s:%s' % (settings.SERVER_NAME, settings.SERVER_PORT)
-    script = '$(document).ready(function() { $.ed._wsConnect("%s://%s%s?token=%s"); });' % \
+    script = '$(document).ready(function() { $.df._wsConnect("%s://%s%s?token=%s"); });' % \
              (protocol, site_name, settings.WEBSOCKET_URL, signed_token)
     init_value = '<script type="application/javascript">%s</script>' % script
     init_value += '<script type="text/javascript" src="%s" charset="utf-8"></script>' % reverse('df:signals')
@@ -106,13 +106,13 @@ def df_messages(context, style='banner'):
     bootstrap_javascript tag.
     Uses the template ``bootstrap3/messages.html``.
     **Tag name**::
-        ed_bootstrap_messages
+        df_messages
     **Parameters**:
         style: "notification", "banner", "modal" or "system"
     **Usage**::
-        {% ed_bootstrap_messages style='banner' %}
+        {% df_messages style='banner' %}
     **Example**::
-        {% ed_bootstrap_messages style='notification' %}
+        {% df_messages style='notification' %}
     """
 
     if context and isinstance(context, Context):
@@ -125,12 +125,12 @@ def df_messages(context, style='banner'):
         return 'info'
     result = '<script type="text/javascript">\n'
     for message in context.get('messages', []):
-        result += '$.ed.call("notify", {style: "%s", level: "%s", content: "%s"});\n' \
+        result += '$.df.call("notify", {style: "%s", level: "%s", content: "%s"});\n' \
                   % (style, message_level(message), force_text(message).translate(_js_escapes))
     get_notifications = context.get('df_get_notifications', lambda: [])
     values = get_notifications()
     for notification in values:
-        result += '$.ed.call("notify", {style: "%s", level: "%s", content: "%s", timeout: %s, title: "%s"});\n' \
+        result += '$.df.call("notify", {style: "%s", level: "%s", content: "%s", timeout: %s, title: "%s"});\n' \
                   % (notification.display_mode,
                      notification.level,
                      notification.content.translate(_js_escapes),
@@ -138,6 +138,11 @@ def df_messages(context, style='banner'):
                      notification.title)
     result += '</script>'
     return mark_safe(result)
+
+
+@register.simple_tag(takes_context=False)
+def df_deprecation(value):
+    warnings.warn(value, RemovedInDjangoFloor110Warning)
 
 
 # TODO remove the following functions

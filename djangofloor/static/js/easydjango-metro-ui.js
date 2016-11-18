@@ -1,7 +1,7 @@
 (function(jQ) {
 
     notification = function (style, level, content, title, icon, timeout) {
-        var notificationId = "edMessage" + jQ.ed._notificationId++;
+        var notificationId = "dfMessage" + jQ.df._notificationId++;
         if (timeout === undefined) {
             timeout = 0;
         }
@@ -24,7 +24,7 @@
             htmlContent += "</div>";
             var messages = $('#messages');
             messages.prepend(htmlContent);
-            if (timeout > 0) { setTimeout(function () { $.ed._closeHTMLNotification(notificationId); }, timeout); }
+            if (timeout > 0) { setTimeout(function () { $.df._closeHTMLNotification(notificationId); }, timeout); }
         }
         else if (style === "notification") {
             var keepOpen = (timeout === 0);
@@ -41,11 +41,11 @@
 //            window.showMetroDialog('#' + notificationId, undefined);
 //        }
         else if (style === "system") {
-            jQ.ed._systemNotification(notificationId, level, content, title, icon, timeout);
+            jQ.df._systemNotification(notificationId, level, content, title, icon, timeout);
         }
     };
 
-    jQ.ed.connect("notify", function (opts, id) {
+    jQ.df.connect("notify", function (opts, id) {
         notification(opts.style, opts.level, opts.content, opts.title, opts.icon, opts.timeout);
     });
 }(jQuery));

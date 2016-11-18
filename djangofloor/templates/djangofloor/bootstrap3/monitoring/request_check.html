@@ -70,13 +70,13 @@
     </div>
     <script type="application/javascript">
         window.onload = function () {
-            $.ed.connect('ed.monitoring.checked_ws', function () {
+            $.df.connect('df.monitoring.checked_ws', function () {
                 "use strict";
                 $('#workingwebsockets').removeClass('label-danger').addClass('label-success');
                 $('#workingwebsockets').html('{% bootstrap_icon 'ok' %}');
                 $('#notworkingwebsockets').remove();
             });
-            $.ed.call('ed.monitoring.check_ws', {});
+            $.df.call('df.monitoring.check_ws', {});
         };
     </script>
 </div>

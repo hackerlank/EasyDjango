@@ -143,6 +143,11 @@ class Connection(object):
     def register(self):
         raise NotImplementedError
 
+    def get_queue(self, signal_name, window_info, original_kwargs):
+        if callable(self.queue):
+            return self.queue(signal_name, window_info, original_kwargs)
+        return text_type(self.queue) or 'celery'
+
 
 class SignalConnection(Connection):
     def register(self):
@@ -170,7 +175,7 @@ def function(fn=None, path=None, is_allowed_to=server_side, queue=None):
 
     .. code-block:: javascript
 
-    $.edws.path({}).then(function(x) { alert(x); });
+    $.dfws.path({}).then(function(x) { alert(x); });
 
      """
     return signal(fn=fn, path=path, is_allowed_to=is_allowed_to, queue=queue, cls=FunctionConnection)
@@ -303,7 +308,7 @@ class SerializedForm(object):
 
     .. code-block:: html
 
-        <form onsubmit="return $.ed.call('myproject.signals.test', {value: $(this).serializeArray(), other: 42})">
+        <form onsubmit="return $.df.call('myproject.signals.test', {value: $(this).serializeArray(), other: 42})">
             <input name='field' value='test' type='text'>
         </form>
 

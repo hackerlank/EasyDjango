@@ -7,16 +7,16 @@
     });
 
     notification = function (style, level, content, title, icon, timeout) {
-        var notificationId = "edMessage" + jQ.ed._notificationId++;
+        var notificationId = "dfMessage" + jQ.df._notificationId++;
         if (timeout === undefined) { timeout = 0; }
         if (style === undefined) { style = "notification"; }
         if (level === undefined) { level = "info"; }
         if (style === "banner") {
-            var messages = $('#edMessages');
+            var messages = $('#dfMessages');
             content = '<div id="' + notificationId + '" class="alert alert-' + level + ' fade in"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>' + content + '</div>'
             messages.prepend(content);
             messages.slideDown();
-            if (timeout > 0) { setTimeout(function () { $.ed._closeHTMLNotification(notificationId); }, timeout); }
+            if (timeout > 0) { setTimeout(function () { $.df._closeHTMLNotification(notificationId); }, timeout); }
         }
         else if (style === "notification") {
             var keepOpen = (timeout === 0);
@@ -32,21 +32,21 @@
             if (content) {
                 htmlContent += '<div class="modal-body"><p>' + content + '</p></div>';
             }
-            $.ed.call('modal.show', {html: htmlContent});
+            $.df.call('modal.show', {html: htmlContent});
             if (timeout > 0) {
-                setTimeout(function () { $.ed.call('modal.hide'); }, timeout);
+                setTimeout(function () { $.df.call('modal.hide'); }, timeout);
             }
        }
         else if (style === "system") {
-            $.ed._systemNotification(notificationId, level, content, title, icon, timeout);
+            $.df._systemNotification(notificationId, level, content, title, icon, timeout);
         }
     };
 
-    jQ.ed.connect("notify", function (opts, id) {
+    jQ.df.connect("notify", function (opts, id) {
         notification(opts.style, opts.level, opts.content, opts.title, opts.icon, opts.timeout);
     });
 
-    jQ.ed.connect('modal.show', function (options) {
+    jQ.df.connect('modal.show', function (options) {
         "use strict";
         var baseModal = $('#edModal');
         if (baseModal[0] === undefined) {
@@ -62,15 +62,15 @@
         baseModal.modal('show');
     });
 
-    jQ.ed.connect('modal.hide', function () {
+    jQ.df.connect('modal.hide', function () {
         "use strict";
         var baseModal = $('#edModal');
         baseModal.modal('hide');
         baseModal.removeData('bs.modal');
     });
 
-    jQ.ed.validateForm = function (form, fn) {
-        $.edws[fn]({data: $(form).serializeArray()}).then(function(data) {
+    jQ.df.validateForm = function (form, fn) {
+        $.dfws[fn]({data: $(form).serializeArray()}).then(function(data) {
             var index, formGroup, formInput, key, helpText;
             var errors = data.errors, helpTexts = data.help_texts;
             $(form).find('.form-group').each(function (index, formGroup) {

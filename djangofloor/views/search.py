@@ -18,7 +18,7 @@ from djangofloor.tasks import set_websocket_topics
 __author__ = 'Matthieu Gallet'
 
 
-@validate_form(path='easydjango_validate_search', is_allowed_to=everyone)
+@validate_form(path='djangofloor_validate_search', is_allowed_to=everyone)
 class SearchForm(forms.Form):
     q = forms.CharField(max_length=255, min_length=1, label=_('Search'),
                         help_text=_('Please enter your search pattern.'))

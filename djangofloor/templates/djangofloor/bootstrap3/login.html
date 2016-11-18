@@ -7,7 +7,7 @@
     {% if creation_form %}
     <div class="col-md-3 col-sm-3 col-xs-12">
         <h3>{% trans 'Create a new account' %}</h3>
-        <form onchange="$.ed.validateForm(this, 'easydjango_validate_user_creation');" action="?" method="post">
+        <form onchange="$.df.validateForm(this, 'djangofloor_validate_user_creation');" action="?" method="post">
             {% csrf_token %}
             {% bootstrap_form creation_form %}
             <input type="submit" class="btn btn-success" value="{% trans 'Create account' %}">

@@ -10,7 +10,7 @@ __author__ = 'Matthieu Gallet'
 logger = logging.getLogger('djangofloor.websocket')
 
 
-@signal(path='ed.monitoring.check_ws', is_allowed_to=is_staff)
+@signal(path='df.monitoring.check_ws', is_allowed_to=is_staff)
 def check_websockets(window_info):
     logger.info('websocket OK')
-    scall(window_info, 'ed.monitoring.checked_ws', to=[WINDOW])
+    scall(window_info, 'df.monitoring.checked_ws', to=[WINDOW])

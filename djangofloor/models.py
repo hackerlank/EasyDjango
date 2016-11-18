@@ -127,7 +127,7 @@ class Notification(models.Model):
                                                                                 last_read_time=now)
             notifications = result
         else:
-            read_notification_pks = request.session.get('easydjango_notifications', {})
+            read_notification_pks = request.session.get('djangofloor_notifications', {})
             result = []
             for notification in notifications:
                 pk = notification.pk
@@ -138,7 +138,7 @@ class Notification(models.Model):
                     read_notification_pks[pk] = 1 + current_count
                     result.append(notification)
             notifications = result
-            request.session['easydjango_notifications'] = read_notification_pks
+            request.session['djangofloor_notifications'] = read_notification_pks
         return notifications
 
 

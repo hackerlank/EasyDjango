@@ -1,7 +1,7 @@
 <!DOCTYPE html>{% load pipeline staticfiles djangofloor bootstrap3 i18n %}
-<html lang="{% block header-language %}{{ LANGUAGE_CODE }}{% endblock %}">
+<html lang="{% block html-language %}{{ LANGUAGE_CODE }}{% endblock %}">
 <head>
-    {% block header %}
+    {% block head %}
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="{% block header-description %}{% endblock %}">
@@ -16,12 +16,12 @@
     <meta name="msapplication-TileImage" content="{% static 'favicon/mstile-144x144.png' %}">
     <meta name="theme-color" content="#ffffff">
     {% endblock %}
-    <title>{% block header-title %}{{ df_project_name|capfirst }}{% endblock %}</title>
+    <title>{% block head-title %}{{ df_project_name|capfirst }}{% endblock %}</title>
     {% endblock %}
 </head>
 
 <body>
-
+{% block body %}
 {% block navbar %}
 <nav class="navbar navbar-inverse">
     <div class="container">
@@ -33,15 +33,16 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            {% if df_has_index_view %}<a class="navbar-brand" href="{% url 'index' %}">{{ df_project_name |capfirst}}</a>
-            {% else %}{{ df_project_name |capfirst}}{% endif %}
+            {% if df_has_index_view %}<a class="navbar-brand" href="{% url 'index' %}">{{ df_project_name|capfirst}}</a>
+            {% else %}{{ df_project_name|capfirst}}{% endif %}
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             {% block navbar-search %}{% if df_has_site_search_view %}
             <form class="navbar-form navbar-right" method="get" action="{% url 'df:site_search' %}">
                 <input type="text" placeholder="{% trans 'search…' %}" class="form-control" name="q">
                 <button type="submit" class="btn btn-success">{% trans 'Search' %}</button>
-            </form>{% endif %}{% endblock %}
+            </form>
+            {% endif %}{% endblock %}
 
             {% block navbar-login %}{% if df_has_login_view %}
             <ul class="nav navbar-nav navbar-right">
@@ -50,13 +51,16 @@
                 {% elif df_remote_username %}
                 <li>{{ df_user }}</li>
                 {% else %}
-                <li><a href="{% url 'df:logout' %}" title="{% trans 'Log out' %}">{{ df_user }} {% bootstrap_icon 'log-out' %}</a>
+                <li><a href="{% url 'df:logout' %}" title="{% trans 'Log out' %}">{{ df_user }} {% bootstrap_icon
+                    'log-out' %}</a>
                 </li>
-                <li><a href="{% url 'df:set_password' %}" title="{% trans 'Change your password' %}">{% bootstrap_icon 'edit' %}</a>
- </li>
+                <li><a href="{% url 'df:set_password' %}" title="{% trans 'Change your password' %}">{% bootstrap_icon
+                    'edit' %}</a>
+                </li>
                 {% endif %}
                 {% if df_user and df_user.is_superuser %}
-                <li><a href="{% url 'df:system_state' %}" title="{% trans 'Check system state' %}">{% bootstrap_icon 'eye-open' %}</a></li>
+                <li><a href="{% url 'df:system_state' %}" title="{% trans 'Check system state' %}">{% bootstrap_icon
+                    'eye-open' %}</a></li>
                 {% endif %}
                 {% if df_user and df_user.is_staff %}
                 <li><a href="{% url 'admin:index' %}" title="{% trans 'Admin' %}">{% bootstrap_icon 'cog' %}</a></li>
@@ -67,7 +71,7 @@
     </div>
 </nav>
 {% endblock %}
-<div id="edMessages"></div>
+<div id="dfMessages"></div>
 <div class="container">
     {% block content %}
     <div class="row">
@@ -95,11 +99,10 @@
     </div>
     {% endblock %}
     {% block footer %}
-    <hr>
-    <footer><p>{% block footer-copyright %}&copy; 2016, Matthieu Gallet{% endblock %}</p></footer>
+    <footer><hr><p>{% block footer-copyright %}&copy; 2016, Matthieu Gallet{% endblock %}</p></footer>
     {% endblock %}
 </div> <!-- /container -->
-
+{% endblock %}
 <!-- Placed at the end of the document so the pages load faster -->
 {% javascript 'bootstrap3' %}
 <!--[if lt IE 9 ]>{% javascript 'ie9' %}<![endif]-->

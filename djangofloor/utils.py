@@ -195,7 +195,8 @@ class SettingMerger(OriginalSettingMerger):
         if djangofloor_config_path:
             providers.append(IniConfigProvider(djangofloor_config_path))
         super(SettingMerger, self).__init__(PythonConfigFieldsProvider(djangofloor_mapping), providers,
-                                            extra_values=extra_values)
+                                            extra_values=extra_values,
+                                            read_only=read_only)
 
     @staticmethod
     def import_file(filepath):

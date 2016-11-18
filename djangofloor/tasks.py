@@ -118,7 +118,8 @@ def _call_signal(window_info, signal_name, to=None, kwargs=None, countdown=None,
     if countdown:
         celery_kwargs['countdown'] = countdown
     import_signals_and_functions()
-    queues = {x.queue for x in REGISTERED_SIGNALS.get(signal_name, [])}
+    queues = {x.get_queue(signal_name, window_info, kwargs)
+              for x in REGISTERED_SIGNALS.get(signal_name, [])}
     window_info_as_dict = None
     if window_info:
         window_info_as_dict = window_info.to_dict()
@@ -199,7 +200,8 @@ def _server_signal_call(signal_name, window_info_dict, kwargs=None, from_client=
         return
     for connection in REGISTERED_SIGNALS[signal_name]:
         assert isinstance(connection, SignalConnection)
-        if connection.queue != queue or (from_client and not connection.is_allowed_to(window_info)):
+        if connection.get_queue(signal_name, window_info, kwargs) != queue or \
+                (from_client and not connection.is_allowed_to(window_info)):
             continue
         kwargs = connection.check(kwargs)
         if kwargs is None:

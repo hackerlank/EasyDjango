@@ -44,7 +44,7 @@ class AutocreateDirectory(Path):
 
     def get_value(self, merger):
         value = merger.analyze_raw_value(self.value)
-        if not os.path.isdir(value):
+        if not os.path.isdir(value) and not merger.read_only:
             os.makedirs(value)
         if not value.endswith('/'):
             value += '/'
@@ -58,7 +58,7 @@ class AutocreateFile(Path):
     def get_value(self, merger):
         value = merger.analyze_raw_value(self.value)
         dirname = os.path.dirname(value)
-        if not os.path.isdir(dirname):
+        if not os.path.isdir(dirname) and not merger.read_only:
             os.makedirs(dirname)
         return value
 
