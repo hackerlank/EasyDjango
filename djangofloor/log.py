@@ -7,6 +7,8 @@ import os
 import time
 
 import sys
+import warnings
+
 from django.core.management import color_style
 from django.utils.log import AdminEmailHandler as BaseAdminEmailHandler
 from djangofloor.utils import ensure_dir
@@ -77,8 +79,9 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
     handlers = {}
     config = {'version': 1, 'disable_existing_loggers': True, 'formatters': formatters,
               'handlers': handlers, 'loggers': loggers, 'root': root}
-
     if debug:
+        warnings.simplefilter('always', DeprecationWarning)
+        logging.captureWarnings(True)
         loggers['django.request'].update({'level': 'DEBUG'})
         loggers['django.server'].update({'handlers': ['django.server'], 'propagate': False})
         loggers['py.warnings'].update({'level': 'INFO'})

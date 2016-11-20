@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
 from argparse import ArgumentParser
 
+from django.conf import settings
 from django.core.management import BaseCommand
 
 from djangofloor.conf.fields import ConfigField
@@ -67,4 +69,4 @@ class Command(BaseCommand):
                 provider.set_value(config_field)
             self.stdout.write(provider.to_str())
         else:
-                self.stdout.write(self.style.WARNING('Please specify either "ini" or "python"'))
+            self.stdout.write(self.style.WARNING('Please specify either "ini" or "python"'))

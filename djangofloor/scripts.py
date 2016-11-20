@@ -7,6 +7,7 @@ Define "main" functions for your scripts using the Django `manage.py` system or 
 from __future__ import unicode_literals, absolute_import, print_function
 
 import codecs
+import logging
 import os
 import re
 import shutil

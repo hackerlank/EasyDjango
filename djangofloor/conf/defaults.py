@@ -38,7 +38,7 @@ USE_ALLAUTH = is_package_present('allauth')
 #
 # ######################################################################################################################
 ADMINS = (('admin', '{ADMIN_EMAIL}',),)
-ALLOWED_HOSTS = ['{SERVER_NAME}']
+ALLOWED_HOSTS = ['{SERVER_NAME}', '127.0.0.1', '::1']
 if USE_DJANGO_REDIS:
     CACHES = {
         'default': {
@@ -185,9 +185,9 @@ REST_FRAMEWORK = {
 
 # djangofloor
 DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
-SERVER_NAME = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).hostname, 'SERVER_BASE_URL')
+SERVER_NAME = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).hostname, 'SERVER_BASE_URL')  # ~ www.example.org
 SERVER_PORT = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).port or (USE_SSL and 443) or 80,
-                              'SERVER_BASE_URL', 'USE_SSL')
+                              'SERVER_BASE_URL', 'USE_SSL')  # ~ 443
 
 
 def url_prefix(values):
@@ -197,9 +197,9 @@ def url_prefix(values):
     return p
 
 
-URL_PREFIX = CallableSetting(url_prefix, 'SERVER_BASE_URL')
+URL_PREFIX = CallableSetting(url_prefix, 'SERVER_BASE_URL')  # ~ /prefix/
 USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
-USE_SSL = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).scheme == 'https', 'SERVER_BASE_URL')
+USE_SSL = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).scheme == 'https', 'SERVER_BASE_URL')  # ~ True
 USE_X_FORWARDED_FOR = True  # X-Forwarded-For
 USE_X_SEND_FILE = False  # Apache module
 X_ACCEL_REDIRECT = []  # paths used by nginx
@@ -425,3 +425,26 @@ CELERY_PASSWORD = ''
 
 UWSGI_PROCESSES = 3
 UWSGI_THREADS = 20
+
+
+# deprecated settings
+FLOOR_USE_WS4REDIS = False
+FLOOR_BACKUP_SINGLE_TRANSACTION = False
+BIND_ADDRESS = SettingReference('LISTEN_ADDRESS')
+USE_SCSS = False
+PROTOCOL = CallableSetting(lambda x: 'https' if x['USE_SSL'] else 'http', 'USE_SSL')
+LOG_PATH = Path('{LOCAL_PATH}/log')
+REDIS_HOST = SettingReference('CELERY_SERVER')
+REDIS_PORT = SettingReference('CELERY_PORT')
+THREADS = SettingReference('UWSGI_THREADS')
+WORKERS = 1
+INTERNAL_IPS = ('127.0.0.1', '::1', )
+MAX_REQUESTS = 10000
+REVERSE_PROXY_IPS = ['127.0.0.1', ]
+REVERSE_PROXY_TIMEOUT = 300
+REVERSE_PROXY_SSL_KEY_FILE = None
+REVERSE_PROXY_SSL_CRT_FILE = None
+REVERSE_PROXY_PORT = None  #
+ACCOUNT_EMAIL_VERIFICATION = None
+ACCOUNT_EMAIL_SUBJECT_PREFIX = '[{SERVER_NAME}] '
+FLOOR_URL_CONF = SettingReference('DF_URL_CONF')

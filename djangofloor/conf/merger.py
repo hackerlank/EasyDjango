@@ -7,10 +7,13 @@ settings from different sources. This file must be importable while Django is no
 """
 from __future__ import unicode_literals, absolute_import
 
+import warnings
 from collections import OrderedDict
 from distutils.version import LooseVersion
 
 from django import get_version
+from django.conf import LazySettings
+from django.utils.functional import empty
 
 from djangofloor.conf.config_values import ExpandIterable, ConfigValue
 from djangofloor.conf.fields import ConfigField
@@ -26,6 +29,42 @@ import string
 from django.utils import six
 
 __author__ = 'Matthieu Gallet'
+
+deprecated_settings = {
+    'FLOOR_USE_WS4REDIS': None,
+    'FLOOR_BACKUP_SINGLE_TRANSACTION': None,
+    'BIND_ADDRESS': None,
+    'USE_SCSS': None,
+    'PROTOCOL': None,
+    'LOG_PATH': None,
+    'REDIS_HOST': None,
+    'REDIS_PORT': None,
+    'THREADS': None,
+    'WORKERS': None,
+    'INTERNAL_IPS': None,
+    'MAX_REQUESTS': None,
+    'REVERSE_PROXY_IPS': None,
+    'REVERSE_PROXY_TIMEOUT': None,
+    'REVERSE_PROXY_SSL_KEY_FILE': None,
+    'REVERSE_PROXY_SSL_CRT_FILE': None,
+    'REVERSE_PROXY_PORT': None,
+    'ACCOUNT_EMAIL_VERIFICATION': None,
+    'ACCOUNT_EMAIL_SUBJECT_PREFIX': None,
+    'FLOOR_URL_CONF': None,
+}
+
+
+def __getattr__(self, name):
+    if name in deprecated_settings:
+        from djangofloor.utils import RemovedInDjangoFloor110Warning
+        msg = deprecated_settings[name] or 'setting "%s" is deprecated' % name
+        warnings.warn(msg, RemovedInDjangoFloor110Warning, stacklevel=2)
+    if self._wrapped is empty:
+        self._setup(name)
+    return getattr(self._wrapped, name)
+
+
+LazySettings.__getattr__ = __getattr__
 
 
 class SettingMerger(object):
@@ -143,7 +182,6 @@ class SettingMerger(object):
         """Perform some cleaning on settings:
 
             * remove duplicates in `INSTALLED_APPS` (keeps only the first occurrence)
-
         """
         # remove duplicates in INSTALLED_APPS
         self.settings['INSTALLED_APPS'] = list(OrderedDict.fromkeys(self.settings['INSTALLED_APPS']))
