@@ -85,7 +85,7 @@ class SettingMerger(object):
     """Load different settings modules and config files and merge them.
     """
 
-    def __init__(self, fields_provider, providers, extra_values=None, read_only=True):
+    def __init__(self, fields_provider, providers, extra_values=None, read_only=False):
         self.fields_provider = fields_provider or PythonConfigFieldsProvider(None)
         extra_values = extra_values or {}
         self.providers = providers
