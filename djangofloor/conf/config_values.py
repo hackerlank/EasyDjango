@@ -2,6 +2,8 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 import os
+import warnings
+
 
 __author__ = 'Matthieu Gallet'
 
@@ -92,6 +94,22 @@ class SettingReference(ConfigValue):
         if self.func:
             result = self.func(result)
         return result
+
+
+class DeprecatedSetting(ConfigValue):
+
+    def __init__(self, value, default=None, msg=''):
+        super(DeprecatedSetting, self).__init__(value)
+        self.default = default
+        self.msg = msg
+
+    def get_value(self, merger):
+        if merger.has_setting_value(self.value) and merger.get_setting_value(self.value):
+            from djangofloor.utils import RemovedInDjangoFloor110Warning
+            warnings.warn('"%s" setting should not be used anymore. %s' % (self.value, self.msg),
+                          RemovedInDjangoFloor110Warning)
+            return merger.get_setting_value(self.value)
+        return merger.analyze_raw_value(self.default)
 
 
 class CallableSetting(ConfigValue):

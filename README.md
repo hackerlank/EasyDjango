@@ -65,3 +65,27 @@ WebSocket:
   - comment générer la request à partir de l'ID de fenêtre ? les infos doivent être en RAM (petit cache) ou en dans Redis
   - une seule fonction pour ajouter des événements aux websockets via du pubsub
   
+  
+  
+  
+https://blueimp.github.io/Gallery/
+https://codecanyon.net/item/bootslider-responsive-bootstrap-css3-slider/6477433
+https://github.com/morrissinger/BootstrapTreeNav
+https://github.com/asyraf9/bootstrap-sidebar
+https://codecanyon.net/item/flavr-flat-jquery-popup-dialog/7021021
+https://github.com/Serhioromano/bootstrap-calendar
+http://ethaizone.github.io/Bootstrap-Confirmation/
+http://bootboxjs.com
+http://vitalets.github.io/x-editable/
+https://github.com/gfranko/jquery.tocify.js
+http://www.virtuosoft.eu/code/bootstrap-colorpickersliders/
+http://www.eyecon.ro/bootstrap-datepicker/
+https://github.com/uxsolutions/bootstrap-datepicker
+http://eonasdan.github.io/bootstrap-datetimepicker/
+http://getfuelux.com
+http://getwebhelp.com/bootcomplete/
+https://github.com/inacho/bootstrap-markdown-editor
+http://lab.hakim.se/reveal-js/#/fragments
+https://github.com/impress/impress.js
+https://pandao.github.io/editor.md/en.html
+https://github.com/tylingsoft/markdown-plus

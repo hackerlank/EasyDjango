@@ -3,7 +3,8 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 import os
 
-from djangofloor.conf.config_values import Path, AutocreateDirectory, SettingReference, ExpandIterable, CallableSetting
+from djangofloor.conf.config_values import Path, AutocreateDirectory, SettingReference, ExpandIterable, \
+    CallableSetting, DeprecatedSetting
 from djangofloor.utils import is_package_present, guess_version
 from djangofloor.log import generate_log_configuration
 # noinspection PyUnresolvedReferences
@@ -142,9 +143,8 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 WSGI_APPLICATION = 'djangofloor.wsgi.django_application'
 
 # django.contrib.auth
-AUTHENTICATION_BACKENDS = (
-    'djangofloor.backends.DefaultGroupsRemoteUserBackend',
-    'django.contrib.auth.backends.ModelBackend',)
+AUTHENTICATION_BACKENDS = ('djangofloor.backends.DefaultGroupsRemoteUserBackend',
+                           'django.contrib.auth.backends.ModelBackend',)
 
 # django.contrib.sessions
 if USE_DJANGO_REDIS_SESSION:
@@ -233,6 +233,8 @@ COMMON_COMMANDS = {
     'server-dev': ('django', 'runserver'),
     'sendtestemail': ('django', 'sendtestemail'),
     'shell': ('django', 'shell'),
+    'django': ('django', ''),
+    'celery': ('celery', ''),
     'server-gunicorn': ('gunicorn', ''),
     'server-uwsgi': ('uwsgi', ''),
 }
@@ -320,7 +322,7 @@ if USE_SCSS:
 # Django-Debug-Toolbar
 DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js', }
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
-INTERNAL_IPS = ('127.0.0.1', '::1', )
+INTERNAL_IPS = ('127.0.0.1', '::1',)
 
 # Django-Bootstrap3
 BOOTSTRAP3 = {
@@ -341,19 +343,19 @@ BOOTSTRAP3 = {
 #
 # ######################################################################################################################
 # djangofloor
-DF_CSS = SettingReference('FLOOR_EXTRA_CSS')
-DF_JS = SettingReference('FLOOR_EXTRA_JS')
+DF_CSS = DeprecatedSetting('FLOOR_EXTRA_CSS', [])
+DF_JS = DeprecatedSetting('FLOOR_EXTRA_JS', [])
 DF_INDEX_VIEW = 'djangofloor.views.index.IndexView'
 DF_SITE_SEARCH_VIEW = 'djangofloor.views.search.UserSearchView'
 DF_LOGIN_VIEW = 'djangofloor.views.auth.LoginView'
 
 DF_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
-DF_INSTALLED_APPS = ['{PROJECT_NAME}']
+DF_INSTALLED_APPS = DeprecatedSetting('FLOOR_INSTALLED_APPS', ['{PROJECT_NAME}'])
 DF_MIDDLEWARE_CLASSES = []
 DF_REMOTE_USER_HEADER = None  # HTTP-REMOTE-USER
 DF_FAKE_AUTHENTICATION_USERNAME = 'testuser'
 DF_DEFAULT_GROUPS = [_('Users')]
-DF_TEMPLATE_CONTEXT_PROCESSORS = []
+DF_TEMPLATE_CONTEXT_PROCESSORS = DeprecatedSetting('FLOOR_TEMPLATE_CONTEXT_PROCESSORS', [])
 DF_CHECKED_REQUIREMENTS = ['django>=1.12', 'django<=1.13', 'celery', 'django-bootstrap3', 'redis', 'pip',
                            'psutil', 'django-redis-sessions']
 DF_PROJECT_VERSION = CallableSetting(guess_version)
@@ -442,12 +444,15 @@ CELERY_PASSWORD = ''
 UWSGI_PROCESSES = 3
 UWSGI_THREADS = 20
 
-
 # deprecated settings
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_SUBJECT_PREFIX = '[{SERVER_NAME}] '
 ACCOUNT_EMAIL_VERIFICATION = None
+
 BIND_ADDRESS = SettingReference('LISTEN_ADDRESS')
+BROKER_DB = SettingReference('CELERY_DB')
+DF_EXTRA_APPS = DeprecatedSetting('FLOOR_EXTRA_APPS', msg='FLOOR_EXTRA_APPS should be merged to DF_INSTALLED_APPS.')
+DF_OTHER_ALLAUTH = DeprecatedSetting('OTHER_ALLAUTH', msg='OTHER_ALLAUTH should be merged to DF_INSTALLED_APPS.')
 FLOOR_AUTHENTICATION_HEADER = SettingReference('DF_REMOTE_USER_HEADER')
 FLOOR_BACKUP_SINGLE_TRANSACTION = False
 FLOOR_DEFAULT_GROUP_NAME = _('Users')
@@ -478,4 +483,3 @@ USE_SCSS = False
 WORKERS = 1
 WS4REDIS_EMULATION_INTERVAL = 0
 WS4REDIS_SUBSCRIBER = 'djangofloor.df_ws4redis.Subscriber'
-BROKER_DB = SettingReference('CELERY_DB')

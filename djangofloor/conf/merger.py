@@ -7,6 +7,7 @@ settings from different sources. This file must be importable while Django is no
 """
 from __future__ import unicode_literals, absolute_import
 
+import traceback
 import warnings
 from collections import OrderedDict
 from distutils.version import LooseVersion
@@ -64,15 +65,18 @@ deprecated_settings = {
     'WS4REDIS_EMULATION_INTERVAL': None,
     'WS4REDIS_SUBSCRIBER': None,
 }
+warned_settings = set()
 
 
 def __getattr__(self, name):
-    if name in deprecated_settings:
+    if name in deprecated_settings and name not in warned_settings:
         from djangofloor.utils import RemovedInDjangoFloor110Warning
-        msg = 'Setting "%s" is deprecated. ' % name
-        if deprecated_settings[name]:
-            msg += deprecated_settings[name]
-        # warnings.warn(msg, RemovedInDjangoFloor110Warning, stacklevel=2)
+        f = traceback.extract_stack()
+        if not f[-1][0].endswith('/debug.py'):
+            msg = 'Setting "%s" is deprecated. ' % name
+            msg += deprecated_settings[name] or ''
+            warnings.warn(msg, RemovedInDjangoFloor110Warning, stacklevel=2)
+            warned_settings.add(name)
     if self._wrapped is empty:
         self._setup(name)
     return getattr(self._wrapped, name)
@@ -120,6 +124,9 @@ class SettingMerger(object):
             for setting_name, value in provider.get_extra_settings():
                 self.raw_settings.setdefault(setting_name, OrderedDict())
                 self.raw_settings[setting_name][source_name] = value
+
+    def has_setting_value(self, setting_name):
+        return setting_name in self.raw_settings
 
     def get_setting_value(self, setting_name):
         if setting_name in self.settings:
