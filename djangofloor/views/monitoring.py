@@ -99,6 +99,7 @@ class System(MonitoringCheck):
         memory = psutil.virtual_memory()
         swap = psutil.swap_memory()
         disks = [(y.mountpoint, psutil.disk_usage(y.mountpoint)) for y in psutil.disk_partitions(all=True)]
+        disks = [x for x in disks if x[1].total > 0]
         return {'cpu_count': cpu_count, 'memory': memory, 'cpu_average_usage': cpu_average_usage,
                 'cpu_current_usage': cpu_current_usage, 'swap': swap, 'disks': disks}
 
@@ -111,7 +112,8 @@ class CeleryStats(MonitoringCheck):
         import_signals_and_functions()
         expected_queues = {y.queue: ('danger', 'remove') for y in REGISTERED_FUNCTIONS.values()}
         for connections in REGISTERED_SIGNALS.values():
-            expected_queues.update({y.queue: ('danger', 'remove') for y in connections})
+            if not callable(y.queue):
+                expected_queues.update({y.queue: ('danger', 'remove') for y in connections})
         queue_stats = app.control.inspect().active_queues()
         if queue_stats is None:
             queue_stats = {}
