@@ -203,6 +203,6 @@ class SettingMerger(object):
         # remove deprecated settings
         if LooseVersion(django_version) >= LooseVersion('1.8'):
             if 'TEMPLATES' in self.settings:
-                for key in 'TEMPLATE_DIRS', 'TEMPLATE_CONTEXT_PROCESSORS', 'TEMPLATE_LOADERS':
+                for key in 'TEMPLATE_DIRS', 'TEMPLATE_CONTEXT_PROCESSORS', 'TEMPLATE_LOADERS', 'TEMPLATE_DEBUG':
                     if key in self.settings:
                         del self.settings[key]

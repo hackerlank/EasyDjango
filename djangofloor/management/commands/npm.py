@@ -27,8 +27,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         ensure_dir(settings.NPM_ROOT_PATH, False)
         for npm_package, patterns in settings.NPM_FILE_PATTERNS.items():
-            subprocess.check_output([settings.NPM_EXECUTABLE_PATH, 'install', npm_package],
-                                    cwd=settings.NPM_ROOT_PATH)
+            command = [settings.NPM_EXECUTABLE_PATH, 'install', npm_package]
+            try:
+                subprocess.check_output(command, cwd=settings.NPM_ROOT_PATH)
+            except OSError:
+                print("Unable to execute command %s" % " ".join(command))
+                continue
             src_package_root = os.path.join(settings.NPM_ROOT_PATH, 'node_modules', npm_package)
             dst_package_root = os.path.join(settings.STATIC_ROOT, settings.NPM_STATIC_FILES_PREFIX, npm_package)
             ensure_dir(dst_package_root)
