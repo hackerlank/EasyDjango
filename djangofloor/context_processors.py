@@ -26,7 +26,6 @@ def context_base(request):
     :rtype: :class:`dict`
     """
     # noinspection PyTypeChecker
-    print("DF2", request.remote_username, getattr(request, 'user', None))
     return {
         'df_has_index_view': bool(settings.DF_INDEX_VIEW),
         'df_has_login_view': bool(settings.DF_LOGIN_VIEW),

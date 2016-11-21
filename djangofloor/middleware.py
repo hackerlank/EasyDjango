@@ -55,7 +55,7 @@ class DjangoFloorMiddleware(BaseRemoteUserMiddleware):
                     auth.login(request, user)
         # noinspection PyTypeChecker
         username = getattr(settings, 'DF_FAKE_AUTHENTICATION_USERNAME', None)
-        if username and settings.DEBUG:
+        if username and settings.DEBUG and request.META.get('REMOTE_ADDR') in settings.INTERNAL_IPS:
             request.META[self.header] = username
 
         if self.header and self.header in request.META:

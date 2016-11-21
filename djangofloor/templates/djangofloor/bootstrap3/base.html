@@ -35,6 +35,7 @@
             </button>
             {% if df_has_index_view %}<a class="navbar-brand" href="{% url 'index' %}">{{ df_project_name|capfirst}}</a>
             {% else %}{{ df_project_name|capfirst}}{% endif %}
+
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             {% block navbar-search %}{% if df_has_site_search_view %}
@@ -46,10 +47,11 @@
 
             {% block navbar-login %}{% if df_has_login_view %}
             <ul class="nav navbar-nav navbar-right">
+                {% if debug %}<li><a><span class="label label-danger">{% trans 'DEBUG mode is activated' %}</span></a></li>{% endif %}
                 {% if df_user.is_anonymous %}
                 <li><a title="{% trans 'Log-in' %}" href="{% url 'login' %}">{% bootstrap_icon 'log-in' %}</a></li>
                 {% elif df_remote_username %}
-                <li><a href="#" title="{% trans 'Log out' %}">{{ df_user }}</a></li>
+                <li><a>{{ df_user }}</a></li>
                 {% else %}
                 <li><a href="{% url 'df:logout' %}" title="{% trans 'Log out' %}">{{ df_user }} {% bootstrap_icon 'log-out' %}</a>
                 </li>
