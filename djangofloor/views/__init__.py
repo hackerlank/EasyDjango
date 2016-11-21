@@ -20,11 +20,9 @@ from django.utils.lru_cache import lru_cache
 from django.utils.six import binary_type
 from django.views.decorators.cache import never_cache
 from djangofloor.decorators import REGISTERED_SIGNALS, REGISTERED_FUNCTIONS
-from djangofloor.exceptions import InvalidRequest
 from djangofloor.request import WindowInfo
-from djangofloor.tasks import import_signals_and_functions, get_signal_decoder, get_signal_encoder, SERVER
-# noinspection PyProtectedMember
 from djangofloor.tasks import _call_signal
+from djangofloor.tasks import import_signals_and_functions, get_signal_decoder, get_signal_encoder, SERVER
 from djangofloor.utils import RemovedInDjangoFloor110Warning
 
 __author__ = 'Matthieu Gallet'
@@ -159,11 +157,8 @@ def signal_call(request, signal):
         kwargs = json.loads(request.body.decode('utf-8'), cls=get_signal_decoder())
     else:
         kwargs = {}
-    try:
-        _call_signal(WindowInfo.from_request(request), signal_name=signal, to=SERVER,
-                     kwargs=kwargs, from_client=True)
-    except InvalidRequest:
-        pass
+    _call_signal(WindowInfo.from_request(request), signal_name=signal, to=SERVER,
+                 kwargs=kwargs, from_client=True)
     return JsonResponse([], safe=False, encoder=get_signal_encoder())
 
 

@@ -30,8 +30,8 @@ import string
 from django.utils import six
 
 __author__ = 'Matthieu Gallet'
-2
-deprecated_settings = {
+
+_deprecated_settings = {
     'BIND_ADDRESS': 'Replaced by "LISTEN_ADDRESS".',
     'BROKER_DB': 'Replaced by "CELERY_DB"',
     'FLOOR_AUTHENTICATION_HEADER': 'Replaced by "DF_REMOTE_USER_HEADER"',
@@ -65,18 +65,18 @@ deprecated_settings = {
     'WS4REDIS_EMULATION_INTERVAL': None,
     'WS4REDIS_SUBSCRIBER': None,
 }
-warned_settings = set()
+_warned_settings = set()
 
 
 def __getattr__(self, name):
-    if name in deprecated_settings and name not in warned_settings:
+    if name in _deprecated_settings and name not in _warned_settings:
         from djangofloor.utils import RemovedInDjangoFloor110Warning
         f = traceback.extract_stack()
         if not f[-1][0].endswith('/debug.py'):
             msg = 'Setting "%s" is deprecated. ' % name
-            msg += deprecated_settings[name] or ''
+            msg += _deprecated_settings[name] or ''
             warnings.warn(msg, RemovedInDjangoFloor110Warning, stacklevel=2)
-            warned_settings.add(name)
+            _warned_settings.add(name)
     if self._wrapped is empty:
         self._setup(name)
     return getattr(self._wrapped, name)

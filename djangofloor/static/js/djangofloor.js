@@ -1,142 +1,257 @@
-(function($) {
-    $.df = {};
-    $.dfws = {};
-    $.df._wsToken = null;
-    $.df._wsConnection = null;
-    $.df._notificationId = 1;
-    $.df._wsFunctionCallId = 1;
-    $.df._notificationClosers = {};
-    $.df._signalIds = {};
-    $.df._functionCallPromises = {};
-    $.df._registered_signals = {};
-    $.df._wsBuffer = [];
-    $.df._closeHTMLNotification = function (id) {
-        $("#" + id).fadeOut(400, "swing", function () { $("#" + id).remove()});
-        delete $.df._notificationClosers[id];
-    }
-    $.df._systemNotification = function (notificationId, level, content, title, icon, timeout) {
-        "use strict";
-        var createNotification = function (level, content, title, icon, timeout) {
-            var notification = new Notification(title, {body: content, icon: icon});
-            $.df._notificationClosers[notificationId] = function () {
-                notification.close();
-                delete $.df._notificationClosers[notificationId];
-            };
-            if (timeout > 0) {
-                if (timeout > 0) { setTimeout(function () { $.df._notificationClosers[notificationId](); }, timeout); }
-            }
-        }
-        if (!("Notification" in window)) { $.df.notification("notification", level, content, title, icon, timeout); }
-        else if (Notification.permission === "granted") { createNotification(level, content, title, icon, timeout); }
-        else if (Notification.permission !== 'denied') {
-            Notification.requestPermission(function (permission) {
-                if(!('permission' in Notification)) { Notification.permission = permission; }
-                if (permission === "granted") { createNotification(level, content, title, icon, timeout); }
-                else { $.df.notification("notification", level, content, title, icon, timeout); }
-            });
-        }
-    };
-    $.df._wsConnect = function (dfWsUrl) {
-        "use strict";
-        var url = dfWsUrl;
-        var connection = new WebSocket(dfWsUrl);
-        connection.onopen = function() {
-            $.df._wsConnection = connection;
-            console.log("websocket connected");
-            for(var i=0; i < $.df._wsBuffer.length; i++) {
-                connection.send($.df._wsBuffer[i]);
-            }
-            $.df._wsBuffer = [];
-        };
-        connection.onmessage = function(e) {
-            console.log("Received: " + e.data);
-            if (e.data == $.df._heartbeatMessage) {
-                $.df._wsConnection.send(e.data);
-            } else {
-                var msg = JSON.parse(e.data);
-                if (msg.signal && msg.signal_id) {
-                    $.df.call(msg.signal, msg.opts, msg.signal_id);
-                }
-                else if((msg.result_id) && (msg.exception)) {
-                    $.df._functionCallPromises[msg.result_id][1](msg.exception);
-                    delete $.df._functionCallPromises[msg.result_id];
-                }
-                else if(msg.result_id) {
-                    $.df._functionCallPromises[msg.result_id][0](msg.result);
-                    delete $.df._functionCallPromises[msg.result_id];
-                }
-            };
-        };
-        connection.onerror = function(e) {
-            console.error(e);
-        };
-        connection.onclose = function(e) {
-            console.log("connection closed");
-            $.df._wsConnection = null;
-            setTimeout(function () {$.df._wsConnect(url);}, 3000);
-        }
-    }
-    $.df._wsSignalConnect = function (signal) {
-        "use strict";
-        var wrapper = function (opts, id) {
-            if (id) {
-                return;
-            }
-            var msg = JSON.stringify({signal: signal, opts: opts});
-            if ($.df._wsConnection) {
-                $.df._wsConnection.send(msg);
-            } else {
-                $.df._wsBuffer.push(msg);
-            }
-        };
-        $.df.connect(signal, wrapper);
-    };
-    $.df._wsCallFunction = function (func, opts) {
-        "use strict";
-        var callId = 'f' + ($.df._wsFunctionCallId++);
-        if (opts === undefined) {
-            opts = {};
-        }
-        $.df._wsConnection.send(JSON.stringify({func: func, opts: opts, result_id: callId}));
-        var promise = new Promise(function(resolve, reject) {
-            $.df._functionCallPromises[callId] = [resolve, reject];
-            });
-        return promise;
-    };
-    $.df.call = function (signal, opts, id) {
-        "use strict";
-        var i;
-        if ($.df._registered_signals[signal] === undefined) {
-            return false;
-        }
-        else if ((id !== undefined) && ($.df._signalIds[id] !== undefined)) {
-            return false;
-        } else if (id !== undefined) {
-            $.df._signalIds[id] = true;
-        }
-        for (i = 0; i < $.df._registered_signals[signal].length; i += 1) {
-            $.df._registered_signals[signal][i](opts, id);
-        }
-        return false;
-    };
-    $.df.connect = function (signal, fn) {
-        "use strict";
-        if ($.df._registered_signals[signal] === undefined) {
-            $.df._registered_signals[signal] = [];
-        }
-        $.df._registered_signals[signal].push(fn);
-    };
-    /**
-     * add the CSRF token to a form as a hidden input. Always returns True so you can use it as onsubmit attribute;
-     <form onsubmit="return df.add_csrf_to_form(this);" method="POST" >;
-    */
-    $.df.CsrfForm = function (form) {
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'csrfmiddlewaretoken';
-        input.value = $.df.csrfTokenValue;
-        form.appendChild(input);
-        return true;
-    };
+/**
+ * Created by flanker on 16/04/15.
+ */
+df = {};
 
-}(jQuery));
+df.registered_signals = {};
+df.default_message_timeout = 5000;
+df.__message_count = 0;
+df.window_key = null;
+df.ws4redis = null;
+df.csrf_cookie_value = '';
+/**
+ * Call an existing signal
+ * @param signal
+ * @param options
+ * @returns boolean always false
+ */
+df.call = function (signal, options, from_server) {
+    "use strict";
+    var i;
+    if (df.ws4redis === null) {
+        df.ws4redis_connect(df.window_key);
+    }
+    if (this.registered_signals[signal] === undefined) {
+        return false;
+    }
+    for (i = 0; i < this.registered_signals[signal].length; i += 1) {
+        this.registered_signals[signal][i](options, from_server);
+    }
+    return false;
+};
+
+/**
+ * add the CSRF token to a form as a hidden input. Always returns True so you can use it as onsubmit attribute;
+ <form onsubmit="return df.add_csrf_to_form(this);" method="POST" >;
+*/
+
+df.add_csrf_to_form = function (form) {
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'csrfmiddlewaretoken';
+    input.value = df.csrf_cookie_value;
+    form.appendChild(input);
+    return true;
+};
+
+/**
+ * Connect a new slot to a signal (the signal will be automatically created on the first connection).
+ *
+ * @param signal name of the signal to connect to
+ * @param fn JS function
+ */
+df.connect = function (signal, fn) {
+    "use strict";
+    if (this.registered_signals[signal] === undefined) {
+        this.registered_signals[signal] = [];
+    }
+    this.registered_signals[signal].push(fn);
+};
+
+df.connect_http = function (signal, url) {
+    "use strict";
+    var wrapper = function (options, from_server) {
+        if (from_server) {
+            return;
+        }
+        var jqxhr, completeUrl = url;
+        if (df.window_key) {
+            completeUrl += '?window_key=' + df.window_key;
+        }
+        jqxhr = $.post(completeUrl, JSON.stringify(options));
+        jqxhr.done(function (calls) {
+            for (var i = 0; i < calls.length; i += 1) {
+                df.call(calls[i].signal, calls[i].options);
+            }
+        });
+    };
+    df.connect(signal, wrapper);
+};
+
+df.connect_ws_emulator = function (url) {
+    "use strict";
+    var jqxhr, completeUrl = url;
+    if (df.window_key) {
+        completeUrl += '?window_key=' + df.window_key;
+    }
+    jqxhr = $.get(completeUrl);
+    jqxhr.done(function (calls) {
+        for (var i = 0; i < calls.length; i += 1) {
+            df.call(calls[i].signal, calls[i].options, true);
+        }
+    });
+};
+
+df.connect_ws = function (signal) {
+    "use strict";
+    var wrapper = function (options, from_server) {
+        if (from_server) {
+            return;
+        }
+        df.ws4redis.send_message(JSON.stringify({signal: signal, options: options, window_key: df.window_key}));
+    };
+    df.connect(signal, wrapper);
+};
+
+df.connect('df.messages.hide', function (options) {
+    "use strict";
+    var obj;
+    if (options.id) {
+        obj = $('#' + options.id);
+        $(obj).slideUp(400, 'swing', function () {
+            $(obj).remove();
+        });
+    } else {
+        $('#messages').each(function (index, obj) {
+            $(obj).slideUp(400, 'swing', function () {
+                $(obj).remove();
+            });
+        });
+    }
+});
+
+/**
+ * {html: 'nice message', level: 'warning', duration: 10000}
+ */
+df.connect('df.messages.show', function (options) {
+    "use strict";
+    var durationMs, level, messages = $('#messages'), content, mid;
+    df.__message_count += 1;
+    mid = 'df_message_' + df.__message_count;
+    if (options.level === undefined) {
+        level = 'warning';
+    } else {
+        level = options.level;
+    }
+    content = '<div id="' + mid + '" class="alert alert-' + level + ' fade in"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>' + options.html + '</div>'
+    if (options.duration === undefined) {
+        durationMs = df.default_message_timeout;
+    } else {
+        durationMs = options.duration;
+    }
+    messages.prepend(content);
+    messages.slideDown();
+    if (durationMs > 0) {
+        setTimeout(function () {
+            df.call('df.messages.hide', {id: mid})
+        }, durationMs);
+    }
+});
+
+df.connect('df.messages.warning', function (options) {
+    options.level = 'warning';
+    df.call('df.messages.show', options);
+});
+
+df.connect('df.messages.info', function (options) {
+    options.level = 'info';
+    df.call('df.messages.show', options);
+});
+
+df.connect('df.messages.error', function (options) {
+    options.level = 'danger';
+    df.call('df.messages.show', options);
+});
+
+df.connect('df.messages.success', function (options) {
+    options.level = 'success';
+    df.call('df.messages.show', options);
+});
+
+df.connect('df.notify.show', function (options) {
+    if (options.title) {
+        options.title = '<strong>' + options.title + '</strong>';
+    }
+    if (options.type === undefined) {
+        options.type = 'default';
+    }
+    var content = {icon: options.icon, title: options.title, message: options.message,
+        url: options.url, target: options.target};
+    $.notify(content, options);
+});
+
+df.connect('df.notify.warning', function (options) {
+        options.type = 'warning';
+        df.call('df.notify.show', options);
+    }
+);
+
+df.connect('df.notify.info', function (options) {
+        options.type = 'info';
+        df.call('df.notify.show', options);
+    }
+);
+
+df.connect('df.notify.error', function (options) {
+        options.type = 'danger';
+        df.call('df.notify.show', options);
+    }
+);
+
+df.connect('df.notify.success', function (options) {
+        options.type = 'success';
+        df.call('df.notify.show', options);
+    }
+);
+
+/**
+ * {html: 'nice message', width: '1200px'}
+ */
+df.connect('df.modal.show', function (options) {
+    "use strict";
+    var baseModal = $('#df_modal');
+    if (baseModal.size() == 0) {
+        $('body').append('<div class="modal fade" id="df_modal" tabindex="-1" role="dialog" aria-labelledby="df_modal" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"></div></div></div>');
+    }
+    // TODO : ajouter une option onclose, qui correspond à un appel JS à la fermeture
+    // on l'ajoute à une liste d'onclose pour les enchaînements ouverture/fermeture
+    baseModal.find(".modal-content").html(options.html);
+    if (options.width) {
+        baseModal.find(".modal-dialog").attr("style", "width: " + options.width);
+    } else {
+        baseModal.find(".modal-dialog").removeAttr("style");
+    }
+    baseModal.modal('show');
+});
+
+df.connect('df.modal.hide', function () {
+    "use strict";
+    var baseModal = $('#df_modal');
+    baseModal.modal('hide');
+    baseModal.removeData('bs.modal');
+});
+
+/**
+ * {url: 'http://example.com/'}
+ */
+df.connect('df.redirect', function (options) {
+    "use strict";
+    window.location.href = options.url;
+});
+
+$(function () {
+    $("#body").on('hidden.bs.modal', function () {
+        "use strict";
+        var baseModal = $('#df_modal');
+        baseModal.removeData('bs.modal');
+        baseModal.find(".modal-content").html('');
+    });
+    $('#messages div').each(function (index, obj) {
+        setTimeout(function () {
+            $(obj).slideUp(400, 'swing', function () {
+                $(obj).remove();
+            });
+        }, df.default_message_timeout);
+    });
+
+})

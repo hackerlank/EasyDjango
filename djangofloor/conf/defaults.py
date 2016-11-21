@@ -294,18 +294,18 @@ PIPELINE_MIMETYPES = (
 )
 PIPELINE_JS = {
     'default': {
-        'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'js/djangofloor.js', ExpandIterable('DF_JS')],
+        'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'js/djangofloor-base.js', ExpandIterable('DF_JS')],
         'output_filename': 'js/default.js',
     },
     'bootstrap3': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/bootstrap3/dist/js/bootstrap.min.js',
-                             'js/djangofloor.js', 'vendor/bootstrap-notify/bootstrap-notify.min.js',
+                             'js/djangofloor-base.js', 'vendor/bootstrap-notify/bootstrap-notify.min.js',
                              'js/djangofloor-bootstrap3.js', ExpandIterable('DF_JS')],
         'output_filename': 'js/bootstrap3.js',
     },
     'metro-ui': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'vendor/metro-ui/build/js/metro.min.js',
-                             'js/djangofloor.js', 'js/djangofloor-metro-ui.js', ExpandIterable('DF_JS')],
+                             'js/djangofloor-base.js', 'js/djangofloor-metro-ui.js', ExpandIterable('DF_JS')],
         'output_filename': 'js/metro-ui.js',
     },
     'ie9': {
