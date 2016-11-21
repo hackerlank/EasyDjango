@@ -49,18 +49,15 @@
                 {% if df_user.is_anonymous %}
                 <li><a title="{% trans 'Log-in' %}" href="{% url 'login' %}">{% bootstrap_icon 'log-in' %}</a></li>
                 {% elif df_remote_username %}
-                <li>{{ df_user }}</li>
+                <li><a href="#" title="{% trans 'Log out' %}">{{ df_user }}</a></li>
                 {% else %}
-                <li><a href="{% url 'df:logout' %}" title="{% trans 'Log out' %}">{{ df_user }} {% bootstrap_icon
-                    'log-out' %}</a>
+                <li><a href="{% url 'df:logout' %}" title="{% trans 'Log out' %}">{{ df_user }} {% bootstrap_icon 'log-out' %}</a>
                 </li>
-                <li><a href="{% url 'df:set_password' %}" title="{% trans 'Change your password' %}">{% bootstrap_icon
-                    'edit' %}</a>
+                <li><a href="{% url 'df:set_password' %}" title="{% trans 'Change your password' %}">{% bootstrap_icon 'edit' %}</a>
                 </li>
                 {% endif %}
                 {% if df_user and df_user.is_superuser %}
-                <li><a href="{% url 'df:system_state' %}" title="{% trans 'Check system state' %}">{% bootstrap_icon
-                    'eye-open' %}</a></li>
+                <li><a href="{% url 'df:system_state' %}" title="{% trans 'Check system state' %}">{% bootstrap_icon 'eye-open' %}</a></li>
                 {% endif %}
                 {% if df_user and df_user.is_staff %}
                 <li><a href="{% url 'admin:index' %}" title="{% trans 'Admin' %}">{% bootstrap_icon 'cog' %}</a></li>

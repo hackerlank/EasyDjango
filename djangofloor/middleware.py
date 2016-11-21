@@ -61,6 +61,8 @@ class DjangoFloorMiddleware(BaseRemoteUserMiddleware):
         if self.header and self.header in request.META:
             if not request.user.is_authenticated():
                 self.remote_user_authentication(request)
+            else:
+                request.remote_username = self.format_remote_username(request.META.get(self.header))
 
     # noinspection PyUnusedLocal,PyMethodMayBeStatic
     def process_response(self, request, response):
@@ -86,6 +88,7 @@ class DjangoFloorMiddleware(BaseRemoteUserMiddleware):
         # persisted in the session and we don't need to continue.
         if request.user.is_authenticated():
             if request.user.get_username() == self.clean_username(username, request):
+                request.remote_username = remote_username
                 return
             else:
                 # An authenticated user is associated with the request, but

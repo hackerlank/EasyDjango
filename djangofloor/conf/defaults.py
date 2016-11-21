@@ -119,7 +119,7 @@ TEMPLATES = [
                     'loaders': SettingReference('TEMPLATE_LOADERS')},
     },
 ]
-TEMPLATE_DEBUG = SettingReference('DEBUG')
+TEMPLATE_DEBUG = False  # SettingReference('DEBUG')
 TEMPLATE_DIRS = ()
 TEMPLATE_CONTEXT_PROCESSORS = ['django.contrib.auth.context_processors.auth',
                                'django.template.context_processors.debug',

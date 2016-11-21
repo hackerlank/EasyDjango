@@ -112,8 +112,7 @@ class CeleryStats(MonitoringCheck):
         import_signals_and_functions()
         expected_queues = {y.queue: ('danger', 'remove') for y in REGISTERED_FUNCTIONS.values()}
         for connections in REGISTERED_SIGNALS.values():
-            if not callable(y.queue):
-                expected_queues.update({y.queue: ('danger', 'remove') for y in connections})
+            expected_queues.update({y.queue: ('danger', 'remove') for y in connections if not callable(y.queue)})
         queue_stats = app.control.inspect().active_queues()
         if queue_stats is None:
             queue_stats = {}
