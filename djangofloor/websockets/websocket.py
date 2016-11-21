@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # This code was generously pilfered from https://bitbucket.org/Jeffrey/gevent-websocket
 # written by Jeffrey Gelens (http://noppo.pro/) and licensed under the Apache License, Version 2.0
-import six
 import struct
 from socket import error as socket_error
 from django.core.handlers.wsgi import logger
+from django.utils import six
 from djangofloor.websockets.utf8validator import Utf8Validator
 from djangofloor.websockets.exceptions import WebSocketError, FrameTooLargeException
 

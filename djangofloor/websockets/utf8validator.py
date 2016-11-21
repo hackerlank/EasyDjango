@@ -27,7 +27,7 @@
 ##
 ###############################################################################
 
-import six
+from django.utils import six
 
 if six.PY3:
     xrange = range
