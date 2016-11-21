@@ -4,10 +4,11 @@ from __future__ import unicode_literals, print_function, absolute_import
 import os
 
 from djangofloor.conf.config_values import Path, AutocreateDirectory, SettingReference, ExpandIterable, CallableSetting
-from djangofloor.utils import is_package_present
+from djangofloor.utils import is_package_present, guess_version
 from djangofloor.log import generate_log_configuration
 # noinspection PyUnresolvedReferences
 from django.utils.six.moves.urllib.parse import urlparse
+from django.utils.translation import ugettext_lazy as _
 
 __author__ = 'Matthieu Gallet'
 
@@ -43,7 +44,7 @@ if USE_DJANGO_REDIS:
     CACHES = {
         'default': {
             'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': '{CACHE_REDIS_PROTOCOL}://:{CACHE_REDIS_PASSWORD}@{CACHE_REDIS_SERVER}:{CACHE_REDIS_PORT}/'
+            'LOCATION': '{CACHE_REDIS_PROTOCOL}://:{CACHE_REDIS_PASSWORD}@{CACHE_REDIS_HOST}:{CACHE_REDIS_PORT}/'
                         '{CACHE_REDIS_DB}',
             'OPTIONS': {'CLIENT_CLASS': 'django_redis.client.DefaultClient'}
         }
@@ -118,6 +119,7 @@ TEMPLATES = [
                     'loaders': SettingReference('TEMPLATE_LOADERS')},
     },
 ]
+TEMPLATE_DEBUG = SettingReference('DEBUG')
 TEMPLATE_DIRS = ()
 TEMPLATE_CONTEXT_PROCESSORS = ['django.contrib.auth.context_processors.auth',
                                'django.template.context_processors.debug',
@@ -130,11 +132,13 @@ TEMPLATE_CONTEXT_PROCESSORS = ['django.contrib.auth.context_processors.auth',
                                'djangofloor.context_processors.context_base', ]
 TEMPLATE_LOADERS = ('django.template.loaders.filesystem.Loader',
                     'django.template.loaders.app_directories.Loader')
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 USE_I18N = True
 USE_L10N = True
 USE_THOUSAND_SEPARATOR = True
 USE_TZ = True
 USE_X_FORWARDED_HOST = True  # X-Forwarded-Host
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 WSGI_APPLICATION = 'djangofloor.wsgi.django_application'
 
 # django.contrib.auth
@@ -162,7 +166,7 @@ if USE_PIPELINE:
     STATICFILES_FINDERS.append('pipeline.finders.PipelineFinder')
 
 # celery
-BROKER_URL = '{CELERY_PROTOCOL}://{CELERY_SERVER}:{CELERY_PORT}/{CELERY_DB}'
+BROKER_URL = '{CELERY_PROTOCOL}://{CELERY_HOST}:{CELERY_PORT}/{CELERY_DB}'
 CELERY_DEFAULT_QUEUE = 'celery'
 CELERY_TIMEZONE = '{TIME_ZONE}'
 CELERY_RESULT_EXCHANGE = '{PROJECT_NAME}_results'
@@ -188,6 +192,7 @@ DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
 SERVER_NAME = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).hostname, 'SERVER_BASE_URL')  # ~ www.example.org
 SERVER_PORT = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).port or (USE_SSL and 443) or 80,
                               'SERVER_BASE_URL', 'USE_SSL')  # ~ 443
+SERVER_PROTOCOL = CallableSetting(lambda x: 'https' if x['USE_SSL'] else 'http', 'USE_SSL')  # ~ "https"
 
 
 def url_prefix(values):
@@ -236,7 +241,7 @@ COMMON_COMMANDS = {
 
 # ws4redis
 WEBSOCKET_URL = '/ws/'
-WS4REDIS_CONNECTION = {'host': '{WS4REDIS_SERVER}', 'port': SettingReference('WS4REDIS_PORT'),
+WS4REDIS_CONNECTION = {'host': '{WS4REDIS_HOST}', 'port': SettingReference('WS4REDIS_PORT'),
                        'db': SettingReference('WS4REDIS_DB'), 'password': '{WS4REDIS_PASSWORD}'}
 WS4REDIS_TOPIC_SERIALIZER = 'djangofloor.websockets.topics.serialize_topic'
 WS4REDIS_HEARTBEAT = '--HEARTBEAT--'
@@ -278,6 +283,13 @@ PIPELINE_CSS = {
         'output_filename': 'css/ie9.css', 'extra_context': {'media': 'all'},
     },
 }
+PIPELINE_MIMETYPES = (
+    (b'text/coffeescript', '.coffee'),
+    (b'text/less', '.less'),
+    (b'text/javascript', '.js'),
+    (b'text/x-sass', '.sass'),
+    (b'text/x-scss', '.scss')
+)
 PIPELINE_JS = {
     'default': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'js/djangofloor.js', ExpandIterable('DF_JS')],
@@ -307,6 +319,8 @@ if USE_SCSS:
 
 # Django-Debug-Toolbar
 DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js', }
+DEBUG_TOOLBAR_PATCH_SETTINGS = False
+INTERNAL_IPS = ('127.0.0.1', '::1', )
 
 # Django-Bootstrap3
 BOOTSTRAP3 = {
@@ -327,8 +341,8 @@ BOOTSTRAP3 = {
 #
 # ######################################################################################################################
 # djangofloor
-DF_CSS = []
-DF_JS = []
+DF_CSS = SettingReference('FLOOR_EXTRA_CSS')
+DF_JS = SettingReference('FLOOR_EXTRA_JS')
 DF_INDEX_VIEW = 'djangofloor.views.index.IndexView'
 DF_SITE_SEARCH_VIEW = 'djangofloor.views.search.UserSearchView'
 DF_LOGIN_VIEW = 'djangofloor.views.auth.LoginView'
@@ -338,10 +352,12 @@ DF_INSTALLED_APPS = ['{PROJECT_NAME}']
 DF_MIDDLEWARE_CLASSES = []
 DF_REMOTE_USER_HEADER = None  # HTTP-REMOTE-USER
 DF_FAKE_AUTHENTICATION_USERNAME = 'testuser'
-DF_DEFAULT_GROUPS = ['Users']
+DF_DEFAULT_GROUPS = [_('Users')]
 DF_TEMPLATE_CONTEXT_PROCESSORS = []
 DF_CHECKED_REQUIREMENTS = ['django>=1.12', 'django<=1.13', 'celery', 'django-bootstrap3', 'redis', 'pip',
                            'psutil', 'django-redis-sessions']
+DF_PROJECT_VERSION = CallableSetting(guess_version)
+
 # django-npm
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],
@@ -399,7 +415,7 @@ LOG_DIRECTORY = '{LOCAL_PATH}/logs'
 
 # django_redis
 CACHE_REDIS_PROTOCOL = 'redis'
-CACHE_REDIS_SERVER = 'localhost'
+CACHE_REDIS_HOST = 'localhost'
 CACHE_REDIS_PORT = 6379
 CACHE_REDIS_DB = 2
 CACHE_REDIS_PASSWORD = ''
@@ -411,7 +427,7 @@ SESSION_REDIS_DB = 3
 SESSION_REDIS_PASSWORD = ''
 
 # ws4redis
-WS4REDIS_SERVER = 'localhost'
+WS4REDIS_HOST = 'localhost'
 WS4REDIS_PORT = 6379
 WS4REDIS_DB = 11
 WS4REDIS_PASSWORD = ''
@@ -419,7 +435,7 @@ WS4REDIS_PASSWORD = ''
 # celery
 CELERY_PROTOCOL = 'redis'
 CELERY_DB = 13
-CELERY_SERVER = 'localhost'
+CELERY_HOST = 'localhost'
 CELERY_PORT = 6379
 CELERY_PASSWORD = ''
 
@@ -428,23 +444,38 @@ UWSGI_THREADS = 20
 
 
 # deprecated settings
-FLOOR_USE_WS4REDIS = False
-FLOOR_BACKUP_SINGLE_TRANSACTION = False
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_SUBJECT_PREFIX = '[{SERVER_NAME}] '
+ACCOUNT_EMAIL_VERIFICATION = None
 BIND_ADDRESS = SettingReference('LISTEN_ADDRESS')
-USE_SCSS = False
-PROTOCOL = CallableSetting(lambda x: 'https' if x['USE_SSL'] else 'http', 'USE_SSL')
+FLOOR_AUTHENTICATION_HEADER = SettingReference('DF_REMOTE_USER_HEADER')
+FLOOR_BACKUP_SINGLE_TRANSACTION = False
+FLOOR_DEFAULT_GROUP_NAME = _('Users')
+FLOOR_EXTRA_CSS = []
+FLOOR_EXTRA_JS = []
+FLOOR_FAKE_AUTHENTICATION_USERNAME = SettingReference('DF_FAKE_AUTHENTICATION_USERNAME')
+FLOOR_INDEX = None
+FLOOR_PROJECT_NAME = SettingReference('PROJECT_NAME')
+FLOOR_PROJECT_VERSION = CallableSetting(guess_version)
+FLOOR_SIGNAL_DECODER = SettingReference('WS4REDIS_SIGNAL_DECODER')
+FLOOR_SIGNAL_ENCODER = SettingReference('WS4REDIS_SIGNAL_ENCODER')
+FLOOR_URL_CONF = SettingReference('DF_URL_CONF')
+FLOOR_USE_WS4REDIS = False
+FLOOR_WS_FACILITY = 'djangofloor'
 LOG_PATH = Path('{LOCAL_PATH}/log')
-REDIS_HOST = SettingReference('CELERY_SERVER')
-REDIS_PORT = SettingReference('CELERY_PORT')
-THREADS = SettingReference('UWSGI_THREADS')
-WORKERS = 1
-INTERNAL_IPS = ('127.0.0.1', '::1', )
+LOGOUT_URL = '/df/logout/'
 MAX_REQUESTS = 10000
+PROTOCOL = SettingReference('SERVER_PROTOCOL')
+REDIS_HOST = SettingReference('CELERY_HOST')
+REDIS_PORT = SettingReference('CELERY_PORT')
 REVERSE_PROXY_IPS = ['127.0.0.1', ]
-REVERSE_PROXY_TIMEOUT = 300
+REVERSE_PROXY_PORT = None  #
 REVERSE_PROXY_SSL_KEY_FILE = None
 REVERSE_PROXY_SSL_CRT_FILE = None
-REVERSE_PROXY_PORT = None  #
-ACCOUNT_EMAIL_VERIFICATION = None
-ACCOUNT_EMAIL_SUBJECT_PREFIX = '[{SERVER_NAME}] '
-FLOOR_URL_CONF = SettingReference('DF_URL_CONF')
+REVERSE_PROXY_TIMEOUT = 300
+THREADS = SettingReference('UWSGI_THREADS')
+USE_SCSS = False
+WORKERS = 1
+WS4REDIS_EMULATION_INTERVAL = 0
+WS4REDIS_SUBSCRIBER = 'djangofloor.df_ws4redis.Subscriber'
+BROKER_DB = SettingReference('CELERY_DB')

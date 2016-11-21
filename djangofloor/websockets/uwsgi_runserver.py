@@ -56,5 +56,11 @@ class uWSGIWebsocketServer(WebsocketWSGIServer):
         uwsgi.websocket_handshake(environ['HTTP_SEC_WEBSOCKET_KEY'], environ.get('HTTP_ORIGIN', ''))
         return uWSGIWebsocket()
 
+    def get_ws_file_descriptor(self, websocket):
+        return websocket.get_file_descriptor()
+
     def select(self, rlist, wlist, xlist, timeout=None):
         return gevent.select.select(rlist, wlist, xlist, timeout)
+
+    def flush_websocket(self, websocket):
+        return websocket.flush()

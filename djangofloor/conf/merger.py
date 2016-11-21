@@ -29,36 +29,50 @@ import string
 from django.utils import six
 
 __author__ = 'Matthieu Gallet'
-
+2
 deprecated_settings = {
-    'FLOOR_USE_WS4REDIS': None,
+    'BIND_ADDRESS': 'Replaced by "LISTEN_ADDRESS".',
+    'BROKER_DB': 'Replaced by "CELERY_DB"',
+    'FLOOR_AUTHENTICATION_HEADER': 'Replaced by "DF_REMOTE_USER_HEADER"',
     'FLOOR_BACKUP_SINGLE_TRANSACTION': None,
-    'BIND_ADDRESS': None,
-    'USE_SCSS': None,
-    'PROTOCOL': None,
-    'LOG_PATH': None,
-    'REDIS_HOST': None,
-    'REDIS_PORT': None,
-    'THREADS': None,
-    'WORKERS': None,
-    'INTERNAL_IPS': None,
+    'FLOOR_DEFAULT_GROUP_NAME': 'Repladed by "DF_DEFAULT_GROUPS"',
+    'FLOOR_EXTRA_CSS': 'Replaced by DF_CSS.',
+    'FLOOR_EXTRA_JS': 'Replaced by DF_JS.',
+    'FLOOR_FAKE_AUTHENTICATION_USERNAME': 'Replaced by "DF_FAKE_AUTHENTICATION_USERNAME"',
+    'FLOOR_WS_FACILITY': None,
+    'FLOOR_INDEX': 'Replaced by "DF_INDEX_VIEW" and class-based views.',
+    'FLOOR_PROJECT_NAME': 'Replaced by "PROJECT_NAME"',
+    'FLOOR_PROJECT_VERSION': 'Replaced by "DF_PROJECT_VERSION"',
+    'FLOOR_SIGNAL_DECODER': 'Replaced by "WS4REDIS_SIGNAL_DECODER".',
+    'FLOOR_SIGNAL_ENCODER': 'Replaced by "WS4REDIS_SIGNAL_ENCODER".',
+    'FLOOR_URL_CONF': 'Replaced by "DF_URL_CONF".',
+    'FLOOR_USE_WS4REDIS': 'ws4redis is not used anymore.',
+    'LOG_PATH': 'Use "LOG_DIRECTORY" instead.',
+    'LOGOUT_URL': None,
     'MAX_REQUESTS': None,
+    'PROTOCOL': 'Use "SERVER_PROTOCOL" instead.',
+    'REDIS_HOST': 'Replaced by "CELERY_HOST".',
+    'REDIS_PORT': 'Replaced by "CELERY_PORT".',
     'REVERSE_PROXY_IPS': None,
     'REVERSE_PROXY_TIMEOUT': None,
     'REVERSE_PROXY_SSL_KEY_FILE': None,
     'REVERSE_PROXY_SSL_CRT_FILE': None,
-    'REVERSE_PROXY_PORT': None,
-    'ACCOUNT_EMAIL_VERIFICATION': None,
-    'ACCOUNT_EMAIL_SUBJECT_PREFIX': None,
-    'FLOOR_URL_CONF': None,
+    'REVERSE_PROXY_PORT': 'Use the port component of "SERVER_BASE_URL" instead.',
+    'THREADS': 'Replaced by "UWSGI_THREADS".',
+    'USE_SCSS': None,
+    'WORKERS': None,
+    'WS4REDIS_EMULATION_INTERVAL': None,
+    'WS4REDIS_SUBSCRIBER': None,
 }
 
 
 def __getattr__(self, name):
     if name in deprecated_settings:
         from djangofloor.utils import RemovedInDjangoFloor110Warning
-        msg = deprecated_settings[name] or 'setting "%s" is deprecated' % name
-        warnings.warn(msg, RemovedInDjangoFloor110Warning, stacklevel=2)
+        msg = 'Setting "%s" is deprecated. ' % name
+        if deprecated_settings[name]:
+            msg += deprecated_settings[name]
+        # warnings.warn(msg, RemovedInDjangoFloor110Warning, stacklevel=2)
     if self._wrapped is empty:
         self._setup(name)
     return getattr(self._wrapped, name)

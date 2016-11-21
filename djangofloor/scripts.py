@@ -171,9 +171,13 @@ def gunicorn():
     from gunicorn.app.wsgiapp import run
     set_env()
     from django.conf import settings
+    from gevent import monkey
+    monkey.patch_all()
+
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
     parser.add_argument('-b', '--bind', default=settings.LISTEN_ADDRESS)
-    parser.add_argument('-k', '--worker-class', default='gunicorn.workers.gthread.ThreadWorker')
+    # parser.add_argument('-k', '--worker-class', default='gunicorn.workers.gthread.ThreadWorker')
+    parser.add_argument('-k', '--worker-class', default='geventwebsocket.gunicorn.workers.GeventWebSocketWorker')
     options, extra_args = parser.parse_known_args()
     sys.argv[1:] = extra_args
     __set_default_option(options, 'bind')

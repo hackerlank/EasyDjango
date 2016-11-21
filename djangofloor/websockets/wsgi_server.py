@@ -32,7 +32,7 @@ from django.contrib.auth import get_user
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.exceptions import PermissionDenied
 from django import http
-from django.utils.encoding import force_str, force_text
+from django.utils.encoding import force_str
 from djangofloor.websockets.exceptions import WebSocketError, HandshakeError, UpgradeRequiredError
 
 try:
@@ -80,6 +80,9 @@ class WebsocketWSGIServer(object):
         raise NotImplementedError
 
     def select(self, rlist, wlist, xlist, timeout=None):
+        raise NotImplementedError
+
+    def flush_websocket(self, websocket):
         raise NotImplementedError
 
     # noinspection PyMethodMayBeStatic
@@ -199,8 +202,11 @@ class WebsocketWSGIServer(object):
                 logger.info('Finish non-websocket response with status code: {}'.format(response.status_code))
         return response
 
+    def get_ws_file_descriptor(self, websocket):
+        raise NotImplementedError
+
     def process_websocket(self, window_info, websocket, channels):
-        websocket_fd = websocket.get_file_descriptor()
+        websocket_fd = self.get_ws_file_descriptor(websocket)
         listening_fds = [websocket_fd]
         redis_fd, pubsub = None, None
         if channels:
@@ -217,7 +223,7 @@ class WebsocketWSGIServer(object):
             ready = selected_fds[0]
             if not ready:
                 # flush empty socket
-                websocket.flush()
+                self.flush_websocket(websocket)
             for fd in ready:
                 if fd == websocket_fd:
                     message = websocket.receive()

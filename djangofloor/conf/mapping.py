@@ -22,7 +22,7 @@ INI_MAPPING = [
     CharConfigField('database.user', 'DATABASE_USER'),
 
     IntegerConfigField('cache.db', 'CACHE_REDIS_DB'),
-    CharConfigField('cache.host', 'CACHE_REDIS_SERVER'),
+    CharConfigField('cache.host', 'CACHE_REDIS_HOST'),
     CharConfigField('cache.password', 'CACHE_REDIS_PASSWORD'),
     IntegerConfigField('cache.port', 'CACHE_REDIS_PORT'),
 
@@ -32,12 +32,12 @@ INI_MAPPING = [
     IntegerConfigField('session.port', 'SESSION_REDIS_PORT'),
 
     IntegerConfigField('websocket.db', 'WS4REDIS_DB'),
-    CharConfigField('websocket.host', 'WS4REDIS_SERVER'),
+    CharConfigField('websocket.host', 'WS4REDIS_HOST'),
     CharConfigField('websocket.password', 'WS4REDIS_PASSWORD'),
     IntegerConfigField('websocket.port', 'WS4REDIS_PORT'),
 
     IntegerConfigField('celery.db', 'CELERY_DB'),
-    CharConfigField('celery.host', 'CELERY_SERVER'),
+    CharConfigField('celery.host', 'CELERY_HOST'),
     CharConfigField('celery.password', 'CELERY_PASSWORD'),
     IntegerConfigField('celery.port', 'CELERY_PORT'),
 

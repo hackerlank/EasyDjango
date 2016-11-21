@@ -58,8 +58,14 @@ class WebsocketRunServer(WebsocketWSGIServer):
         six.get_method_self(start_response).finish_content()
         return WebSocket(environ['wsgi.input'])
 
+    def get_ws_file_descriptor(self, websocket):
+        return websocket.get_file_descriptor()
+
     def select(self, rlist, wlist, xlist, timeout=None):
         return select.select(rlist, wlist, xlist, timeout)
+
+    def flush_websocket(self, websocket):
+        return websocket.flush()
 
 
 def run(addr, port, wsgi_handler, ipv6=False, threading=False):

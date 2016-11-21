@@ -314,13 +314,13 @@ class RemoteUserMiddleware(BaseRemoteUserMiddleware):
 
     def __init__(self):
         super(RemoteUserMiddleware, self).__init__()
-        warnings.warn('djangofloor.middleware.IEMiddleware has been replaced by '
+        warnings.warn('djangofloor.middleware.RemoteUserMiddleware has been replaced by '
                       'djangofloor.middleware.DjangoFloorMiddleware', RemovedInDjangoFloor110Warning)
     header = settings.DF_REMOTE_USER_HEADER
 
     def process_request(self, request):
         request.df_remote_authenticated = False
-        if request.META['REMOTE_ADDR'] in settings.REVERSE_PROXY_IPS and self.header and self.header in request.META:
+        if self.header and self.header in request.META:
             if not request.user.is_authenticated():
                 self.original_process_request(request)
             request.df_remote_authenticated = request.user.is_authenticated()
