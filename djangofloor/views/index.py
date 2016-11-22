@@ -10,4 +10,8 @@ class IndexView(TemplateView):
     template_name = 'djangofloor/bootstrap3/index.html'
 
     def get(self, request, *args, **kwargs):
-        return self.render_to_response({})
+        context = self.get_context(request)
+        return self.render_to_response(context)
+
+    def get_context(self, request):
+        return {}
