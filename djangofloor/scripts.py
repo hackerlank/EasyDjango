@@ -8,6 +8,7 @@ from __future__ import unicode_literals, absolute_import, print_function
 
 import codecs
 import logging
+import logging.config
 import os
 import re
 import shutil
@@ -121,10 +122,18 @@ def load_celery():
 def control():
     """Main user function, with commands for deploying, migrating data, backup or running services
     """
-    set_env()
+    conf_name = set_env()
+    project_name = conf_name.partition(':')[0]
     import django as base_django
     if base_django.VERSION[:2] >= (1, 7):
         base_django.setup()
+    try:
+        # noinspection PyPackageRequirements
+        from gevent import monkey
+        monkey.patch_all()
+    except ImportError:
+        # noinspection PyUnusedLocal
+        monkey = None
     from django.conf import settings
     from django.utils.translation import ugettext as _
     command_commands = settings.COMMON_COMMANDS
@@ -132,16 +141,17 @@ def control():
     script, command = command_commands.get(cmd, (None, None))
     invalid_script = _('Invalid script name: %(cmd)s') % {'cmd': script}
     invalid_command = _('Usage: %(name)s %(cmd)s') % {'name': sys.argv[0], 'cmd': '|'.join(command_commands)}
-
-    if len(sys.argv) == 1 or sys.argv[1] not in command_commands:
+    if cmd not in command_commands:
         print(invalid_command)
         return 1
     scripts = {'django': django, 'gunicorn': gunicorn, 'celery': celery, 'uwsgi': uwsgi}
     if script not in scripts:
         print(invalid_script)
         return 1
-    project_name, sep, __ = os.environ['DF_CONF_NAME'].partition(':')
     os.environ['DF_CONF_NAME'] = '%s:%s' % (project_name, script)
+    script_re = re.match(r'^([\w_\-.]+)-ctl(\.py|\.pyc|)$', os.path.basename(sys.argv[0]))
+    if script_re:
+        sys.argv[0] = '%s-%s%s' % (script_re.group(1), script, script_re.group(2))
     if command:
         sys.argv[1] = command
     else:
@@ -158,30 +168,65 @@ def django():
     from django.core.management import execute_from_command_line
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
     options, extra_args = parser.parse_known_args()
-    if len(extra_args) == 1 and extra_args[0] == 'runserver':
-        sys.argv += [settings.LISTEN_ADDRESS]
+    env_set = bool(os.environ.get('DF_CONF_SET', ''))
+    if not env_set:
+        if len(extra_args) >= 1 and extra_args[0] == 'runserver':
+            sys.argv += [settings.LISTEN_ADDRESS]
+        os.environ['DF_CONF_SET'] = '1'
     return execute_from_command_line(sys.argv)
 
 
 def gunicorn():
     """ wrapper around gunicorn. Retrieve some default values from Django settings.
 
+  --log-syslog          Send *Gunicorn* logs to syslog. [False]
+  --log-syslog-facility SYSLOG_FACILITY
+                        Syslog facility name [user]
+  --access-logfile FILE
+                        The Access log file to write to. [None]
+  --error-logfile FILE, --log-file FILE
+                        The Error log file to write to. [-]
+  --log-level LEVEL     The granularity of Error log outputs. [info]
+  --capture-output      Redirect stdout/stderr to Error log. [False]
+  --log-syslog-to SYSLOG_ADDR
+                        Address to send syslog messages.
+                        [unix:///var/run/syslog]
+  --log-syslog-prefix SYSLOG_PREFIX
+                        Makes Gunicorn use the parameter as program-name in
+                        the syslog entries. [None]
+
     :return:
     """
     from gunicorn.app.wsgiapp import run
     set_env()
     from django.conf import settings
-    from gevent import monkey
-    monkey.patch_all()
-
+    use_gevent = False
+    try:
+        # noinspection PyPackageRequirements
+        from gevent import monkey
+        monkey.patch_all()
+        use_gevent = True
+    except ImportError:
+        # noinspection PyUnusedLocal
+        monkey = None
+    logging.config.dictConfig(settings.LOGGING)
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
     parser.add_argument('-b', '--bind', default=settings.LISTEN_ADDRESS)
+    parser.add_argument('-w', '--workers', default=str(settings.SERVER_PROCESSES))
+    parser.add_argument('-t', '--timeout', default=str(settings.SERVER_TIMEOUT))
+    parser.add_argument('--reload', default=False, action='store_true')
     # parser.add_argument('-k', '--worker-class', default='gunicorn.workers.gthread.ThreadWorker')
-    parser.add_argument('-k', '--worker-class', default='geventwebsocket.gunicorn.workers.GeventWebSocketWorker')
+    if use_gevent:
+        parser.add_argument('-k', '--worker-class', default='geventwebsocket.gunicorn.workers.GeventWebSocketWorker')
     options, extra_args = parser.parse_known_args()
     sys.argv[1:] = extra_args
-    __set_default_option(options, 'bind')
-    __set_default_option(options, 'worker_class')
+    env_set = bool(os.environ.get('DF_CONF_SET', ''))
+    if not env_set:
+        os.environ['DF_CONF_SET'] = '1'
+        __set_default_option(options, 'bind')
+        __set_default_option(options, 'worker_class')
+        # if settings.DEBUG and not options.reload:
+        #     sys.argv += ['--reload']
     application = 'djangofloor.wsgi:gunicorn_application'
     if application not in sys.argv:
         sys.argv.append(application)
@@ -210,11 +255,11 @@ def uwsgi():
                         help='do not automatically detect websockets connections and put the session in raw mode')
     parser.add_argument('--no-enable-threads', default=False, action='store_true',
                         help='do not run each worker in prethreaded mode with the specified number of threads')
-    parser.add_argument('-p', '--processes', default=settings.UWSGI_PROCESSES, type=int,
+    parser.add_argument('-p', '--processes', default=settings.SERVER_PROCESSES, type=int,
                         help='spawn the specified number of workers/processes')
     parser.add_argument('--workers', default=None, type=int,
                         help='spawn the specified number of workers/processes')
-    parser.add_argument('--threads', default=settings.UWSGI_THREADS, type=int,
+    parser.add_argument('--threads', default=settings.SERVER_THREADS, type=int,
                         help='run each worker in prethreaded mode with the specified number of threads')
     parser.add_argument('--http-socket', default=settings.LISTEN_ADDRESS,
                         help='bind to the specified UNIX/TCP socket using HTTP protocol')

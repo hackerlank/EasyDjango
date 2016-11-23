@@ -66,7 +66,7 @@ def read_file_in_chunks(fileobj, chunk_size=32768):
 def signals(request):
     signal_request = WindowInfo.from_request(request)
     import_signals_and_functions()
-    if settings.WS4REDIS_PUBLIC_WS_LIST:
+    if settings.DF_PUBLIC_SIGNAL_LIST:
         valid_signal_names = list(REGISTERED_SIGNALS.keys())
         valid_function_names = list(REGISTERED_FUNCTIONS.keys())
     else:

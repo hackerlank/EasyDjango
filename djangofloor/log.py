@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
 import logging
+import logging.handlers
 import os
 
 import time
@@ -9,8 +10,11 @@ import time
 import sys
 import warnings
 
+import re
 from django.core.management import color_style
 from django.utils.log import AdminEmailHandler as BaseAdminEmailHandler
+# noinspection PyUnresolvedReferences
+from django.utils.six.moves.urllib.parse import urlparse
 from djangofloor.utils import ensure_dir
 
 __author__ = 'Matthieu Gallet'
@@ -19,6 +23,8 @@ __author__ = 'Matthieu Gallet'
 class ColorizedFormatter(logging.Formatter):
     def __init__(self, *args, **kwargs):
         self.style = color_style()
+        kwargs.setdefault('fmt', '%(asctime)s [%(name)s] [%(levelname)s] %(message)s')
+        kwargs.setdefault('datefmt', '%Y-%m-%d %H:%M:%S')
         super(ColorizedFormatter, self).__init__(*args, **kwargs)
 
     def format(self, record):
@@ -60,22 +66,29 @@ class AdminEmailHandler(BaseAdminEmailHandler):
 
 
 # noinspection PyTypeChecker
-def generate_log_configuration(log_directory=None, project_name=None, script_name=None, debug=False):
+def generate_log_configuration(log_directory=None, project_name=None, script_name=None, debug=False,
+                               log_remote_url=None,
+                               systemd_facility=None):
     fmt_server = 'django.server' if sys.stdout.isatty() else None
     fmt_stderr = 'colorized' if sys.stderr.isatty() else None
     fmt_stdout = 'colorized' if sys.stdout.isatty() else None
     formatters = {
-        'django.server': {'()': 'django.utils.log.ServerFormatter', 'format': '[%(server_time)s] %(message)s'},
+        'django.server': {'()': 'django.utils.log.ServerFormatter',
+                          'format': '%(asctime)s [%(name)s] [%(levelname)s] %(message)s',
+                          'datefmt': '%Y-%m-%d %H:%M:%S'},
         'colorized': {'()': 'djangofloor.log.ColorizedFormatter'}}
 
     loggers = {'django': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'django.db.backends': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'django.request': {'handlers': [], 'level': 'INFO', 'propagate': True},
                'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
-               'django.server': {'handlers': [], 'level': 'INFO', 'propagate': True},
+               'django.server': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
+               'gunicorn.access': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
+               'gunicorn.error': {'handlers': [], 'level': 'WARN', 'propagate': True},
+               'geventwebsocket.handler': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
                'pip.vcs': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'py.warnings': {'handlers': [], 'level': 'WARN', 'propagate': True}, }
-    root = {'handlers': [], 'level': 'INFO'}
+    root = {'handlers': [], 'level': 'DEBUG'}
     handlers = {}
     config = {'version': 1, 'disable_existing_loggers': True, 'formatters': formatters,
               'handlers': handlers, 'loggers': loggers, 'root': root}
@@ -83,37 +96,67 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
         warnings.simplefilter('always', DeprecationWarning)
         logging.captureWarnings(True)
         loggers['django.request'].update({'level': 'DEBUG'})
-        loggers['django.server'].update({'handlers': ['django.server'], 'propagate': False})
         loggers['py.warnings'].update({'level': 'INFO'})
-        handlers.update({'django.server': {'class': 'logging.StreamHandler', 'level': 'DEBUG',
-                                           'stream': 'ext://sys.stdout', 'formatter': fmt_server},
+        handlers.update({'access': {'class': 'logging.StreamHandler', 'level': 'INFO',
+                                    'stream': 'ext://sys.stdout', 'formatter': fmt_server},
                          'stderr': {'class': 'logging.StreamHandler', 'level': 'ERROR',
                                     'stream': 'ext://sys.stderr', 'formatter': fmt_stderr},
                          'stdout': {'class': 'logging.StreamHandler', 'level': 'DEBUG',
                                     'stream': 'ext://sys.stdout', 'formatter': fmt_stdout}})
-        root.update({'handlers': ['stdout', 'stderr'], 'level': 'DEBUG'})
+        root.update({'handlers': ['stdout', 'stderr'], 'level': 'INFO'})
         return config
-    elif log_directory is None:
-        loggers['django.request'].update({'level': 'WARN'})
-        loggers['django.server'].update({'handlers': ['django.server'], 'propagate': False})
-        handlers.update({'django.server': {'class': 'logging.StreamHandler', 'level': 'INFO',
-                                           'stream': 'ext://sys.stdout', 'formatter': fmt_server},
-                         "mail_admins": {'class': 'djangofloor.log.AdminEmailHandler', 'level': 'ERROR', },
-                         'stderr': {'class': 'logging.StreamHandler', 'level': 'ERROR',
-                                    'stream': 'ext://sys.stderr', 'formatter': fmt_stderr},
-                         'stdout': {'class': 'logging.StreamHandler', 'level': 'INFO',
-                                    'stream': 'ext://sys.stdout', 'formatter': fmt_stdout}})
-        root.update({'handlers': ['mail_admins', 'stdout', 'stderr']})
-        return config
-    ensure_dir(log_directory, parent=False)
-    handlers.update({'info_rotating': {'class': 'logging.handlers.RotatingFileHandler', 'level': 'INFO',
-                                       'filename': os.path.join(log_directory,
-                                                                '%s-%s-info.log' % (project_name, script_name)),
-                                       'maxBytes': 1000000, 'backupCount': 3},
-                     'error_rotating': {'class': 'logging.handlers.RotatingFileHandler', 'level': 'ERROR',
-                                        'filename': os.path.join(log_directory,
-                                                                 '%s-%s-error.log' % (project_name, script_name)),
-                                        'maxBytes': 1000000, 'backupCount': 3},
-                     'mail_admins': {'level': 'ERROR', 'class': 'djangofloor.log.AdminEmailHandler'}})
-    root.update({'handlers': ['mail_admins', 'error_rotating', 'info_rotating']})
+
+    error_handler = {'class': 'logging.StreamHandler', 'stream': 'ext://sys.stderr', 'formatter': fmt_stderr}
+    handlers.update({'access': {'class': 'logging.StreamHandler', 'level': 'INFO',
+                                'stream': 'ext://sys.stdout', 'formatter': fmt_server},
+                     "mail_admins": {'class': 'djangofloor.log.AdminEmailHandler', 'level': 'ERROR', },
+                     'info': {'class': 'logging.StreamHandler', 'level': 'INFO',
+                              'stream': 'ext://sys.stdout', 'formatter': fmt_stdout}})
+    if log_directory is not None:
+        ensure_dir(log_directory, parent=False)
+        error_handler = {'class': 'logging.handlers.RotatingFileHandler', 'maxBytes': 1000000, 'backupCount': 3,
+                         'filename': os.path.join(log_directory, '%s-%s-error.log' % (project_name, script_name))}
+        handlers.update({'info': {'class': 'logging.handlers.RotatingFileHandler', 'level': 'INFO',
+                                  'filename': os.path.join(log_directory,
+                                                           '%s-%s-info.log' % (project_name, script_name)),
+                                  'maxBytes': 1000000, 'backupCount': 3},
+                         'access': {'class': 'logging.handlers.RotatingFileHandler', 'level': 'INFO',
+                                    'filename': os.path.join(log_directory,
+                                                             '%s-%s-access.log' % (project_name, script_name)),
+                                    'maxBytes': 1000000, 'backupCount': 3},
+                         'mail_admins': {'level': 'ERROR', 'class': 'djangofloor.log.AdminEmailHandler'},
+                         })
+    if log_remote_url:
+        parsed_log_url = urlparse(log_remote_url)
+        scheme = parsed_log_url.scheme
+        device, sep, facility_name = parsed_log_url.path.rpartition('/')
+        if scheme == 'syslog' or scheme == 'syslog+tcp':
+            error_handler = {'class': 'logging.handlers.SysLogHandler'}
+            import platform
+            import socket
+            import syslog
+            if parsed_log_url.hostname and parsed_log_url.port and re.match('^\d+$', parsed_log_url.port):
+                address = (parsed_log_url.hostname, int(parsed_log_url.port))
+            elif device:
+                address = device
+            elif platform.system() == 'Darwin':
+                address = '/var/run/syslog'
+            elif platform.system() == 'Linux':
+                address = '/dev/log'
+            else:
+                address = ('localhost', 514)
+            socktype = socket.SOCK_DGRAM if scheme == 'syslog' else socket.SOCK_STREAM
+            facility = logging.handlers.SysLogHandler.facility_names.get(facility_name, syslog.LOG_USER)
+            handlers.update({'error': {'class': 'logging.handlers.SysLogHandler',
+                                       'address': address, 'facility': facility,
+                                       'socktype': socktype}})
+        elif scheme == 'logd':
+            identifier = facility_name or project_name
+            handlers.update({'error': {'class': 'systemd.journal.JournalHandler',
+                                       'SYSLOG_IDENTIFIER': identifier}})
+
+    error_handler['level'] = 'ERROR'
+    handlers['error'] = error_handler
+    loggers['django.request'].update({'level': 'WARN'})
+    root.update({'handlers': ['mail_admins', 'error', 'info']})
     return config

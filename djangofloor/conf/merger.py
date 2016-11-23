@@ -59,7 +59,7 @@ _deprecated_settings = {
     'REVERSE_PROXY_SSL_KEY_FILE': None,
     'REVERSE_PROXY_SSL_CRT_FILE': None,
     'REVERSE_PROXY_PORT': 'Use the port component of "SERVER_BASE_URL" instead.',
-    'THREADS': 'Replaced by "UWSGI_THREADS".',
+    'THREADS': 'Replaced by "SERVER_THREADS".',
     'USE_SCSS': None,
     'WORKERS': None,
     'WS4REDIS_EMULATION_INTERVAL': None,
@@ -72,7 +72,7 @@ def __getattr__(self, name):
     if name in _deprecated_settings and name not in _warned_settings:
         from djangofloor.utils import RemovedInDjangoFloor110Warning
         f = traceback.extract_stack()
-        if not f[-1][0].endswith('/debug.py'):
+        if not f[-1][0].endswith('/debug.py') and not not f[-2][0].endswith('/debug.py'):
             msg = 'Setting "%s" is deprecated. ' % name
             msg += _deprecated_settings[name] or ''
             warnings.warn(msg, RemovedInDjangoFloor110Warning, stacklevel=2)

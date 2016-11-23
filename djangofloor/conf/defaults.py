@@ -82,10 +82,12 @@ if USE_PIPELINE:
 if USE_REST_FRAMEWORK:
     INSTALLED_APPS.append('rest_framework')
 INSTALLED_APPS.append('djangofloor')
+LOG_REMOTE_URL = None
 LOGGING = CallableSetting(lambda x:
                           generate_log_configuration(log_directory=x['LOG_DIRECTORY'], project_name=x['PROJECT_NAME'],
-                                                     script_name=x['SCRIPT_NAME'], debug=x['DEBUG']),
-                          'DEBUG', 'PROJECT_NAME', 'SCRIPT_NAME', 'LOG_DIRECTORY')
+                                                     script_name=x['SCRIPT_NAME'], debug=x['DEBUG'],
+                                                     log_remote_url=x['LOG_REMOTE_URL']),
+                          'DEBUG', 'PROJECT_NAME', 'SCRIPT_NAME', 'LOG_DIRECTORY', 'LOG_REMOTE_URL')
 MANAGERS = SettingReference('ADMINS')
 MEDIA_ROOT = AutocreateDirectory('{LOCAL_PATH}/media')
 MEDIA_URL = '/media/'
@@ -285,13 +287,11 @@ PIPELINE_CSS = {
         'output_filename': 'css/ie9.css', 'extra_context': {'media': 'all'},
     },
 }
-PIPELINE_MIMETYPES = (
-    (b'text/coffeescript', '.coffee'),
+PIPELINE_MIMETYPES = ((b'text/coffeescript', '.coffee'),
     (b'text/less', '.less'),
     (b'text/javascript', '.js'),
     (b'text/x-sass', '.sass'),
-    (b'text/x-scss', '.scss')
-)
+    (b'text/x-scss', '.scss'))
 PIPELINE_JS = {
     'default': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'js/djangofloor-base.js', ExpandIterable('DF_JS')],
@@ -359,8 +359,8 @@ DF_TEMPLATE_CONTEXT_PROCESSORS = DeprecatedSetting('FLOOR_TEMPLATE_CONTEXT_PROCE
 DF_CHECKED_REQUIREMENTS = ['django>=1.12', 'django<=1.13', 'celery', 'django-bootstrap3', 'redis', 'pip',
                            'psutil', 'django-redis-sessions']
 DF_PROJECT_VERSION = CallableSetting(guess_version)
+DF_PUBLIC_SIGNAL_LIST = True
 
-# django-npm
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],
     'bootstrap3': ['dist/*'],
@@ -374,7 +374,6 @@ NPM_FILE_PATTERNS = {
 
 # ws4redis
 WS4REDIS_EXPIRE = 36000
-WS4REDIS_PUBLIC_WS_LIST = True
 # do not check for each WS signal/function before sending its name to the client
 
 # ######################################################################################################################
@@ -441,8 +440,9 @@ CELERY_HOST = 'localhost'
 CELERY_PORT = 6379
 CELERY_PASSWORD = ''
 
-UWSGI_PROCESSES = 3
-UWSGI_THREADS = 20
+SERVER_PROCESSES = 3
+SERVER_THREADS = 20
+SERVER_TIMEOUT = 300
 
 # deprecated settings
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
@@ -456,8 +456,6 @@ DF_OTHER_ALLAUTH = DeprecatedSetting('OTHER_ALLAUTH', msg='OTHER_ALLAUTH should 
 FLOOR_AUTHENTICATION_HEADER = SettingReference('DF_REMOTE_USER_HEADER')
 FLOOR_BACKUP_SINGLE_TRANSACTION = False
 FLOOR_DEFAULT_GROUP_NAME = _('Users')
-FLOOR_EXTRA_CSS = []
-FLOOR_EXTRA_JS = []
 FLOOR_FAKE_AUTHENTICATION_USERNAME = SettingReference('DF_FAKE_AUTHENTICATION_USERNAME')
 FLOOR_INDEX = None
 FLOOR_PROJECT_NAME = SettingReference('PROJECT_NAME')
@@ -478,7 +476,7 @@ REVERSE_PROXY_PORT = None  #
 REVERSE_PROXY_SSL_KEY_FILE = None
 REVERSE_PROXY_SSL_CRT_FILE = None
 REVERSE_PROXY_TIMEOUT = 300
-THREADS = SettingReference('UWSGI_THREADS')
+THREADS = SettingReference('SERVER_THREADS')
 USE_SCSS = False
 WORKERS = 1
 WS4REDIS_EMULATION_INTERVAL = 0
