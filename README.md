@@ -66,6 +66,8 @@ WebSocket:
   - une seule fonction pour ajouter des événements aux websockets via du pubsub
   
   
+ editor.md/languages/en.js
+  
   
 http://lab.hakim.se/reveal-js/#/fragments
 https://pandao.github.io/editor.md/en.html
