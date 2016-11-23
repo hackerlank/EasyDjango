@@ -67,8 +67,7 @@ class AdminEmailHandler(BaseAdminEmailHandler):
 
 # noinspection PyTypeChecker
 def generate_log_configuration(log_directory=None, project_name=None, script_name=None, debug=False,
-                               log_remote_url=None,
-                               systemd_facility=None):
+                               log_remote_url=None):
     fmt_server = 'django.server' if sys.stdout.isatty() else None
     fmt_stderr = 'colorized' if sys.stderr.isatty() else None
     fmt_stdout = 'colorized' if sys.stdout.isatty() else None
@@ -131,7 +130,6 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
         scheme = parsed_log_url.scheme
         device, sep, facility_name = parsed_log_url.path.rpartition('/')
         if scheme == 'syslog' or scheme == 'syslog+tcp':
-            error_handler = {'class': 'logging.handlers.SysLogHandler'}
             import platform
             import socket
             import syslog
@@ -147,13 +145,11 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
                 address = ('localhost', 514)
             socktype = socket.SOCK_DGRAM if scheme == 'syslog' else socket.SOCK_STREAM
             facility = logging.handlers.SysLogHandler.facility_names.get(facility_name, syslog.LOG_USER)
-            handlers.update({'error': {'class': 'logging.handlers.SysLogHandler',
-                                       'address': address, 'facility': facility,
-                                       'socktype': socktype}})
+            error_handler = {'class': 'logging.handlers.SysLogHandler', 'address': address, 'facility': facility,
+                             'socktype': socktype}
         elif scheme == 'logd':
             identifier = facility_name or project_name
-            handlers.update({'error': {'class': 'systemd.journal.JournalHandler',
-                                       'SYSLOG_IDENTIFIER': identifier}})
+            error_handler = {'class': 'systemd.journal.JournalHandler', 'SYSLOG_IDENTIFIER': identifier}
 
     error_handler['level'] = 'ERROR'
     handlers['error'] = error_handler
