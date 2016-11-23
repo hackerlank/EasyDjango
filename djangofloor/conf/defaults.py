@@ -52,7 +52,7 @@ if USE_DJANGO_REDIS:
     }
 else:
     CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'unique-snowflake'}}
-CSRF_COOKIE_DOMAIN = '.{SERVER_NAME}'
+CSRF_COOKIE_DOMAIN = '{SERVER_NAME}'
 DATABASES = {'default': {
     'ENGINE': '{DATABASE_ENGINE}', 'NAME': '{DATABASE_NAME}', 'USER': '{DATABASE_USER}',
     'OPTIONS': SettingReference('DATABASE_OPTIONS'),
