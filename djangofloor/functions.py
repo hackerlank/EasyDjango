@@ -8,7 +8,7 @@ from djangofloor.decorators import function, is_authenticated
 __author__ = 'Matthieu Gallet'
 
 
-@function(path='djangofloor_validate_set_password', is_allowed_to=is_authenticated)
+@function(path='djangofloor.validate.set_password', is_allowed_to=is_authenticated)
 def validate_set_password_form(window_info, data=None):
     query_dict = QueryDict('', mutable=True)
     for obj in data:

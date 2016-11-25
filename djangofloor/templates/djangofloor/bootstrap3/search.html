@@ -6,7 +6,7 @@
     <div class="col-md-1 col-sm-1 hidden-xs">&nbsp;</div>
     <div class="col-md-10 col-sm-10 col-xs-12">
         <h3>{% trans 'Search results' %}</h3>
-        <form onchange="$.df.validateForm(this, 'djangofloor_validate_search');"  action="?" method="post">
+        <form onchange="$.df.validateForm(this, 'djangofloor.validate.search');"  action="?" method="post">
             {% csrf_token %}
             {% bootstrap_form form %}
             <input type="submit" class="btn btn-primary" value="{% trans 'Search' %}">

@@ -5,6 +5,7 @@ import json
 import mimetypes
 import os
 import warnings
+from collections import OrderedDict
 
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
@@ -78,6 +79,18 @@ def signals(request):
         for function_name, connection in REGISTERED_FUNCTIONS.items():
             if connection.is_allowed_to(signal_request):
                 valid_function_names.append(function_name)
+
+    function_names_dict = {}
+    for name in valid_function_names:
+        function_names_dict[name] = 'function(opts) { return $.df._wsCallFunction("%(name)s", opts); }' % {'name': name}
+        name, sep, right = name.rpartition('.')
+        while sep == '.':
+            function_names_dict.setdefault(name, '{}')
+            name, sep, right = name.rpartition('.')
+    functions = OrderedDict()
+    for key in sorted(function_names_dict):
+        functions[key] = function_names_dict[key]
+
     protocol = 'wss' if settings.USE_SSL else 'ws'
     site_name = '%s:%s' % (settings.SERVER_NAME, settings.SERVER_PORT)
 
@@ -85,7 +98,7 @@ def signals(request):
     csrf_header_name = getattr(settings, 'CSRF_HEADER_NAME', 'HTTP_X_CSRFTOKEN')
     return TemplateResponse(request, 'djangofloor/signals.html',
                             {'SIGNALS': valid_signal_names,
-                             'FUNCTIONS': valid_function_names,
+                             'FUNCTIONS': functions,
                              'WS4REDIS_HEARTBEAT': settings.WS4REDIS_HEARTBEAT,
                              'WEBSOCKET_URL': '%s://%s%s' % (protocol, site_name, settings.WEBSOCKET_URL),
                              'CSRF_COOKIE_NAME': settings.CSRF_COOKIE_NAME,

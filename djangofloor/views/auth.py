@@ -17,9 +17,9 @@ from djangofloor.tasks import set_websocket_topics
 
 __author__ = 'Matthieu Gallet'
 
-validate_form(form_cls=UserCreationForm, path='djangofloor_validate_user_creation', is_allowed_to=everyone)
+validate_form(form_cls=UserCreationForm, path='djangofloor.validate.user_creation', is_allowed_to=everyone)
 validate_form(form_cls=PasswordResetForm,
-              path='djangofloor_validate_password_reset', is_allowed_to=everyone)
+              path='djangofloor.validate.password_reset', is_allowed_to=everyone)
 
 
 class LoginView(TemplateView):

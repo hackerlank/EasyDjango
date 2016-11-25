@@ -93,6 +93,8 @@ class Connection(object):
         self.function = fn
         # noinspection PyTypeChecker
         self.path = path or (hasattr(fn, '__name__') and fn.__name__)
+        if not re.match(r'^([_a-zA-Z]\w*)(\.[_a-zA-Z]\w*)*$', self.path):
+            raise ValueError('Invalid identifier: %s' % self.path)
         self.is_allowed_to = is_allowed_to
         self.queue = queue or settings.CELERY_DEFAULT_QUEUE
         self.accept_kwargs = False

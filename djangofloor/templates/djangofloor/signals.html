@@ -21,7 +21,7 @@ $.df._heartbeatMessage = "{{ WS4REDIS_HEARTBEAT }}";
 
 {% for s in SIGNALS %}$.df._wsSignalConnect("{{ s }}");
 {% endfor %}
-{% for f in FUNCTIONS %}$.dfws.{{ f }} = function(opts) { return $.df._wsCallFunction("{{ f }}", opts); };
+{% for f in FUNCTIONS.items %}$.dfws.{{ f.0 }} = {{ f.1|safe }};
 {% endfor %}
 
 $.df.csrfTokenValue = getCookie("{{ CSRF_COOKIE_NAME }}")
