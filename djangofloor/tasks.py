@@ -28,7 +28,7 @@ BROADCAST = [[]]
 
 _signal_encoder = import_string(settings.WS4REDIS_SIGNAL_ENCODER)
 _topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
-logger = logging.getLogger('djangofloor.websockets')
+logger = logging.getLogger('djangofloor.celery')
 
 
 # noinspection PyCallingNonCallable
@@ -179,34 +179,45 @@ def import_signals_and_functions():
             import_module('%s.signals' % app)
         except ImportError:
             pass
+        except Exception as e:
+            logger.exception(e)
         try:
             import_module('%s.functions' % app)
         except ImportError:
             pass
+        except Exception as e:
+            logger.exception(e)
 
 
 @shared_task(serializer='json')
 def _server_signal_call(signal_name, window_info_dict, kwargs=None, from_client=False, serialized_client_topics=None,
                         to_server=False, queue=None):
-    if kwargs is None:
-        kwargs = {}
-    if serialized_client_topics:
-        signal_id = str(uuid.uuid4())
-        for topic in serialized_client_topics:
-            _call_ws_signal(signal_name, signal_id, topic, kwargs)
-    window_info = WindowInfo.from_dict(window_info_dict)
-    import_signals_and_functions()
-    if not to_server or signal_name not in REGISTERED_SIGNALS:
-        return
-    for connection in REGISTERED_SIGNALS[signal_name]:
-        assert isinstance(connection, SignalConnection)
-        if connection.get_queue(signal_name, window_info, kwargs) != queue or \
-                (from_client and not connection.is_allowed_to(window_info)):
-            continue
-        kwargs = connection.check(kwargs)
+    try:
         if kwargs is None:
-            continue
-        connection(window_info, **kwargs)
+            kwargs = {}
+        if serialized_client_topics:
+            signal_id = str(uuid.uuid4())
+            for topic in serialized_client_topics:
+                _call_ws_signal(signal_name, signal_id, topic, kwargs)
+        try:
+            window_info = WindowInfo.from_dict(window_info_dict)
+        except Exception as e:
+            logger.exception(e)
+            return
+        import_signals_and_functions()
+        if not to_server or signal_name not in REGISTERED_SIGNALS:
+            return
+        for connection in REGISTERED_SIGNALS[signal_name]:
+            assert isinstance(connection, SignalConnection)
+            if connection.get_queue(signal_name, window_info, kwargs) != queue or \
+                    (from_client and not connection.is_allowed_to(window_info)):
+                continue
+            kwargs = connection.check(kwargs)
+            if kwargs is None:
+                continue
+            connection(window_info, **kwargs)
+    except Exception as e:
+        logger.exception(e)
 
 
 @shared_task(serializer='json')

@@ -239,11 +239,11 @@ def gunicorn_ws():
     from djangofloor.websockets.aiohttp_runserver import run_server
 
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
-    parser.add_argument('-b', '--bind', default=settings.LISTEN_WS_ADDRESS)
+    parser.add_argument('-b', '--bind', default=settings.LISTEN_ADDRESS)
     options, args = parser.parse_known_args()
     host, sep, port = options.bind.partition(':')
-    host = host or 'localhost'
-    port = int(port) or 9000
+    host = host or settings.SERVER_NAME
+    port = int(port) or settings.SERVER_PORT
     return run_server(host, port)
 
 

@@ -29,7 +29,6 @@ def df_init_websocket(context):
     signed_token = signer.sign(ws_token)
     protocol = 'wss' if settings.USE_SSL else 'ws'
     site_name = '%s:%s' % (settings.SERVER_NAME, settings.SERVER_PORT)
-    site_name = 'localhost:9001'
     script = '$(document).ready(function() { $.df._wsConnect("%s://%s%s?token=%s"); });' % \
              (protocol, site_name, settings.WEBSOCKET_URL, signed_token)
     init_value = '<script type="application/javascript">%s</script>' % script

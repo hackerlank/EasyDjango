@@ -267,7 +267,15 @@ class DjangoAuthMiddleware(WindowInfoMiddleware):
             req._template_perms = result
             return result
 
+        def is_authenticated(req):
+            return req.user_pk is not None
+
+        def is_anonymous(req):
+            return req.user_pk is None
+
         window_info_cls.user = property(get_user)
+        window_info_cls.is_authenticated = is_authenticated
+        window_info_cls.is_anonymous = is_anonymous
         window_info_cls.has_perm = has_perm
         window_info_cls.perms = property(get_perms)
         window_info_cls.template_perms = property(get_template_perms)

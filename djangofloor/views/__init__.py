@@ -78,13 +78,16 @@ def signals(request):
         for function_name, connection in REGISTERED_FUNCTIONS.items():
             if connection.is_allowed_to(signal_request):
                 valid_function_names.append(function_name)
+    protocol = 'wss' if settings.USE_SSL else 'ws'
+    site_name = '%s:%s' % (settings.SERVER_NAME, settings.SERVER_PORT)
+
     # noinspection PyTypeChecker
     csrf_header_name = getattr(settings, 'CSRF_HEADER_NAME', 'HTTP_X_CSRFTOKEN')
     return TemplateResponse(request, 'djangofloor/signals.html',
                             {'SIGNALS': valid_signal_names,
                              'FUNCTIONS': valid_function_names,
                              'WS4REDIS_HEARTBEAT': settings.WS4REDIS_HEARTBEAT,
-                             'WEBSOCKET_URL': 'ws://localhost:9000' + settings.WEBSOCKET_URL,
+                             'WEBSOCKET_URL': '%s://%s%s' % (protocol, site_name, settings.WEBSOCKET_URL),
                              'CSRF_COOKIE_NAME': settings.CSRF_COOKIE_NAME,
                              'CSRF_HEADER_NAME': csrf_header_name[5:].replace('_', '-')},
                             content_type=__get_js_mimetype())
