@@ -3,14 +3,16 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 import logging
 
+# noinspection PyPackageRequirements
 import aiohttp
+# noinspection PyPackageRequirements
 import aiohttp.web
+# noinspection PyPackageRequirements
 import aiohttp.web_reqrep
-import asyncio
-
-import asyncio_redis
-from aiohttp import web
 from aiohttp_wsgi import WSGIHandler
+import asyncio
+# noinspection PyPackageRequirements
+import asyncio_redis
 from django.conf import settings
 from django.contrib.auth import get_user
 from django.core import signing
@@ -21,7 +23,6 @@ from djangofloor.utils import import_module
 from djangofloor.wsgi.wsgi_server import signer, WebsocketWSGIServer
 
 __author__ = 'Matthieu Gallet'
-
 logger = logging.getLogger('django.request')
 
 
@@ -55,7 +56,8 @@ def get_http_request(aiohttp_request):
 class WebsocketEchoHandler(object):
     @asyncio.coroutine
     def __call__(self, request):
-        ws = web.WebSocketResponse()
+        ws = aiohttp.web.WebSocketResponse()
+        # noinspection PyDeprecation
         ws.start(request)
         django_request = get_http_request(request)
         window_info = WebsocketWSGIServer.process_request(django_request)
@@ -66,6 +68,7 @@ class WebsocketEchoHandler(object):
         yield from subscriber.subscribe(channels)
         # noinspection PyBroadException
         try:
+            # noinspection PyTypeChecker
             yield from asyncio.gather(self.handle_ws(window_info, ws), self.handle_redis(window_info, ws, subscriber))
         except Exception as e:  # Don't do except: pass
             print(e)
@@ -78,6 +81,7 @@ class WebsocketEchoHandler(object):
         while True:
             msg_ws = yield from ws.receive()
             if msg_ws:
+                # noinspection PyTypeChecker
                 self.on_msg_from_ws(window_info, ws, msg_ws)
 
     @staticmethod
@@ -93,6 +97,7 @@ class WebsocketEchoHandler(object):
                 WebsocketWSGIServer.publish_message(window_info, msg.data)
                 # ws.send_str(msg.data + '/answer')
 
+    # noinspection PyUnusedLocal
     @staticmethod
     def on_msg_from_redis(window_info, ws, msg):
         message = msg.value
@@ -103,6 +108,7 @@ class WebsocketEchoHandler(object):
         while True:
             msg_redis = yield from subscriber.next_published()
             if msg_redis:
+                # noinspection PyTypeChecker
                 self.on_msg_from_redis(window_info, ws, msg_redis)
 
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
 import re
 import warnings
 
@@ -18,6 +19,7 @@ except ImportError:
     from funcsigs import signature
 
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('djangofloor.signals')
 
 REGISTERED_SIGNALS = {}
 REGISTERED_FUNCTIONS = {}
@@ -99,8 +101,9 @@ class Connection(object):
         self.queue = queue or settings.CELERY_DEFAULT_QUEUE
         self.accept_kwargs = False
         self.argument_types = {}
-        self.required_arguments_names = []
-        self.optional_arguments_names = []
+        self.required_arguments_names = set()
+        self.optional_arguments_names = set()
+        self.accepted_argument_names = set()
         self.signature_check(fn)
         # noinspection PyTypeChecker
         if hasattr(fn, '__name__'):
@@ -119,24 +122,36 @@ class Connection(object):
             elif param.kind == param.VAR_POSITIONAL:  # corresponds to "fn(*args)"
                 raise ValueError('Cannot connect a signal using the *%s syntax' % key)
             elif param.default == param.empty:  # "fn(foo)" : kind = POSITIONAL_ONLY or POSITIONAL_OR_KEYWORD
-                self.required_arguments_names.append(key)
+                self.required_arguments_names.add(key)
                 if param.annotation != param.empty and callable(param.annotation):
                     self.argument_types[key] = param.annotation
+                self.accepted_argument_names.add(key)
             else:  # "fn(foo=bar)" : kind = POSITIONAL_OR_KEYWORD or KEYWORD_ONLY
-                self.optional_arguments_names.append(key)
+                self.optional_arguments_names.add(key)
+                self.accepted_argument_names.add(key)
                 if param.annotation != param.empty and callable(param.annotation):
                     self.argument_types[key] = param.annotation
         if not window_info_is_present:
-            raise ValueError('Your signal %s must takes "window_info" as first argument' % self.path)
+            raise ValueError('%s(%s) must takes "window_info" as first argument' % (self.__class__.__name__, self.path))
 
     def check(self, kwargs):
+        cls = self.__class__.__name__
         for k, v in self.argument_types.items():
             try:
                 if k in kwargs:
                     kwargs[k] = v(kwargs[k])
             except ValueError:
-                raise ValueError(text_type(_('Invalid value %(value)s for argument %(arg)s.')) %
-                                     {'arg': k, 'value': v})
+                logger.info('%s("%s"): Invalid value %r for argument "%s".' % (cls, self.path, v, k))
+                return None
+        for k in self.required_arguments_names:
+            if k not in kwargs:
+                logger.info('%s("%s"): Missing required argument "%s".' % (cls, self.path, k))
+                return None
+        if not self.accept_kwargs:
+            for k in kwargs:
+                if k not in self.accepted_argument_names:
+                    logger.info('%s("%s"): Invalid argument "%s".' % (cls, self.path, k))
+                    return None
         return kwargs
 
     def __call__(self, window_info, **kwargs):
@@ -145,10 +160,10 @@ class Connection(object):
     def register(self):
         raise NotImplementedError
 
-    def get_queue(self, signal_name, window_info, original_kwargs):
+    def get_queue(self, path, window_info, original_kwargs):
         if callable(self.queue):
-            return self.queue(signal_name, window_info, original_kwargs)
-        return text_type(self.queue) or 'celery'
+            return self.queue(path, window_info, original_kwargs)
+        return text_type(self.queue) or settings.CELERY_DEFAULT_QUEUE
 
 
 class SignalConnection(Connection):

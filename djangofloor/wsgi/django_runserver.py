@@ -18,6 +18,7 @@ from djangofloor.wsgi.websocket import WebSocket
 from djangofloor.wsgi.wsgi_server import WebsocketWSGIServer, HandshakeError, UpgradeRequiredError
 
 util._hoppish = {}.__contains__
+__author__ = 'Matthieu Gallet'
 logger = logging.getLogger('django.request')
 
 

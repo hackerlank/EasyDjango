@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
+
 from django.contrib.auth.forms import SetPasswordForm
 from django.http import QueryDict
 from djangofloor.decorators import function, is_authenticated
 
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('djangofloor.signals')
 
 
 @function(path='djangofloor.validate.set_password', is_allowed_to=is_authenticated)

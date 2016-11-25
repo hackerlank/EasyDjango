@@ -45,7 +45,8 @@ except ImportError:
     from django.utils.importlib import import_module
 
 
-logger = logging.getLogger('djangofloor.signals')
+__author__ = 'Matthieu Gallet'
+logger = logging.getLogger('django.request')
 signer = signing.Signer()
 topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
 signal_decoder = import_string(settings.WS4REDIS_SIGNAL_DECODER)
@@ -143,8 +144,9 @@ class WebsocketWSGIServer(object):
                 import_signals_and_functions()
                 if function_name in REGISTERED_FUNCTIONS:
                     fn = REGISTERED_FUNCTIONS[function_name]
+                    queue = fn.get_queue(function_name, window_info, kwargs)
                     _server_function_call.apply_async([function_name, window_info.to_dict(), result_id, kwargs],
-                                                      queue=fn.queue or settings.CELERY_DEFAULT_QUEUE)
+                                                      queue=queue)
                 else:
                     logger.warning('Unknown function "%s" called by client "%s"' %
                                    (function_name, window_info.window_key))

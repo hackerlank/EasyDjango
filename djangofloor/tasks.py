@@ -19,6 +19,7 @@ from djangofloor.utils import import_module, RemovedInDjangoFloor110Warning
 from djangofloor.wsgi.exceptions import NoWindowKeyException
 
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('djangofloor.signals')
 
 SERVER = [[]]
 SESSION = [[]]
@@ -28,7 +29,6 @@ BROADCAST = [[]]
 
 _signal_encoder = import_string(settings.WS4REDIS_SIGNAL_ENCODER)
 _topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
-logger = logging.getLogger('djangofloor.signals')
 
 
 # noinspection PyCallingNonCallable
@@ -118,8 +118,7 @@ def _call_signal(window_info, signal_name, to=None, kwargs=None, countdown=None,
     if countdown:
         celery_kwargs['countdown'] = countdown
     import_signals_and_functions()
-    queues = {x.get_queue(signal_name, window_info, kwargs)
-              for x in REGISTERED_SIGNALS.get(signal_name, [])}
+    queues = {x.get_queue(signal_name, window_info, kwargs) for x in REGISTERED_SIGNALS.get(signal_name, [])}
     window_info_as_dict = None
     if window_info:
         window_info_as_dict = window_info.to_dict()
@@ -192,6 +191,8 @@ def import_signals_and_functions():
 @shared_task(serializer='json')
 def _server_signal_call(signal_name, window_info_dict, kwargs=None, from_client=False, serialized_client_topics=None,
                         to_server=False, queue=None):
+    logger.info('Signal "%s" called on queue "%s" to topics %s (from client?: %s, to server?: %s)' %
+                (signal_name, queue, serialized_client_topics, from_client, to_server))
     try:
         if kwargs is None:
             kwargs = {}
@@ -199,11 +200,7 @@ def _server_signal_call(signal_name, window_info_dict, kwargs=None, from_client=
             signal_id = str(uuid.uuid4())
             for topic in serialized_client_topics:
                 _call_ws_signal(signal_name, signal_id, topic, kwargs)
-        try:
-            window_info = WindowInfo.from_dict(window_info_dict)
-        except Exception as e:
-            logger.exception(e)
-            return
+        window_info = WindowInfo.from_dict(window_info_dict)
         import_signals_and_functions()
         if not to_server or signal_name not in REGISTERED_SIGNALS:
             return
@@ -222,19 +219,24 @@ def _server_signal_call(signal_name, window_info_dict, kwargs=None, from_client=
 
 @shared_task(serializer='json')
 def _server_function_call(function_name, window_info_dict, result_id, kwargs=None):
-    if kwargs is None:
-        kwargs = {}
-    window_info = WindowInfo.from_dict(window_info_dict)
-    import_signals_and_functions()
-    connection = REGISTERED_FUNCTIONS[function_name]
-    assert isinstance(connection, FunctionConnection)
-    # noinspection PyBroadException
+    logger.info('Function %s called from client.' % function_name)
+    e, result, window_info = None, None, None
     try:
-        result = connection(window_info, **kwargs)
-        e = None
+        if kwargs is None:
+            kwargs = {}
+        window_info = WindowInfo.from_dict(window_info_dict)
+        import_signals_and_functions()
+        connection = REGISTERED_FUNCTIONS[function_name]
+        assert isinstance(connection, FunctionConnection)
+        kwargs = connection.check(kwargs)
+        if kwargs is not None:
+            # noinspection PyBroadException
+            result = connection(window_info, **kwargs)
     except Exception as e:
+        logger.exception(e)
         result = None
-    _return_ws_function_result(window_info, result_id, result, exception=e)
+    if window_info:
+        _return_ws_function_result(window_info, result_id, result, exception=e)
 
 
 # TODO remove the following functions

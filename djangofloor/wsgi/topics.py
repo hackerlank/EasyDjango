@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
+
 from django.contrib.auth import get_user_model
 from django.db.models import Model
 from djangofloor.wsgi.window_info import Session
@@ -8,6 +10,7 @@ from djangofloor.wsgi.window_info import Session
 from djangofloor.tasks import BROADCAST, USER, WINDOW
 
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('djangofloor.signals')
 
 
 def serialize_topic(window_info, obj):

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, login as auth_login
 from django.contrib.auth.decorators import login_required
@@ -16,6 +18,7 @@ from djangofloor.decorators import validate_form, everyone
 from djangofloor.tasks import set_websocket_topics
 
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('django.requests')
 
 validate_form(form_cls=UserCreationForm, path='djangofloor.validate.user_creation', is_allowed_to=everyone)
 validate_form(form_cls=PasswordResetForm,

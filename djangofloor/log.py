@@ -82,7 +82,7 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
                'django.request': {'handlers': [], 'level': 'INFO', 'propagate': True},
                'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'django.server': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
-               'djangofloor.celery': {'handlers': [], 'level': 'WARN', 'propagate': True},
+               'djangofloor.signals': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'aiohttp.access': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
                'gunicorn.access': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
                'gunicorn.error': {'handlers': [], 'level': 'WARN', 'propagate': True},
@@ -99,7 +99,7 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
         logging.captureWarnings(True)
         loggers['django.request'].update({'level': 'DEBUG'})
         loggers['py.warnings'].update({'level': 'INFO'})
-        loggers['djangofloor.celery'].update({'level': 'INFO'})
+        loggers['djangofloor.signals'].update({'level': 'INFO'})
         handlers.update({'stdout': {'class': 'logging.StreamHandler', 'level': 'DEBUG',
                                     'stream': 'ext://sys.stdout', 'formatter': fmt_stdout}})
         root.update({'handlers': ['stdout'], 'level': 'INFO'})

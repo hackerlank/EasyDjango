@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
 import warnings
 
 from django import template
@@ -19,6 +20,7 @@ from djangofloor.wsgi.wsgi_server import signer
 
 __author__ = 'Matthieu Gallet'
 register = template.Library()
+logger = logging.getLogger('django.requests')
 
 
 @register.simple_tag(takes_context=True)

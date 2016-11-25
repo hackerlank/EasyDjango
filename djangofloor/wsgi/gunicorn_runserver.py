@@ -25,8 +25,7 @@ from django.utils import six
 from djangofloor.wsgi.wsgi_server import WebsocketWSGIServer
 
 __author__ = 'Matthieu Gallet'
-
-logger = logging.getLogger('djangofloor.websocket')
+logger = logging.getLogger('django.request')
 
 if six.PY3:
     # noinspection PyShadowingBuiltins

@@ -7,6 +7,8 @@
 """
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
+
 import pip
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -33,6 +35,7 @@ except ImportError:
     psutil = None
 
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('django.requests')
 
 
 class MonitoringCheck(object):

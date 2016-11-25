@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
 from socket import error as socket_error
 
 from django.http import BadHeaderError
 
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('django.request')
 
 
 # noinspection PyClassHasNoInit

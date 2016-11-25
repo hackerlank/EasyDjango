@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
+
 from django.views.generic import TemplateView
 
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('django.requests')
 
 
 class IndexView(TemplateView):

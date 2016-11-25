@@ -220,9 +220,9 @@ def gunicorn():
     if not env_set:
         os.environ['DF_CONF_SET'] = '1'
         __set_default_option(options, 'bind')
-        # __set_default_option(options, 'worker_class')
-        # if settings.DEBUG and not options.reload:
-        #     sys.argv += ['--reload']
+        __set_default_option(options, 'worker_class')
+        if settings.DEBUG and not options.reload:
+            sys.argv += ['--reload']
     application = 'djangofloor.wsgi.gunicorn_runserver:application'
     if application not in sys.argv:
         sys.argv.append(application)

@@ -10,6 +10,7 @@ from djangofloor.tasks import scall, BROADCAST, SERVER, WINDOW
 
 __author__ = 'Matthieu Gallet'
 logger = logging.getLogger('django.request')
+logger2 = logging.getLogger('djangofloor.signals')
 
 
 # noinspection PyUnusedLocal
@@ -27,6 +28,10 @@ def print_sig1(window_info, content=''):
     logger.info('Debug info message [%r]' % content)
     logger.warn('Debug warn message [%r]' % content)
     logger.error('Debug error message [%r]' % content)
+    logger2.debug('Debug log message / logger2 [%r]' % content)
+    logger2.info('Debug info message / logger2 [%r]' % content)
+    logger2.warn('Debug warn message / logger2 [%r]' % content)
+    logger2.error('Debug error message / logger2 [%r]' % content)
     scall(window_info, 'demo.print_sig2', to=[BROADCAST, SERVER], content=content)
 
 
@@ -34,6 +39,7 @@ def print_sig1(window_info, content=''):
 def print_sig2(window_info, content=''):
     scall(window_info, 'notify', to=[BROADCAST, SERVER], content="Server notification [éà] [%r]" % content,
           level='warning', timeout=2, style='notification')
+    1/0
 
 
 @signal(is_allowed_to=everyone, path='demo.chat.receive')

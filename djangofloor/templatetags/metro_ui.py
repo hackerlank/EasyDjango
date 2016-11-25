@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
+
 from django import template
 from django.template import Context
 from django.template.loader import render_to_string
 
 register = template.Library()
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('django.requests')
 
 
 @register.filter

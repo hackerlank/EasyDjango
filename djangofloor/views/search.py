@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
+import logging
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -16,6 +18,7 @@ from djangofloor.decorators import validate_form, everyone
 from djangofloor.tasks import set_websocket_topics
 
 __author__ = 'Matthieu Gallet'
+logger = logging.getLogger('django.requests')
 
 
 @validate_form(path='djangofloor.validate.search', is_allowed_to=everyone)

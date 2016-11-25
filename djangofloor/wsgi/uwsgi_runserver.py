@@ -9,6 +9,7 @@ from django.core.wsgi import get_wsgi_application
 from djangofloor.wsgi.exceptions import WebSocketError
 from djangofloor.wsgi.wsgi_server import WebsocketWSGIServer
 
+__author__ = 'Matthieu Gallet'
 logger = logging.getLogger('django.request')
 
 

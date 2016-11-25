@@ -23,15 +23,15 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding=
 
 
 extras_requirements = {}
-install_requirements = ['django>=1.8', 'celery', 'django-bootstrap3', 'redis', 'pip', 'gunicorn']
+install_requirements = ['django>=1.8', 'celery', 'django-bootstrap3', 'redis', 'pip']
 if python_version < (3, 3):
     install_requirements.append('funcsigs')
 if python_version >= (3, 4):
     install_requirements += ['aiohttp-wsgi', 'aiohttp', 'asyncio_redis']
+elif python_version < (2, 8):
+    install_requirements += ['gunicorn']
 
-entry_points = {'console_scripts': [
-    'djangofloor-createproject = djangofloor.scripts:create_project'
-                                     ]}
+entry_points = {'console_scripts': ['djangofloor-createproject = djangofloor.scripts:create_project']}
 extras_requirements['deb'] = ['stdeb>=0.8.5']
 extras_requirements['extra'] = ['django-pipeline', 'django-debug-toolbar', 'django-redis-sessions', 'psutil']
 
@@ -53,8 +53,7 @@ setup(
     extras_require=extras_requirements,
     setup_requires=[],
     classifiers=['Development Status :: 4 - Beta', 'Operating System :: MacOS :: MacOS X',
-                 'Operating System :: POSIX :: BSD',
-                 'Operating System :: POSIX :: Linux', 'Operating System :: Unix',
+                 'Operating System :: POSIX :: BSD', 'Operating System :: POSIX :: Linux', 'Operating System :: Unix',
                  'License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1 (CeCILL-2.1)',
                  'Programming Language :: Python :: 2.7',
                  'Programming Language :: Python :: 3.4', 'Programming Language :: Python :: 3.5',
