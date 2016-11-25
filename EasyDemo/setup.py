@@ -21,13 +21,14 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding=
 entry_points = dict(console_scripts=['easydemo-ctl = djangofloor.scripts:control',
                                      'easydemo-celery = djangofloor.scripts:celery',
                                      'easydemo-django = djangofloor.scripts:django',
+                                     'easydemo-ws = djangofloor.scripts:gunicorn_ws',
                                      'easydemo-uwsgi = djangofloor.scripts:uwsgi',
                                      'easydemo-gunicorn = djangofloor.scripts:gunicorn', ])
 
 setup(
     name='EasyDemo',
     version=version,
-    description='No description yet.',
+    description='Simple demo for the DjangoFloor project.',
     long_description=long_description,
     license='CeCILL-B',
     url='',

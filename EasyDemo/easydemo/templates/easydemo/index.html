@@ -13,7 +13,7 @@
         Test slow Signals (specific Celery queue)
     </button>
 </div>
-<form id="testForm" onchange="$.df.validateForm(this, 'validate.test');" action="?" method="post">
+<form id="testForm" onchange="$.df.validateForm(this, 'validate_test');" action="?" method="post">
     {% csrf_token %}
     {% bootstrap_form form %}
     <input type="submit" class="btn btn-success" value="Valider">

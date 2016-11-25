@@ -7,13 +7,13 @@ from djangofloor.decorators import validate_form, everyone
 __author__ = 'Matthieu Gallet'
 
 
-@validate_form(path='validate.test', is_allowed_to=everyone)
+@validate_form(path='validate_test', is_allowed_to=everyone)
 class TestForm(forms.Form):
     email = forms.EmailField(label='Email', help_text='Please enter your e-mail')
     name = forms.CharField(label='Name', help_text='Please enter your name')
     age = forms.IntegerField(label='Age')
 
 
-@validate_form(path='validate.loginform', is_allowed_to=everyone)
+@validate_form(path='validate_loginform', is_allowed_to=everyone)
 class ChatLoginForm(forms.Form):
     name = forms.CharField(label='Name', help_text='Please enter your name')

@@ -26,6 +26,8 @@ extras_requirements = {}
 install_requirements = ['django>=1.8', 'celery', 'django-bootstrap3', 'redis', 'pip', 'gunicorn']
 if python_version < (3, 3):
     install_requirements.append('funcsigs')
+if python_version >= (3, 4):
+    install_requirements.append('aiohttp-wsgi', 'aiohttp', 'asyncio_redis')
 
 entry_points = {'console_scripts': [
     'djangofloor-ctl = djangofloor.scripts:control',

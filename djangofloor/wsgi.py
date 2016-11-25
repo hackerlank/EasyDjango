@@ -59,3 +59,14 @@ def gunicorn_application(environ, start_response):
     if environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
         return gunicorn_ws_application(environ, start_response)
     return http_application(environ, start_response)
+
+
+def aiohttp_application(environ, start_response):
+    """
+    Return a WSGI application which is patched to be used with websockets.
+
+    :return: a HTTP app, or a WS app (depending on the URL path)
+    """
+    if environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
+        return gunicorn_ws_application(environ, start_response)
+    return http_application(environ, start_response)

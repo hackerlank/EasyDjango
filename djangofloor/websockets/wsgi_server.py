@@ -96,8 +96,8 @@ class WebsocketWSGIServer(object):
         if environ.get('HTTP_UPGRADE', '').lower() != 'websocket':
             raise HandshakeError('Client does not wish to upgrade to a websocket')
 
-    # noinspection PyMethodMayBeStatic
-    def process_request(self, request):
+    @staticmethod
+    def process_request(request):
         request.session = None
         request.user = None
         session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME, None)
@@ -113,8 +113,8 @@ class WebsocketWSGIServer(object):
             pass
         return window_info
 
-    # noinspection PyMethodMayBeStatic
-    def process_subscriptions(self, request):
+    @staticmethod
+    def process_subscriptions(request):
         channels = get_websocket_topics(request)
         echo_message = bool(request.GET.get('echo', ''))
         return channels, echo_message
@@ -146,13 +146,13 @@ class WebsocketWSGIServer(object):
                 else:
                     logger.warning('Unknown function "%s" called by client "%s"' %
                                    (function_name, window_info.window_key))
-        except TypeError:
-            pass
+        except TypeError as e:
+            logger.exception(e)
         except ValueError:
             logger.error('Invalid Websocket JSON message %r' % message)
             pass
-        except KeyError:
-            pass
+        except KeyError as e:
+            logger.exception(e)
 
     def __call__(self, environ, start_response):
         """
@@ -205,6 +205,12 @@ class WebsocketWSGIServer(object):
     def get_ws_file_descriptor(self, websocket):
         raise NotImplementedError
 
+    def ws_send_bytes(self, websocket, message):
+        raise NotImplementedError
+
+    def ws_receive_bytes(self, websocket):
+        raise NotImplementedError
+
     def process_websocket(self, window_info, websocket, channels):
         websocket_fd = self.get_ws_file_descriptor(websocket)
         listening_fds = [websocket_fd]
@@ -226,17 +232,17 @@ class WebsocketWSGIServer(object):
                 self.flush_websocket(websocket)
             for fd in ready:
                 if fd == websocket_fd:
-                    message = websocket.receive()
+                    message = self.ws_receive_bytes(websocket)
                     self.publish_message(window_info, message)
                 elif fd == redis_fd:
                     kind, topic, message = pubsub.parse_response()
                     kind = kind.decode('utf-8')
                     if kind == 'message':
-                        websocket.send(message)
+                        self.ws_send_bytes(websocket, message)
                 else:
                     logger.error('Invalid file descriptor: {0}'.format(fd))
             # Check again that the websocket is closed before sending the heartbeat,
             # because the websocket can closed previously in the loop.
             if settings.WS4REDIS_HEARTBEAT and not websocket.closed and not ready:
-                websocket.send(settings.WS4REDIS_HEARTBEAT)
+                self.ws_send_bytes(websocket, settings.WS4REDIS_HEARTBEAT.encode('utf-8'))
         logger.error('websocket closed')

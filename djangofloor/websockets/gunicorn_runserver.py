@@ -42,7 +42,7 @@ class GunicornWebsocketServer(WebsocketWSGIServer):
         pass
 
     def upgrade_websocket(self, environ, start_response):
-        return environ["wsgi.websocket"]
+        return environ['wsgi.websocket']
 
     def select(self, rlist, wlist, xlist, timeout=None):
         # return gevent.select.select(rlist, wlist, xlist, timeout)
@@ -50,3 +50,9 @@ class GunicornWebsocketServer(WebsocketWSGIServer):
 
     def verify_client(self, ws):
         pass
+
+    def ws_send_bytes(self, websocket, message):
+        return websocket.send(message)
+
+    def ws_receive_bytes(self, websocket):
+        return websocket.receive()

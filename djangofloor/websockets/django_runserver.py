@@ -67,6 +67,12 @@ class WebsocketRunServer(WebsocketWSGIServer):
     def flush_websocket(self, websocket):
         return websocket.flush()
 
+    def ws_send_bytes(self, websocket, message):
+        return websocket.send(message)
+
+    def ws_receive_bytes(self, websocket):
+        return websocket.receive()
+
 
 def run(addr, port, wsgi_handler, ipv6=False, threading=False):
     """

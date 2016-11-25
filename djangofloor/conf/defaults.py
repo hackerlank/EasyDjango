@@ -406,6 +406,7 @@ TIME_ZONE = 'Europe/Paris'
 
 # djangofloor
 LISTEN_ADDRESS = 'localhost:9000'
+LISTEN_WS_ADDRESS = 'localhost:9001'
 LOCAL_PATH = './django_data'
 __split_path = __file__.split(os.path.sep)
 if 'lib' in __split_path:

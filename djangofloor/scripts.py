@@ -98,7 +98,7 @@ def set_env():
     # django settings
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangofloor.conf.settings')
     # project name
-    script_re = re.match(r'^([\w_\-.]+)-(ctl|gunicorn|celery|uwsgi|django)(\.py|\.pyc|)$',
+    script_re = re.match(r'^([\w_\-.]+)-(ctl|gunicorn|celery|uwsgi|django|ws)(\.py|\.pyc|)$',
                          os.path.basename(sys.argv[0]))
     if script_re:
         conf_name = '%s:%s' % (script_re.group(1), script_re.group(2))
@@ -124,9 +124,6 @@ def control():
     """
     conf_name = set_env()
     project_name = conf_name.partition(':')[0]
-    import django as base_django
-    if base_django.VERSION[:2] >= (1, 7):
-        base_django.setup()
     try:
         # noinspection PyPackageRequirements
         from gevent import monkey
@@ -135,12 +132,11 @@ def control():
         # noinspection PyUnusedLocal
         monkey = None
     from django.conf import settings
-    from django.utils.translation import ugettext as _
     command_commands = settings.COMMON_COMMANDS
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''
     script, command = command_commands.get(cmd, (None, None))
-    invalid_script = _('Invalid script name: %(cmd)s') % {'cmd': script}
-    invalid_command = _('Usage: %(name)s %(cmd)s') % {'name': sys.argv[0], 'cmd': '|'.join(command_commands)}
+    invalid_script = 'Invalid script name: %(cmd)s' % {'cmd': script}
+    invalid_command = 'Usage: %(name)s %(cmd)s' % {'name': sys.argv[0], 'cmd': '|'.join(command_commands)}
     if cmd not in command_commands:
         print(invalid_command)
         return 1
@@ -224,13 +220,31 @@ def gunicorn():
     if not env_set:
         os.environ['DF_CONF_SET'] = '1'
         __set_default_option(options, 'bind')
-        __set_default_option(options, 'worker_class')
+        # __set_default_option(options, 'worker_class')
         # if settings.DEBUG and not options.reload:
         #     sys.argv += ['--reload']
     application = 'djangofloor.wsgi:gunicorn_application'
     if application not in sys.argv:
         sys.argv.append(application)
     return run()
+
+
+def gunicorn_ws():
+    set_env()
+    from django.conf import settings
+    import django as base_django
+    if base_django.VERSION[:2] >= (1, 7):
+        base_django.setup()
+    logging.config.dictConfig(settings.LOGGING)
+    from djangofloor.websockets.aiohttp_runserver import run_server
+
+    parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
+    parser.add_argument('-b', '--bind', default=settings.LISTEN_WS_ADDRESS)
+    options, args = parser.parse_known_args()
+    host, sep, port = options.bind.partition(':')
+    host = host or 'localhost'
+    port = int(port) or 9000
+    return run_server(host, port)
 
 
 def celery():

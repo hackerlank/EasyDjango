@@ -1,16 +1,12 @@
 TODO list
 =========
 
-https://bitbucket.org/noppo/gevent-websocket
-
-gunicorn -k "geventwebsocket.gunicorn.workers.GeventWebSocketWorker" wsgi:websocket_app
-
-
   * test with Python 3
   * use uwsgi
   * write doc
   * write Vagrant files
-  
+
+  * allow to use dots in JS signal names
 Example project:
 
   * REST API

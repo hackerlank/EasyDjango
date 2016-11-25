@@ -82,13 +82,15 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
                'django.request': {'handlers': [], 'level': 'INFO', 'propagate': True},
                'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'django.server': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
+               'aiohttp.access': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
                'gunicorn.access': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
                'gunicorn.error': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'geventwebsocket.handler': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
                'pip.vcs': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'py.warnings': {'handlers': [], 'level': 'WARN', 'propagate': True}, }
     root = {'handlers': [], 'level': 'DEBUG'}
-    handlers = {}
+    handlers = {'access': {'class': 'logging.StreamHandler', 'level': 'INFO',
+                                    'stream': 'ext://sys.stdout', 'formatter': fmt_server}}
     config = {'version': 1, 'disable_existing_loggers': True, 'formatters': formatters,
               'handlers': handlers, 'loggers': loggers, 'root': root}
     if debug:
@@ -96,21 +98,15 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
         logging.captureWarnings(True)
         loggers['django.request'].update({'level': 'DEBUG'})
         loggers['py.warnings'].update({'level': 'INFO'})
-        handlers.update({'access': {'class': 'logging.StreamHandler', 'level': 'INFO',
-                                    'stream': 'ext://sys.stdout', 'formatter': fmt_server},
-                         'stderr': {'class': 'logging.StreamHandler', 'level': 'ERROR',
-                                    'stream': 'ext://sys.stderr', 'formatter': fmt_stderr},
-                         'stdout': {'class': 'logging.StreamHandler', 'level': 'DEBUG',
+        handlers.update({'stdout': {'class': 'logging.StreamHandler', 'level': 'DEBUG',
                                     'stream': 'ext://sys.stdout', 'formatter': fmt_stdout}})
-        root.update({'handlers': ['stdout', 'stderr'], 'level': 'INFO'})
+        root.update({'handlers': ['stdout'], 'level': 'INFO'})
         return config
 
     error_handler = {'class': 'logging.StreamHandler', 'stream': 'ext://sys.stderr', 'formatter': fmt_stderr}
-    handlers.update({'access': {'class': 'logging.StreamHandler', 'level': 'INFO',
-                                'stream': 'ext://sys.stdout', 'formatter': fmt_server},
-                     "mail_admins": {'class': 'djangofloor.log.AdminEmailHandler', 'level': 'ERROR', },
-                     'info': {'class': 'logging.StreamHandler', 'level': 'INFO',
-                              'stream': 'ext://sys.stdout', 'formatter': fmt_stdout}})
+    handlers.update({"mail_admins": {'class': 'djangofloor.log.AdminEmailHandler', 'level': 'ERROR', },
+                     'info': {'class': 'logging.StreamHandler', 'level': 'INFO', 'stream': 'ext://sys.stdout',
+                              'formatter': fmt_stdout}})
     if log_directory is not None:
         ensure_dir(log_directory, parent=False)
         error_handler = {'class': 'logging.handlers.RotatingFileHandler', 'maxBytes': 1000000, 'backupCount': 3,
