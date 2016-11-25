@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, absolute_import
 
-import json
 import logging
 
 import aiohttp
@@ -17,9 +16,9 @@ from django.contrib.auth import get_user
 from django.core import signing
 from django.core.wsgi import get_wsgi_application
 from django.http import HttpRequest
-from djangofloor.request import WindowInfo
+from djangofloor.wsgi.window_info import WindowInfo
 from djangofloor.utils import import_module
-from djangofloor.websockets.wsgi_server import signer, WebsocketWSGIServer, _get_redis_connection
+from djangofloor.wsgi.wsgi_server import signer, WebsocketWSGIServer
 
 __author__ = 'Matthieu Gallet'
 
@@ -121,7 +120,7 @@ def run_server(host, port):
 
     f = loop.create_server(handler, host=host, port=port, )
     srv = loop.run_until_complete(f)
-    print("Server started at {sock[0]}:{sock[1]}".format(sock=srv.sockets[0].getsockname()))
+    logger.info("Server started at {sock[0]}:{sock[1]}".format(sock=srv.sockets[0].getsockname()))
     try:
         loop.run_forever()
     except KeyboardInterrupt:

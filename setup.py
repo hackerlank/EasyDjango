@@ -30,11 +30,6 @@ if python_version >= (3, 4):
     install_requirements += ['aiohttp-wsgi', 'aiohttp', 'asyncio_redis']
 
 entry_points = {'console_scripts': [
-    'djangofloor-ctl = djangofloor.scripts:control',
-    'djangofloor-celery = djangofloor.scripts:celery',
-    'djangofloor-django = djangofloor.scripts:django',
-    'djangofloor-uwsgi = djangofloor.scripts:uwsgi',
-    'djangofloor-gunicorn = djangofloor.scripts:gunicorn',
     'djangofloor-createproject = djangofloor.scripts:create_project'
                                      ]}
 extras_requirements['deb'] = ['stdeb>=0.8.5']

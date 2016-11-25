@@ -15,10 +15,10 @@ logger = logging.getLogger('django.request')
 # noinspection PyUnusedLocal
 @signal(is_allowed_to=everyone, path='demo.slow_signal', queue='slow')
 def slow_signal(window_info, content=''):
-    logger.warn('wait for 10 seconds…')
+    logger.warn('wait for 10 seconds [éà]…')
     time.sleep(10)
     logger.warn('10 seconds: done.')
-    scall(window_info, 'demo.print_sig2', to=[BROADCAST, SERVER], content='slow result')
+    scall(window_info, 'demo.print_sig2', to=[BROADCAST, SERVER], content='slow result [éà]')
 
 
 @signal(is_allowed_to=everyone, path='demo.print_sig1')
@@ -32,7 +32,7 @@ def print_sig1(window_info, content=''):
 
 @signal(is_allowed_to=everyone, path='demo.print_sig2')
 def print_sig2(window_info, content=''):
-    scall(window_info, 'notify', to=[BROADCAST, SERVER], content="Server notification [%r]" % content,
+    scall(window_info, 'notify', to=[BROADCAST, SERVER], content="Server notification [éà] [%r]" % content,
           level='warning', timeout=2, style='notification')
 
 

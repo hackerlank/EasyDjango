@@ -15,7 +15,7 @@ from django.utils.safestring import mark_safe
 # noinspection PyUnresolvedReferences
 from django.utils.six.moves.urllib.parse import urljoin, urlparse
 from djangofloor.utils import RemovedInDjangoFloor110Warning
-from djangofloor.websockets.wsgi_server import signer
+from djangofloor.wsgi.wsgi_server import signer
 
 __author__ = 'Matthieu Gallet'
 register = template.Library()

@@ -24,7 +24,7 @@ from django.utils.six.moves import http_client
 from djangofloor.decorators import REGISTERED_FUNCTIONS
 from redis import StrictRedis
 
-from djangofloor.request import WindowInfo
+from djangofloor.wsgi.window_info import WindowInfo
 # noinspection PyProtectedMember
 from djangofloor.tasks import _call_signal, SERVER, _server_function_call, import_signals_and_functions
 
@@ -33,7 +33,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.core.exceptions import PermissionDenied
 from django import http
 from django.utils.encoding import force_str
-from djangofloor.websockets.exceptions import WebSocketError, HandshakeError, UpgradeRequiredError
+from djangofloor.wsgi.exceptions import WebSocketError, HandshakeError, UpgradeRequiredError
 
 try:
     # django >= 1.8 && python >= 2.7
@@ -45,7 +45,7 @@ except ImportError:
     from django.utils.importlib import import_module
 
 
-logger = logging.getLogger('django.request')
+logger = logging.getLogger('djangofloor.signals')
 signer = signing.Signer()
 topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
 signal_decoder = import_string(settings.WS4REDIS_SIGNAL_DECODER)
@@ -121,6 +121,8 @@ class WebsocketWSGIServer(object):
 
     @staticmethod
     def publish_message(window_info, message):
+        if isinstance(message, six.binary_type):
+            message = message.decode('utf-8')
         if not message:
             return
         if message == settings.WS4REDIS_HEARTBEAT:

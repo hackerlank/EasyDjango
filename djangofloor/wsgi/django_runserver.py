@@ -5,15 +5,17 @@ import select
 from hashlib import sha1
 from wsgiref import util
 
+from django.conf import settings
 from django.core.management.commands import runserver
 from django.core.servers.basehttp import WSGIServer, WSGIRequestHandler, ServerHandler
+from django.core.wsgi import get_wsgi_application
 from django.utils.encoding import force_str
 from django.utils import six
 # noinspection PyUnresolvedReferences
 from django.utils.six.moves import socketserver
 
-from djangofloor.websockets.websocket import WebSocket
-from djangofloor.websockets.wsgi_server import WebsocketWSGIServer, HandshakeError, UpgradeRequiredError
+from djangofloor.wsgi.websocket import WebSocket
+from djangofloor.wsgi.wsgi_server import WebsocketWSGIServer, HandshakeError, UpgradeRequiredError
 
 util._hoppish = {}.__contains__
 logger = logging.getLogger('django.request')
@@ -89,3 +91,18 @@ def run(addr, port, wsgi_handler, ipv6=False, threading=False):
     httpd.set_app(wsgi_handler)
     httpd.serve_forever()
 runserver.run = run
+
+
+django_ws_application = WebsocketRunServer()
+http_application = get_wsgi_application()
+
+
+def django_application(environ, start_response):
+    """
+    Return a WSGI application which is patched to be used with websockets.
+
+    :return: a HTTP app, or a WS app (depending on the URL path)
+    """
+    if environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
+        return django_ws_application(environ, start_response)
+    return http_application(environ, start_response)

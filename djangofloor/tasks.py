@@ -14,9 +14,9 @@ from django.utils.six import text_type
 from redis import StrictRedis
 
 from djangofloor.decorators import REGISTERED_SIGNALS, SignalConnection, REGISTERED_FUNCTIONS, FunctionConnection
-from djangofloor.request import WindowInfo
+from djangofloor.wsgi.window_info import WindowInfo
 from djangofloor.utils import import_module, RemovedInDjangoFloor110Warning
-from djangofloor.websockets.exceptions import NoWindowKeyException
+from djangofloor.wsgi.exceptions import NoWindowKeyException
 
 __author__ = 'Matthieu Gallet'
 
@@ -28,7 +28,7 @@ BROADCAST = [[]]
 
 _signal_encoder = import_string(settings.WS4REDIS_SIGNAL_ENCODER)
 _topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
-logger = logging.getLogger('djangofloor.celery')
+logger = logging.getLogger('djangofloor.signals')
 
 
 # noinspection PyCallingNonCallable
@@ -251,7 +251,7 @@ def get_signal_encoder():
 
 def get_signal_decoder():
     warnings.warn('djangofloor.tasks.get_signal_decoder is deprecated', RemovedInDjangoFloor110Warning)
-    from djangofloor.websockets.wsgi_server import signal_decoder
+    from djangofloor.wsgi.wsgi_server import signal_decoder
     return signal_decoder
 
 

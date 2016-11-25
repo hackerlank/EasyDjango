@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.utils.lru_cache import lru_cache
 from django.utils.encoding import force_text
 from django.utils.six import binary_type
-from djangofloor.request import WindowInfo, Session
+from djangofloor.wsgi.window_info import WindowInfo, Session
 from djangofloor.tasks import SESSION, WINDOW, BROADCAST, USER, call
 from djangofloor.utils import RemovedInDjangoFloor110Warning
 

@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 import logging
 
+import redis.connection
 import uwsgi
 import gevent.select
-from djangofloor.websockets.exceptions import WebSocketError
-from djangofloor.websockets.wsgi_server import WebsocketWSGIServer
+from django.conf import settings
+from django.core.wsgi import get_wsgi_application
+from djangofloor.wsgi.exceptions import WebSocketError
+from djangofloor.wsgi.wsgi_server import WebsocketWSGIServer
 
 logger = logging.getLogger('django.request')
 
 
-class uWSGIWebsocket(object):
+class UWSGIWebsocket(object):
     def __init__(self):
         self._closed = False
 
@@ -54,7 +57,7 @@ class uWSGIWebsocket(object):
 class uWSGIWebsocketServer(WebsocketWSGIServer):
     def upgrade_websocket(self, environ, start_response):
         uwsgi.websocket_handshake(environ['HTTP_SEC_WEBSOCKET_KEY'], environ.get('HTTP_ORIGIN', ''))
-        return uWSGIWebsocket()
+        return UWSGIWebsocket()
 
     def get_ws_file_descriptor(self, websocket):
         return websocket.get_file_descriptor()
@@ -70,3 +73,19 @@ class uWSGIWebsocketServer(WebsocketWSGIServer):
 
     def ws_receive_bytes(self, websocket):
         return websocket.receive()
+
+
+redis.connection.socket = gevent.socket
+http_application = get_wsgi_application()
+ws_application = uWSGIWebsocketServer()
+
+
+def application(environ, start_response):
+    """
+    Return a WSGI application which is patched to be used with websockets.
+
+    :return: a HTTP app, or a WS app (depending on the URL path)
+    """
+    if environ.get('PATH_INFO', '').startswith(settings.WEBSOCKET_URL):
+        return ws_application(environ, start_response)
+    return http_application(environ, start_response)

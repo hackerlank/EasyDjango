@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 from django.contrib.auth import get_user_model
 from django.db.models import Model
-from djangofloor.request import Session
+from djangofloor.wsgi.window_info import Session
 
 from djangofloor.tasks import BROADCAST, USER, WINDOW
 

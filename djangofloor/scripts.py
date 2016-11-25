@@ -98,7 +98,7 @@ def set_env():
     # django settings
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangofloor.conf.settings')
     # project name
-    script_re = re.match(r'^([\w_\-.]+)-(ctl|gunicorn|celery|uwsgi|django|ws)(\.py|\.pyc|)$',
+    script_re = re.match(r'^([\w_\-.]+)-(\w+)(\.py|\.pyc|)$',
                          os.path.basename(sys.argv[0]))
     if script_re:
         conf_name = '%s:%s' % (script_re.group(1), script_re.group(2))
@@ -140,7 +140,7 @@ def control():
     if cmd not in command_commands:
         print(invalid_command)
         return 1
-    scripts = {'django': django, 'gunicorn': gunicorn, 'celery': celery, 'uwsgi': uwsgi}
+    scripts = {'django': django, 'gunicorn': gunicorn, 'celery': celery, 'uwsgi': uwsgi, 'aiohttp': aiohttp}
     if script not in scripts:
         print(invalid_script)
         return 1
@@ -223,20 +223,20 @@ def gunicorn():
         # __set_default_option(options, 'worker_class')
         # if settings.DEBUG and not options.reload:
         #     sys.argv += ['--reload']
-    application = 'djangofloor.wsgi:gunicorn_application'
+    application = 'djangofloor.wsgi.gunicorn_runserver:application'
     if application not in sys.argv:
         sys.argv.append(application)
     return run()
 
 
-def gunicorn_ws():
+def aiohttp():
     set_env()
     from django.conf import settings
     import django as base_django
     if base_django.VERSION[:2] >= (1, 7):
         base_django.setup()
     logging.config.dictConfig(settings.LOGGING)
-    from djangofloor.websockets.aiohttp_runserver import run_server
+    from djangofloor.wsgi.aiohttp_runserver import run_server
 
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
     parser.add_argument('-b', '--bind', default=settings.LISTEN_ADDRESS)
@@ -262,7 +262,7 @@ def uwsgi():
     set_env()
     from django.conf import settings
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
-    cmd = ['uwsgi', '--plugin', 'python', '--module', 'djangofloor.wsgi']
+    cmd = ['uwsgi', '--plugin', 'python', '--module', 'djangofloor.wsgi.uwsgi_runserver']
     parser.add_argument('--no-master', default=False, action='store_true',
                         help='disable master process')
     parser.add_argument('--no-http-websockets', default=False, action='store_true',

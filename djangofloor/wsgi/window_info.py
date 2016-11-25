@@ -53,13 +53,13 @@ class WindowInfo(object):
     def from_request(cls, request):
         """ return a :class:`djangofloor.decorators.WindowInfo` from a :class:`django.http.HttpRequest`.
 
-        If the request already is a :class:`djangofloor.decorators.WindowInfo`,
+        If the request already is a :class:`djangofloor.wsgi.window_info.WindowInfo`,
         then it is returned as-is (not copied!).
 
         :param request: standard Django request
-        :type request: :class:`django.http.HttpRequest` or :class:`djangofloor.decorators.SignalRequest`
+        :type request: :class:`django.http.HttpRequest` or :class:`djangofloor.wsgi.window_info.WindowInfo`
         :return: a valid request
-        :rtype: :class:`djangofloor.decorators.SignalRequest`
+        :rtype: :class:`djangofloor.wsgi.window_info.WindowInfo`
         """
         if isinstance(request, WindowInfo):
             return request

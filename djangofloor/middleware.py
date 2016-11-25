@@ -220,7 +220,7 @@ class DjangoAuthMiddleware(WindowInfoMiddleware):
         def has_perm(req, perm):
             """ return true is the user has the required perm.
 
-            >>> from djangofloor.request import WindowInfo
+            >>> from djangofloor.wsgi.window_info import WindowInfo
             >>> r = WindowInfo.from_dict({'username': 'username', 'perms':['app_label.codename']})
             >>> r.has_perm('app_label.codename')
             True

@@ -5,8 +5,8 @@ import struct
 from socket import error as socket_error
 from django.core.handlers.wsgi import logger
 from django.utils import six
-from djangofloor.websockets.utf8validator import Utf8Validator
-from djangofloor.websockets.exceptions import WebSocketError, FrameTooLargeException
+from djangofloor.wsgi.utf8validator import Utf8Validator
+from djangofloor.wsgi.exceptions import WebSocketError, FrameTooLargeException
 
 
 if six.PY3:

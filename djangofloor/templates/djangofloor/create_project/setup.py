@@ -21,7 +21,7 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding=
 entry_points = dict(console_scripts=['{package_name}-ctl = djangofloor.scripts:control',
                                      '{package_name}-celery = djangofloor.scripts:celery',
                                      '{package_name}-django = djangofloor.scripts:django',
-                                     '{package_name}-uwsgi = djangofloor.scripts:uwsgi',
+                                     '{package_name}-aiohttp = djangofloor.scripts:aiohttp',
                                      '{package_name}-gunicorn = djangofloor.scripts:gunicorn', ])
 
 setup(

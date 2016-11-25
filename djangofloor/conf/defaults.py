@@ -247,7 +247,7 @@ COMMON_COMMANDS = {
 WEBSOCKET_URL = '/ws/'
 WS4REDIS_CONNECTION = {'host': '{WS4REDIS_HOST}', 'port': SettingReference('WS4REDIS_PORT'),
                        'db': SettingReference('WS4REDIS_DB'), 'password': '{WS4REDIS_PASSWORD}'}
-WS4REDIS_TOPIC_SERIALIZER = 'djangofloor.websockets.topics.serialize_topic'
+WS4REDIS_TOPIC_SERIALIZER = 'djangofloor.wsgi.topics.serialize_topic'
 WS4REDIS_HEARTBEAT = '--HEARTBEAT--'
 WS4REDIS_SIGNAL_DECODER = 'json.JSONDecoder'
 WS4REDIS_SIGNAL_ENCODER = 'django.core.serializers.json.DjangoJSONEncoder'

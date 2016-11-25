@@ -21,7 +21,8 @@ from django.utils.lru_cache import lru_cache
 from django.utils.six import binary_type
 from django.views.decorators.cache import never_cache
 from djangofloor.decorators import REGISTERED_SIGNALS, REGISTERED_FUNCTIONS
-from djangofloor.request import WindowInfo
+from djangofloor.wsgi.window_info import WindowInfo
+# noinspection PyProtectedMember
 from djangofloor.tasks import _call_signal
 from djangofloor.tasks import import_signals_and_functions, get_signal_decoder, get_signal_encoder, SERVER
 from djangofloor.utils import RemovedInDjangoFloor110Warning
@@ -106,6 +107,7 @@ def signals(request):
                             content_type=__get_js_mimetype())
 
 
+# noinspection PyUnusedLocal
 def test_logging(request):
     x = 1/0
     return HttpResponse(x)
@@ -178,6 +180,7 @@ def signal_call(request, signal):
     return JsonResponse([], safe=False, encoder=get_signal_encoder())
 
 
+# noinspection PyUnusedLocal
 @never_cache
 def get_signal_calls(request):
     """ Regularly called by JS code when websockets are not available. Allows Python code to call JS signals.
