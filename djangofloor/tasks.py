@@ -27,14 +27,14 @@ WINDOW = [[]]
 USER = [[]]
 BROADCAST = [[]]
 
-_signal_encoder = import_string(settings.WS4REDIS_SIGNAL_ENCODER)
-_topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
+_signal_encoder = import_string(settings.WEBSOCKET_SIGNAL_ENCODER)
+_topic_serializer = import_string(settings.WEBSOCKET_TOPIC_SERIALIZER)
 
 
 # noinspection PyCallingNonCallable
 @lru_cache()
 def _get_redis_connection():
-    return StrictRedis(**settings.WS4REDIS_CONNECTION)
+    return StrictRedis(**settings.WEBSOCKET_REDIS_CONNECTION)
 
 
 def set_websocket_topics(request, *topics):
@@ -43,7 +43,7 @@ def set_websocket_topics(request, *topics):
         raise NoWindowKeyException('You should use the DjangoFloorMiddleware middleware')
     token = request.window_key
     request.has_websocket_topics = True
-    prefix = settings.WS4REDIS_PREFIX
+    prefix = settings.WEBSOCKET_REDIS_PREFIX
     request = WindowInfo.from_request(request)
     topic_strings = {_topic_serializer(request, x) for x in topics if x is not SERVER}
     # noinspection PyUnresolvedReferences,PyTypeChecker
@@ -57,7 +57,7 @@ def set_websocket_topics(request, *topics):
     for topic in topic_strings:
         if topic is not None:
             connection.rpush(redis_key, prefix + topic)
-    connection.expire(redis_key, settings.WS4REDIS_EXPIRE)
+    connection.expire(redis_key, settings.WEBSOCKET_REDIS_EXPIRE)
 
 
 def scall(window_info, signal_name, to=None, **kwargs):
@@ -142,10 +142,10 @@ def _call_signal(window_info, signal_name, to=None, kwargs=None, countdown=None,
 
 def _call_ws_signal(signal_name, signal_id, serialized_topic, kwargs):
     # connection = _get_redis_connection()
-    connection = StrictRedis(**settings.WS4REDIS_CONNECTION)
+    connection = StrictRedis(**settings.WEBSOCKET_REDIS_CONNECTION)
     serialized_message = json.dumps({'signal': signal_name, 'opts': kwargs, 'signal_id': signal_id},
                                     cls=_signal_encoder)
-    topic = settings.WS4REDIS_PREFIX + serialized_topic
+    topic = settings.WEBSOCKET_REDIS_PREFIX + serialized_topic
     logger.debug("send message to topic %r" % topic)
     connection.publish(topic, serialized_message.encode('utf-8'))
 
@@ -159,12 +159,12 @@ def _return_ws_function_result(window_info, result_id, result, exception=None):
     :return:
     """
     # connection = _get_redis_connection()
-    connection = StrictRedis(**settings.WS4REDIS_CONNECTION)
+    connection = StrictRedis(**settings.WEBSOCKET_REDIS_CONNECTION)
     json_msg = {'result_id': result_id, 'result': result, 'exception': text_type(exception) if exception else None}
     serialized_message = json.dumps(json_msg, cls=_signal_encoder)
     serialized_topic = _topic_serializer(window_info, WINDOW)
     if serialized_topic:
-        topic = settings.WS4REDIS_PREFIX + serialized_topic
+        topic = settings.WEBSOCKET_REDIS_PREFIX + serialized_topic
         logger.debug("send function result to topic %r" % topic)
         connection.publish(topic, serialized_message.encode('utf-8'))
 

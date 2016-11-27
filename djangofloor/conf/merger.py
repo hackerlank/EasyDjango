@@ -44,8 +44,8 @@ _deprecated_settings = {
     'FLOOR_INDEX': 'Replaced by "DF_INDEX_VIEW" and class-based views.',
     'FLOOR_PROJECT_NAME': 'Replaced by "PROJECT_NAME"',
     'FLOOR_PROJECT_VERSION': 'Replaced by "DF_PROJECT_VERSION"',
-    'FLOOR_SIGNAL_DECODER': 'Replaced by "WS4REDIS_SIGNAL_DECODER".',
-    'FLOOR_SIGNAL_ENCODER': 'Replaced by "WS4REDIS_SIGNAL_ENCODER".',
+    'FLOOR_SIGNAL_DECODER': 'Replaced by "WEBSOCKET_SIGNAL_DECODER".',
+    'FLOOR_SIGNAL_ENCODER': 'Replaced by "WEBSOCKET_SIGNAL_ENCODER".',
     'FLOOR_URL_CONF': 'Replaced by "DF_URL_CONF".',
     'FLOOR_USE_WS4REDIS': 'ws4redis is not used anymore.',
     'LOG_PATH': 'Use "LOG_DIRECTORY" instead.',
@@ -62,8 +62,8 @@ _deprecated_settings = {
     'THREADS': 'Replaced by "SERVER_THREADS".',
     'USE_SCSS': None,
     'WORKERS': None,
-    'WS4REDIS_EMULATION_INTERVAL': None,
-    'WS4REDIS_SUBSCRIBER': None,
+    'WEBSOCKET_REDIS_EMULATION_INTERVAL': None,
+    'WEBSOCKET_REDIS_SUBSCRIBER': None,
 }
 _warned_settings = set()
 

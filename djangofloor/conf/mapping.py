@@ -36,10 +36,10 @@ INI_MAPPING = [
     CharConfigField('session.password', 'SESSION_REDIS_PASSWORD'),
     IntegerConfigField('session.port', 'SESSION_REDIS_PORT'),
 
-    IntegerConfigField('websocket.db', 'WS4REDIS_DB'),
-    CharConfigField('websocket.host', 'WS4REDIS_HOST'),
-    CharConfigField('websocket.password', 'WS4REDIS_PASSWORD'),
-    IntegerConfigField('websocket.port', 'WS4REDIS_PORT'),
+    IntegerConfigField('websocket.db', 'WEBSOCKET_REDIS_DB'),
+    CharConfigField('websocket.host', 'WEBSOCKET_REDIS_HOST'),
+    CharConfigField('websocket.password', 'WEBSOCKET_REDIS_PASSWORD'),
+    IntegerConfigField('websocket.port', 'WEBSOCKET_REDIS_PORT'),
 
     IntegerConfigField('celery.db', 'CELERY_DB'),
     CharConfigField('celery.host', 'CELERY_HOST'),

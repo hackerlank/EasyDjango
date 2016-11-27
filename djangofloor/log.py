@@ -11,6 +11,9 @@ import sys
 import warnings
 
 import re
+from logging import LogRecord
+
+from django.conf import settings
 from django.core.management import color_style
 from django.utils.log import AdminEmailHandler as BaseAdminEmailHandler
 # noinspection PyUnresolvedReferences
@@ -49,7 +52,7 @@ class AdminEmailHandler(BaseAdminEmailHandler):
     min_interval = 600
 
     def send_mail(self, subject, message, *args, **kwargs):
-        if self.can_send_email():
+        if self.can_send_email() and settings.EMAIL_HOST:
             try:
                 super(AdminEmailHandler, self).send_mail(subject, message, *args, **kwargs)
             except Exception as e:
@@ -65,6 +68,18 @@ class AdminEmailHandler(BaseAdminEmailHandler):
         return can_send
 
 
+class RemoveDuplicateWarnings(logging.Filter):
+    def __init__(self, name=''):
+        super(RemoveDuplicateWarnings, self).__init__(name=name)
+        self.previous_records = set()
+
+    def filter(self, record):
+        record_value = hash('%r %r' % (record.pathname, record.args))
+        result = record_value not in self.previous_records
+        self.previous_records.add(record_value)
+        return result
+
+
 # noinspection PyTypeChecker
 def generate_log_configuration(log_directory=None, project_name=None, script_name=None, debug=False,
                                log_remote_url=None):
@@ -76,30 +91,31 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
                           'format': '%(asctime)s [%(name)s] [%(levelname)s] %(message)s',
                           'datefmt': '%Y-%m-%d %H:%M:%S'},
         'colorized': {'()': 'djangofloor.log.ColorizedFormatter'}}
+    filters = {'remove_duplicate_warnings': {'()': 'djangofloor.log.RemoveDuplicateWarnings'}}
+    server_loggers = ['aiohttp.access', 'gunicorn.access', 'django.server', 'geventwebsocket.handler']
 
     loggers = {'django': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'django.db.backends': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'django.request': {'handlers': [], 'level': 'INFO', 'propagate': True},
                'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
-               'django.server': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
                'djangofloor.signals': {'handlers': [], 'level': 'WARN', 'propagate': True},
-               'aiohttp.access': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
-               'gunicorn.access': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
                'gunicorn.error': {'handlers': [], 'level': 'WARN', 'propagate': True},
-               'geventwebsocket.handler': {'handlers': ['access'], 'level': 'INFO', 'propagate': False},
                'pip.vcs': {'handlers': [], 'level': 'WARN', 'propagate': True},
-               'py.warnings': {'handlers': [], 'level': 'WARN', 'propagate': True}, }
+               'py.warnings': {'handlers': [], 'level': 'WARN', 'propagate': True,
+                               'filters': ['remove_duplicate_warnings']}, }
+    for logger in server_loggers:
+        loggers.update({logger: {'handlers': ['access'], 'level': 'INFO', 'propagate': False}})
     root = {'handlers': [], 'level': 'DEBUG'}
-    handlers = {'access': {'class': 'logging.StreamHandler', 'level': 'INFO',
+    handlers = {'access': {'class': 'logging.StreamHandler', 'level': 'ERROR',
                                     'stream': 'ext://sys.stdout', 'formatter': fmt_server}}
-    config = {'version': 1, 'disable_existing_loggers': True, 'formatters': formatters,
+    config = {'version': 1, 'disable_existing_loggers': True, 'formatters': formatters, 'filters': filters,
               'handlers': handlers, 'loggers': loggers, 'root': root}
     if debug:
         warnings.simplefilter('always', DeprecationWarning)
         logging.captureWarnings(True)
         loggers['django.request'].update({'level': 'DEBUG'})
-        loggers['py.warnings'].update({'level': 'INFO'})
-        loggers['djangofloor.signals'].update({'level': 'INFO'})
+        loggers['py.warnings'].update({'level': 'DEBUG'})
+        loggers['djangofloor.signals'].update({'level': 'DEBUG'})
         handlers.update({'stdout': {'class': 'logging.StreamHandler', 'level': 'DEBUG',
                                     'stream': 'ext://sys.stdout', 'formatter': fmt_stdout}})
         root.update({'handlers': ['stdout'], 'level': 'INFO'})
@@ -113,6 +129,7 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
         ensure_dir(log_directory, parent=False)
         error_handler = {'class': 'logging.handlers.RotatingFileHandler', 'maxBytes': 1000000, 'backupCount': 3,
                          'filename': os.path.join(log_directory, '%s-%s-error.log' % (project_name, script_name))}
+        loggers['py.warnings']['level'] = 'ERROR'
         handlers.update({'info': {'class': 'logging.handlers.RotatingFileHandler', 'level': 'INFO',
                                   'filename': os.path.join(log_directory,
                                                            '%s-%s-info.log' % (project_name, script_name)),

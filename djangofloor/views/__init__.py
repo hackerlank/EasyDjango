@@ -100,7 +100,7 @@ def signals(request):
     return TemplateResponse(request, 'djangofloor/signals.html',
                             {'SIGNALS': valid_signal_names,
                              'FUNCTIONS': functions,
-                             'WS4REDIS_HEARTBEAT': settings.WS4REDIS_HEARTBEAT,
+                             'WEBSOCKET_HEARTBEAT': settings.WEBSOCKET_HEARTBEAT,
                              'WEBSOCKET_URL': '%s://%s%s' % (protocol, site_name, settings.WEBSOCKET_URL),
                              'CSRF_COOKIE_NAME': settings.CSRF_COOKIE_NAME,
                              'CSRF_HEADER_NAME': csrf_header_name[5:].replace('_', '-')},
@@ -185,7 +185,7 @@ def signal_call(request, signal):
 def get_signal_calls(request):
     """ Regularly called by JS code when websockets are not available. Allows Python code to call JS signals.
 
-    The polling frequency is set with `WS4REDIS_EMULATION_INTERVAL` (in milliseconds).
+    The polling frequency is set with `WEBSOCKET_REDIS_EMULATION_INTERVAL` (in milliseconds).
 
     Return all signals called by Python code as a JSON-list
     """

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Structure of the redis database, with `prefix = settings.WS4REDIS_PREFIX`:
+Structure of the redis database, with `prefix = settings.WEBSOCKET_REDIS_PREFIX`:
 
   * pubsub topics "{prefix}{topic}" where topic-key is given by the user-defined function
   * HSET "{prefix}topics-{window-key}" to list of topics with EXPIRE
@@ -48,14 +48,14 @@ except ImportError:
 __author__ = 'Matthieu Gallet'
 logger = logging.getLogger('django.request')
 signer = signing.Signer()
-topic_serializer = import_string(settings.WS4REDIS_TOPIC_SERIALIZER)
-signal_decoder = import_string(settings.WS4REDIS_SIGNAL_DECODER)
+topic_serializer = import_string(settings.WEBSOCKET_TOPIC_SERIALIZER)
+signal_decoder = import_string(settings.WEBSOCKET_SIGNAL_DECODER)
 
 
 # noinspection PyCallingNonCallable
 @lru_cache()
 def _get_redis_connection():
-    return StrictRedis(**settings.WS4REDIS_CONNECTION)
+    return StrictRedis(**settings.WEBSOCKET_REDIS_CONNECTION)
 
 
 def get_websocket_topics(request):
@@ -64,7 +64,7 @@ def get_websocket_topics(request):
         token = signer.unsign(signed_token)
     except signing.BadSignature:
         return []
-    redis_key = '%s%s' % (settings.WS4REDIS_PREFIX, token)
+    redis_key = '%s%s' % (settings.WEBSOCKET_REDIS_PREFIX, token)
     connection = _get_redis_connection()
     topics = connection.lrange(redis_key, 0, -1)
     return [x.decode('utf-8') for x in topics]
@@ -126,7 +126,7 @@ class WebsocketWSGIServer(object):
             message = message.decode('utf-8')
         if not message:
             return
-        if message == settings.WS4REDIS_HEARTBEAT:
+        if message == settings.WEBSOCKET_HEARTBEAT:
             return
         try:
             unserialized_message = json.loads(message)
@@ -247,6 +247,6 @@ class WebsocketWSGIServer(object):
                     logger.error('Invalid file descriptor: {0}'.format(fd))
             # Check again that the websocket is closed before sending the heartbeat,
             # because the websocket can closed previously in the loop.
-            if settings.WS4REDIS_HEARTBEAT and not websocket.closed and not ready:
-                self.ws_send_bytes(websocket, settings.WS4REDIS_HEARTBEAT.encode('utf-8'))
+            if settings.WEBSOCKET_HEARTBEAT and not websocket.closed and not ready:
+                self.ws_send_bytes(websocket, settings.WEBSOCKET_HEARTBEAT.encode('utf-8'))
         logger.error('websocket closed')

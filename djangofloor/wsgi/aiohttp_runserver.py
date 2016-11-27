@@ -63,17 +63,19 @@ class WebsocketEchoHandler(object):
         window_info = WebsocketWSGIServer.process_request(django_request)
         channels, echo_message = WebsocketWSGIServer.process_subscriptions(django_request)
 
-        connection = yield from asyncio_redis.Connection.create(**settings.WS4REDIS_CONNECTION)
+        connection = yield from asyncio_redis.Connection.create(**settings.WEBSOCKET_REDIS_CONNECTION)
         subscriber = yield from connection.start_subscribe()
         yield from subscriber.subscribe(channels)
         # noinspection PyBroadException
         try:
             # noinspection PyTypeChecker
             yield from asyncio.gather(self.handle_ws(window_info, ws), self.handle_redis(window_info, ws, subscriber))
-        except Exception as e:  # Don't do except: pass
-            print(e)
-            import traceback
-            traceback.print_exc()
+        except aiohttp.ClientDisconnectedError:
+            pass
+        except RuntimeError:  # avoid raise RuntimeError('WebSocket connection is closed.')
+            pass
+        except Exception as e:
+            logger.exception(e)
         return ws
 
     @asyncio.coroutine
@@ -91,8 +93,8 @@ class WebsocketEchoHandler(object):
         elif msg.type == aiohttp.WSMsgType.TEXT:
             if msg.data == 'close':
                 ws.close()
-            elif msg.data == settings.WS4REDIS_HEARTBEAT:
-                ws.send_str(settings.WS4REDIS_HEARTBEAT)
+            elif msg.data == settings.WEBSOCKET_HEARTBEAT:
+                ws.send_str(settings.WEBSOCKET_HEARTBEAT)
             else:
                 WebsocketWSGIServer.publish_message(window_info, msg.data)
                 # ws.send_str(msg.data + '/answer')

@@ -23,7 +23,7 @@ class IndexView(TemplateView):
     def get(self, request, *args, **kwargs):
         logger.debug('debug log message')
         logger.info('info log message')
-        logger.warn('warn log message')
+        logger.warning('warn log message')
         logger.error('error log message')
         messages.error(request, 'message (error)')
         set_websocket_topics(request)
@@ -41,26 +41,26 @@ class IndexView(TemplateView):
 
 @cache_page(60)
 def cache_60(request):
-    logger.warn("compute cache_60 page")
+    logger.warning("compute cache_60 page")
     return TemplateResponse(request, 'easydemo/index.html', {'form': TestForm(), 'title': 'Cached during 60s'})
 
 
 @cache_page(60)
 @vary_on_headers('User-Agent')
 def cache_vary_on_headers(request):
-    logger.warn("compute cache_vary_on_headers page (User-Agent=%s)" % request.META.get('HTTP_USER_AGENT'))
+    logger.warning("compute cache_vary_on_headers page (User-Agent=%s)" % request.META.get('HTTP_USER_AGENT'))
     return TemplateResponse(request, 'easydemo/index.html', {'form': TestForm(), 'title': 'Cache by User-Agent'})
 
 
 @cache_control(private=True)
 def cache_private(request):
-    logger.warn("compute cache_private page")
+    logger.warning("compute cache_private page")
     return TemplateResponse(request, 'easydemo/index.html', {'form': TestForm(), 'title': 'Cached for public'})
 
 
 @never_cache
 def cache_nevercache(request):
-    logger.warn("compute never_cache page")
+    logger.warning("compute never_cache page")
     return TemplateResponse(request, 'easydemo/index.html', {'form': TestForm(), 'title': 'Never cache'})
 
 

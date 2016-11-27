@@ -142,7 +142,7 @@ USE_THOUSAND_SEPARATOR = True
 USE_TZ = True
 USE_X_FORWARDED_HOST = True  # X-Forwarded-Host
 X_FRAME_OPTIONS = 'SAMEORIGIN'
-WSGI_APPLICATION = 'djangofloor.wsgi.django_application'
+WSGI_APPLICATION = 'djangofloor.wsgi.django_runserver.django_application'
 
 # django.contrib.auth
 AUTHENTICATION_BACKENDS = ('djangofloor.backends.DefaultGroupsRemoteUserBackend',
@@ -182,13 +182,6 @@ NPM_EXECUTABLE_PATH = 'npm'
 NPM_ROOT_PATH = AutocreateDirectory('{LOCAL_PATH}/npm')
 NPM_STATIC_FILES_PREFIX = 'vendor'
 
-# django-rest-framework
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
-}
-
 # djangofloor
 DATA_PATH = AutocreateDirectory('{LOCAL_PATH}/data')
 SERVER_NAME = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).hostname, 'SERVER_BASE_URL')  # ~ www.example.org
@@ -203,13 +196,16 @@ def url_prefix(values):
         p += '/'
     return p
 
-
 URL_PREFIX = CallableSetting(url_prefix, 'SERVER_BASE_URL')  # ~ /prefix/
 USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
 USE_SSL = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).scheme == 'https', 'SERVER_BASE_URL')  # ~ True
 USE_X_FORWARDED_FOR = True  # X-Forwarded-For
 USE_X_SEND_FILE = False  # Apache module
 X_ACCEL_REDIRECT = []  # paths used by nginx
+DF_FAKE_AUTHENTICATION_USERNAME = 'testuser'
+DF_PROJECT_VERSION = CallableSetting(guess_version)
+DF_PUBLIC_SIGNAL_LIST = True
+# do not check for each WS signal/function before sending its name to the client
 DF_SYSTEM_CHECKS = ['djangofloor.views.monitoring.RequestCheck',
                     'djangofloor.views.monitoring.System',
                     'djangofloor.views.monitoring.CeleryStats',
@@ -243,16 +239,15 @@ COMMON_COMMANDS = {
 # COMMON_COMMANDS["command_name"] = ("django", "command")
 # COMMON_COMMANDS["other_command_name"] = ("celery", "other_command")
 
-# ws4redis
 WEBSOCKET_URL = '/ws/'
-WS4REDIS_CONNECTION = {'host': '{WS4REDIS_HOST}', 'port': SettingReference('WS4REDIS_PORT'),
-                       'db': SettingReference('WS4REDIS_DB'), 'password': '{WS4REDIS_PASSWORD}'}
-WS4REDIS_TOPIC_SERIALIZER = 'djangofloor.wsgi.topics.serialize_topic'
-WS4REDIS_HEARTBEAT = '--HEARTBEAT--'
-WS4REDIS_SIGNAL_DECODER = 'json.JSONDecoder'
-WS4REDIS_SIGNAL_ENCODER = 'django.core.serializers.json.DjangoJSONEncoder'
-WS4REDIS_PREFIX = 'ws'
-WS4REDIS_THREAD_COUNT = 2
+WEBSOCKET_REDIS_CONNECTION = {'host': '{WEBSOCKET_REDIS_HOST}', 'port': SettingReference('WEBSOCKET_REDIS_PORT'),
+                              'db': SettingReference('WEBSOCKET_REDIS_DB'), 'password': '{WEBSOCKET_REDIS_PASSWORD}'}
+WEBSOCKET_TOPIC_SERIALIZER = 'djangofloor.wsgi.topics.serialize_topic'
+WEBSOCKET_HEARTBEAT = '--HEARTBEAT--'
+WEBSOCKET_SIGNAL_DECODER = 'json.JSONDecoder'
+WEBSOCKET_SIGNAL_ENCODER = 'django.core.serializers.json.DjangoJSONEncoder'
+WEBSOCKET_REDIS_PREFIX = 'ws'
+WEBSOCKET_REDIS_EXPIRE = 36000
 
 # django-pipeline
 PIPELINE = {
@@ -288,10 +283,10 @@ PIPELINE_CSS = {
     },
 }
 PIPELINE_MIMETYPES = ((b'text/coffeescript', '.coffee'),
-    (b'text/less', '.less'),
-    (b'text/javascript', '.js'),
-    (b'text/x-sass', '.sass'),
-    (b'text/x-scss', '.scss'))
+                      (b'text/less', '.less'),
+                      (b'text/javascript', '.js'),
+                      (b'text/x-sass', '.sass'),
+                      (b'text/x-scss', '.scss'))
 PIPELINE_JS = {
     'default': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'js/djangofloor-base.js', ExpandIterable('DF_JS')],
@@ -353,13 +348,10 @@ DF_URL_CONF = '{PROJECT_NAME}.urls.urlpatterns'
 DF_INSTALLED_APPS = DeprecatedSetting('FLOOR_INSTALLED_APPS', ['{PROJECT_NAME}'])
 DF_MIDDLEWARE_CLASSES = []
 DF_REMOTE_USER_HEADER = None  # HTTP-REMOTE-USER
-DF_FAKE_AUTHENTICATION_USERNAME = 'testuser'
 DF_DEFAULT_GROUPS = [_('Users')]
 DF_TEMPLATE_CONTEXT_PROCESSORS = DeprecatedSetting('FLOOR_TEMPLATE_CONTEXT_PROCESSORS', [])
 DF_CHECKED_REQUIREMENTS = ['django>=1.12', 'django<=1.13', 'celery', 'django-bootstrap3', 'redis', 'pip',
                            'psutil', 'django-redis-sessions']
-DF_PROJECT_VERSION = CallableSetting(guess_version)
-DF_PUBLIC_SIGNAL_LIST = True
 
 NPM_FILE_PATTERNS = {
     'bootstrap-notify': ['*.js'],
@@ -371,10 +363,6 @@ NPM_FILE_PATTERNS = {
     'metro-ui': ['build/*'],
     'respond.js': ['dest/*'],
 }
-
-# ws4redis
-WS4REDIS_EXPIRE = 36000
-# do not check for each WS signal/function before sending its name to the client
 
 # ######################################################################################################################
 #
@@ -428,10 +416,10 @@ SESSION_REDIS_DB = 3
 SESSION_REDIS_PASSWORD = ''
 
 # ws4redis
-WS4REDIS_HOST = 'localhost'
-WS4REDIS_PORT = 6379
-WS4REDIS_DB = 11
-WS4REDIS_PASSWORD = ''
+WEBSOCKET_REDIS_HOST = 'localhost'
+WEBSOCKET_REDIS_PORT = 6379
+WEBSOCKET_REDIS_DB = 11
+WEBSOCKET_REDIS_PASSWORD = ''
 
 # celery
 CELERY_PROTOCOL = 'redis'
@@ -444,7 +432,11 @@ SERVER_PROCESSES = 3
 SERVER_THREADS = 20
 SERVER_TIMEOUT = 300
 
+# ######################################################################################################################
+#
 # deprecated settings
+#
+# ######################################################################################################################
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_SUBJECT_PREFIX = '[{SERVER_NAME}] '
 ACCOUNT_EMAIL_VERIFICATION = None
@@ -460,8 +452,8 @@ FLOOR_FAKE_AUTHENTICATION_USERNAME = SettingReference('DF_FAKE_AUTHENTICATION_US
 FLOOR_INDEX = None
 FLOOR_PROJECT_NAME = SettingReference('PROJECT_NAME')
 FLOOR_PROJECT_VERSION = CallableSetting(guess_version)
-FLOOR_SIGNAL_DECODER = SettingReference('WS4REDIS_SIGNAL_DECODER')
-FLOOR_SIGNAL_ENCODER = SettingReference('WS4REDIS_SIGNAL_ENCODER')
+FLOOR_SIGNAL_DECODER = SettingReference('WEBSOCKET_SIGNAL_DECODER')
+FLOOR_SIGNAL_ENCODER = SettingReference('WEBSOCKET_SIGNAL_ENCODER')
 FLOOR_URL_CONF = SettingReference('DF_URL_CONF')
 FLOOR_USE_WS4REDIS = False
 FLOOR_WS_FACILITY = 'djangofloor'
@@ -479,5 +471,5 @@ REVERSE_PROXY_TIMEOUT = 300
 THREADS = SettingReference('SERVER_THREADS')
 USE_SCSS = False
 WORKERS = 1
-WS4REDIS_EMULATION_INTERVAL = 0
-WS4REDIS_SUBSCRIBER = 'djangofloor.df_ws4redis.Subscriber'
+WEBSOCKET_REDIS_EMULATION_INTERVAL = 0
+WEBSOCKET_REDIS_SUBSCRIBER = 'djangofloor.df_ws4redis.Subscriber'

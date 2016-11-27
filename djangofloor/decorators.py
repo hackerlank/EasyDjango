@@ -202,8 +202,9 @@ class FormValidator(FunctionConnection):
     def signature_check(self, fn):
         if not isinstance(fn, type) or not issubclass(fn, forms.BaseForm):
             raise ValueError('validate_form only apply to Django Forms')
-        self.required_arguments_names = ['window_info']
-        self.optional_arguments_names = ['data']
+        self.required_arguments_names = set()
+        self.optional_arguments_names = {'data'}
+        self.accepted_argument_names = {'data'}
 
     def __call__(self, window_info, data=None):
         form = SerializedForm(self.function)(data)
