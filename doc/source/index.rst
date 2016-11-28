@@ -1,5 +1,5 @@
 DjangoFloor
-==========
+===========
 
 Introduction
 ------------
@@ -14,14 +14,23 @@ Its main features are:
 
 Of course, everything that is provided by default by DjangoFloor can be overriden (like the default templates that are based on the well-known Bootstrap 3 css).
 
+Requirements
+------------
+
+DjangoFloor assumes that some requirements are available:
+
+  * Python 3.4+,
+  * Django 1.8+,
+  * Redis for caching, sessions and celery broker,
+  * a reverse proxy like nginx.
 
 DjangoFloor in a nutshell
-------------------------
+-------------------------
 
 .. code-block:: bash
 
-  pip install DjangoFloor[extra]
-  DjangoFloor-createproject
+  pip install djangofloor[extra]
+  djangofloor-createproject
   | Your new project name [MyProject]
   | Python package name [myproject]
   | Initial version [0.1]
@@ -30,8 +39,9 @@ DjangoFloor in a nutshell
   python setup.py develop
   myproject-django migrate
   myproject-django collectstatic --noinput
-  myproject-django runserver
-  myproject-django worker
+  myproject-aiohttp
+  # open a new terminal window
+  myproject-celery worker
 
 
 Overview:

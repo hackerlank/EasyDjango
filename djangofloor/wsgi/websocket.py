@@ -169,7 +169,6 @@ class WebSocket(object):
         message = ""
         while True:
             header, payload = self.read_frame()
-            print('hp: %r %r' % (header, payload))
             f_opcode = header.opcode
             if f_opcode in (self.OPCODE_TEXT, self.OPCODE_BINARY):
                 # a new frame
@@ -195,17 +194,11 @@ class WebSocket(object):
             else:
                 raise WebSocketError("Unexpected opcode={0!r}".format(f_opcode))
             if opcode == self.OPCODE_TEXT:
-                self.validate_utf8(payload)
-                if six.PY3:
-                    payload = payload.decode()
+                payload = payload.decode('utf-8')
             message += payload
             if header.fin:
                 break
         if opcode == self.OPCODE_TEXT:
-            if six.PY2:
-                self.validate_utf8(message)
-            else:
-                self.validate_utf8(message.encode())
             return message
         else:
             return bytearray(message)
