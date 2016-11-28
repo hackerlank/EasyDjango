@@ -49,7 +49,6 @@
             $.df._wsBuffer = [];
         };
         connection.onmessage = function(e) {
-            console.log("Received: " + e.data);
             if (e.data == $.df._heartbeatMessage) {
                 $.df._wsConnection.send(e.data);
             } else {

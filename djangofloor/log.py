@@ -104,7 +104,7 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
                'py.warnings': {'handlers': [], 'level': 'ERROR', 'propagate': True,
                                'filters': ['remove_duplicate_warnings']}, }
     for logger in server_loggers:
-        loggers.update({logger: {'handlers': ['access'], 'level': 'INFO', 'propagate': False}})
+        loggers[logger] = {'handlers': ['access'], 'level': 'INFO', 'propagate': False}
     root = {'handlers': [], 'level': 'DEBUG'}
     handlers = {'access': {'class': 'logging.StreamHandler', 'level': 'ERROR',
                                     'stream': 'ext://sys.stdout', 'formatter': fmt_server}}

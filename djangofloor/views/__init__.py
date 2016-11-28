@@ -64,7 +64,7 @@ def read_file_in_chunks(fileobj, chunk_size=32768):
     for data in iter(lambda: fileobj.read(chunk_size), b''):
         yield data
 
-
+@never_cache
 def signals(request):
     signal_request = WindowInfo.from_request(request)
     import_signals_and_functions()

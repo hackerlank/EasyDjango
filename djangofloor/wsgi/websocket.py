@@ -101,9 +101,7 @@ class WebSocket(object):
         if len(payload) < 2:
             raise WebSocketError('Invalid close frame: {0} {1}'.format(header, payload))
         rv = payload[:2]
-        if six.PY2:
-            rv = str(rv)
-        code = struct.unpack('!H', rv[0])
+        code = struct.unpack('!H', rv)
         payload = payload[2:]
         if payload:
             validator = Utf8Validator()

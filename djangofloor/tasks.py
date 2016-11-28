@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 import json
 import logging
+import os
 import uuid
 import warnings
 
@@ -174,16 +175,24 @@ def import_signals_and_functions():
     """Import all `signals.py` files to register signals.
     """
     for app in settings.INSTALLED_APPS:
+        filename = None
         try:
-            import_module('%s.signals' % app)
+            mod = import_module(app)
+            filename = mod.__file__
         except ImportError:
             pass
+        try:
+            import_module('%s.signals' % app)
+        except ImportError as e:
+            if filename and os.path.isfile(os.path.join(os.path.dirname(filename), 'signals.py')):
+                logger.exception(e)
         except Exception as e:
             logger.exception(e)
         try:
             import_module('%s.functions' % app)
         except ImportError:
-            pass
+            if filename and os.path.isfile(os.path.join(os.path.dirname(filename), 'functions.py')):
+                logger.exception(e)
         except Exception as e:
             logger.exception(e)
 
