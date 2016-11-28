@@ -18,11 +18,9 @@ python_version = (sys.version_info[0], sys.version_info[1])
 with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as fd:
     long_description = fd.read()
 
-entry_points = dict(console_scripts=['{package_name}-ctl = djangofloor.scripts:control',
-                                     '{package_name}-celery = djangofloor.scripts:celery',
-                                     '{package_name}-django = djangofloor.scripts:django',
-                                     '{package_name}-aiohttp = djangofloor.scripts:aiohttp',
-                                     '{package_name}-gunicorn = djangofloor.scripts:gunicorn', ])
+entry_points = {'console_scripts': ['{package_name}-celery = djangofloor.scripts:celery',
+                                    '{package_name}-django = djangofloor.scripts:django',
+                                    '{package_name}-aiohttp = djangofloor.scripts:aiohttp']}
 
 setup(
     name='{project_name}',

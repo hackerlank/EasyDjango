@@ -100,8 +100,8 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
                'django.security': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'djangofloor.signals': {'handlers': [], 'level': 'WARN', 'propagate': True},
                'gunicorn.error': {'handlers': [], 'level': 'WARN', 'propagate': True},
-               'pip.vcs': {'handlers': [], 'level': 'WARN', 'propagate': True},
-               'py.warnings': {'handlers': [], 'level': 'WARN', 'propagate': True,
+               'pip.vcs': {'handlers': [], 'level': 'ERROR', 'propagate': True},
+               'py.warnings': {'handlers': [], 'level': 'ERROR', 'propagate': True,
                                'filters': ['remove_duplicate_warnings']}, }
     for logger in server_loggers:
         loggers.update({logger: {'handlers': ['access'], 'level': 'INFO', 'propagate': False}})
@@ -129,7 +129,6 @@ def generate_log_configuration(log_directory=None, project_name=None, script_nam
         ensure_dir(log_directory, parent=False)
         error_handler = {'class': 'logging.handlers.RotatingFileHandler', 'maxBytes': 1000000, 'backupCount': 3,
                          'filename': os.path.join(log_directory, '%s-%s-error.log' % (project_name, script_name))}
-        loggers['py.warnings']['level'] = 'ERROR'
         handlers.update({'info': {'class': 'logging.handlers.RotatingFileHandler', 'level': 'INFO',
                                   'filename': os.path.join(log_directory,
                                                            '%s-%s-info.log' % (project_name, script_name)),

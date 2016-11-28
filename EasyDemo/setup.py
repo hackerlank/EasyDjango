@@ -18,8 +18,7 @@ python_version = (sys.version_info[0], sys.version_info[1])
 with codecs.open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as fd:
     long_description = fd.read()
 
-entry_points = dict(console_scripts=['easydemo-ctl = djangofloor.scripts:control',
-                                     'easydemo-celery = djangofloor.scripts:celery',
+entry_points = dict(console_scripts=['easydemo-celery = djangofloor.scripts:celery',
                                      'easydemo-django = djangofloor.scripts:django',
                                      'easydemo-aiohttp = djangofloor.scripts:aiohttp',
                                      'easydemo-gunicorn = djangofloor.scripts:gunicorn', ])
