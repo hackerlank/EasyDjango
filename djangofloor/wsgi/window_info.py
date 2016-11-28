@@ -39,7 +39,7 @@ class WindowInfo(object):
         return window_info
 
     def to_dict(self):
-        """Convert this :class:`djangofloor.decorators.WindowInfo` to a :class:`dict` which can be provided to JSON.
+        """Convert this :class:`djangofloor.wsgi.window_info.WindowInfo` to a :class:`dict` which can be provided to JSON.
 
         :return: a dict ready to be serialized in JSON
         :rtype: :class:`dict`
@@ -53,7 +53,7 @@ class WindowInfo(object):
 
     @classmethod
     def from_request(cls, request):
-        """ return a :class:`djangofloor.decorators.WindowInfo` from a :class:`django.http.HttpRequest`.
+        """ return a :class:`djangofloor.wsgi.window_info.WindowInfo` from a :class:`django.http.HttpRequest`.
 
         If the request already is a :class:`djangofloor.wsgi.window_info.WindowInfo`,
         then it is returned as-is (not copied!).
