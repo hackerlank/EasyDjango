@@ -203,7 +203,7 @@ class DjangoAuthMiddleware(WindowInfoMiddleware):
         window_info.user_agent = values.get('user_agent')
 
     def get_context(self, window_info):
-        return {'df_user': window_info.user, 'df_user_agent': window_info.META.get('HTTP_USER_AGENT', '')}
+        return {'df_user': window_info.user}
 
     def install_methods(self, window_info_cls):
         def get_user(req):
@@ -279,6 +279,23 @@ class DjangoAuthMiddleware(WindowInfoMiddleware):
         window_info_cls.has_perm = has_perm
         window_info_cls.perms = property(get_perms)
         window_info_cls.template_perms = property(get_template_perms)
+
+
+class BrowserMiddleware(WindowInfoMiddleware):
+    def from_request(self, request, window_info):
+        window_info.user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+    def new_window_info(self, window_info):
+        window_info.user_agent = ''
+
+    def to_dict(self, window_info):
+        return {'user_agent': window_info.user_agent}
+
+    def from_dict(self, window_info, values):
+        window_info.user_agent = values.get('user_agent', '')
+
+    def get_context(self, window_info):
+        return {'df_user_agent': window_info.user_agent}
 
 
 class Djangoi18nMiddleware(WindowInfoMiddleware):

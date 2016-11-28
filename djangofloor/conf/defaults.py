@@ -196,6 +196,7 @@ def url_prefix(values):
         p += '/'
     return p
 
+
 URL_PREFIX = CallableSetting(url_prefix, 'SERVER_BASE_URL')  # ~ /prefix/
 USE_HTTP_BASIC_AUTH = True  # HTTP-Authorization
 USE_SSL = CallableSetting(lambda x: urlparse(x['SERVER_BASE_URL']).scheme == 'https', 'SERVER_BASE_URL')  # ~ True
@@ -210,10 +211,10 @@ DF_SYSTEM_CHECKS = ['djangofloor.views.monitoring.RequestCheck',
                     'djangofloor.views.monitoring.System',
                     'djangofloor.views.monitoring.CeleryStats',
                     'djangofloor.views.monitoring.Packages', ]
-WINDOW_INFO_MIDDLEWARES = [
-    'djangofloor.middleware.WindowKeyMiddleware',
-    'djangofloor.middleware.DjangoAuthMiddleware',
-    'djangofloor.middleware.Djangoi18nMiddleware', ]
+WINDOW_INFO_MIDDLEWARES = ['djangofloor.middleware.WindowKeyMiddleware',
+                           'djangofloor.middleware.DjangoAuthMiddleware',
+                           'djangofloor.middleware.Djangoi18nMiddleware',
+                           'djangofloor.middleware.BrowserMiddleware', ]
 COMMON_COMMANDS = {
     'queue-events': ('celery', 'events'),
     'purge-queue': ('celery', 'purge'),
@@ -315,7 +316,7 @@ if USE_SCSS:
     PIPELINE_COMPILERS = ('djangofloor.middleware.PyScssCompiler',)
 
 # Django-Debug-Toolbar
-DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js', }
+DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js',}
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
 INTERNAL_IPS = ('127.0.0.1', '::1',)
 
