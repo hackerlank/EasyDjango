@@ -9,7 +9,6 @@ from django import forms
 from django.conf import settings
 from django.http import QueryDict
 from django.utils.six import text_type
-from django.utils.translation import ugettext_lazy as _
 from djangofloor.utils import RemovedInDjangoFloor110Warning
 
 try:
@@ -26,7 +25,7 @@ REGISTERED_FUNCTIONS = {}
 
 
 # noinspection PyUnusedLocal
-def server_side(window_info):
+def server_side(connection, window_info):
     """does not allow a signal to be called from WebSockets
 
     >>> @signal(is_allowed_to=server_side)
@@ -37,7 +36,7 @@ def server_side(window_info):
 
 
 # noinspection PyUnusedLocal
-def everyone(window_info):
+def everyone(connection, window_info):
     """allow everyone to call a WS signal or function
 
     >>> @signal(is_allowed_to=everyone)
@@ -47,7 +46,8 @@ def everyone(window_info):
     return True
 
 
-def is_authenticated(window_info):
+# noinspection PyUnusedLocal
+def is_authenticated(connection, window_info):
     """restrict a WS signal or a WS function to authenticated users
 
     >>> @signal(is_allowed_to=is_authenticated)
@@ -57,7 +57,8 @@ def is_authenticated(window_info):
     return window_info and window_info.is_authenticated()
 
 
-def is_anonymous(window_info):
+# noinspection PyUnusedLocal
+def is_anonymous(connection, window_info):
     """restrict a WS signal or a WS function to anonymous users
 
     >>> @signal(is_allowed_to=is_anonymous)
@@ -67,11 +68,13 @@ def is_anonymous(window_info):
     return window_info and window_info.is_anonymous()
 
 
-def is_staff(window_info):
+# noinspection PyUnusedLocal
+def is_staff(connection, window_info):
     return window_info and window_info.is_staff
 
 
-def is_superuser(window_info):
+# noinspection PyUnusedLocal
+def is_superuser(connection, window_info):
     return window_info and window_info.is_superuser
 
 
@@ -86,7 +89,7 @@ class has_perm(object):
     def __init__(self, perm):
         self.perm = perm
 
-    def __call__(self, window_info):
+    def __call__(self, connection, window_info):
         return window_info and window_info.has_perm(self.perm)
 
 
@@ -214,7 +217,7 @@ class FormValidator(FunctionConnection):
 
 
 def validate_form(form_cls=None, path=None, is_allowed_to=server_side):
-    if path is None or is_allowed_to == server_side:
+    if path is None or is_allowed_to is server_side:
         # @validate_form
         # class MyForm(forms.Form):
         #     ...

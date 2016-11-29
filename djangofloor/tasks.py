@@ -216,7 +216,7 @@ def _server_signal_call(signal_name, window_info_dict, kwargs=None, from_client=
         for connection in REGISTERED_SIGNALS[signal_name]:
             assert isinstance(connection, SignalConnection)
             if connection.get_queue(signal_name, window_info, kwargs) != queue or \
-                    (from_client and not connection.is_allowed_to(window_info)):
+                    (from_client and not connection.is_allowed_to(connection, window_info)):
                 continue
             kwargs = connection.check(kwargs)
             if kwargs is None:
@@ -237,6 +237,8 @@ def _server_function_call(function_name, window_info_dict, result_id, kwargs=Non
         import_signals_and_functions()
         connection = REGISTERED_FUNCTIONS[function_name]
         assert isinstance(connection, FunctionConnection)
+        if not connection.is_allowed_to(connection, window_info):
+            raise ValueError('Unauthorized function call %s' % connection.path)
         kwargs = connection.check(kwargs)
         if kwargs is not None:
             # noinspection PyBroadException

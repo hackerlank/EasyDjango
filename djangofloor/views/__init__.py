@@ -75,11 +75,11 @@ def signals(request):
     else:
         valid_signal_names = []
         for signal_name, list_of_connections in REGISTERED_SIGNALS.items():
-            if any(x.is_allowed_to(signal_request) for x in list_of_connections):
+            if any(x.is_allowed_to(x, signal_request) for x in list_of_connections):
                 valid_signal_names.append(signal_name)
         valid_function_names = []
         for function_name, connection in REGISTERED_FUNCTIONS.items():
-            if connection.is_allowed_to(signal_request):
+            if connection.is_allowed_to(connection, signal_request):
                 valid_function_names.append(function_name)
 
     function_names_dict = {}
