@@ -64,6 +64,7 @@ def read_file_in_chunks(fileobj, chunk_size=32768):
     for data in iter(lambda: fileobj.read(chunk_size), b''):
         yield data
 
+
 @never_cache
 def signals(request):
     signal_request = WindowInfo.from_request(request)
@@ -137,21 +138,22 @@ def send_file(filepath, mimetype=None, force_download=False):
         # noinspection PyTypeChecker
         mimetype = mimetype.decode('utf-8')
     filepath = os.path.abspath(filepath)
+    response = None
     if settings.USE_X_SEND_FILE:
         response = HttpResponse(content_type=mimetype)
         response['X-SENDFILE'] = filepath
-    else:
+    elif settings.X_ACCEL_REDIRECT:
         for dirpath, alias_url in settings.X_ACCEL_REDIRECT:
             if filepath.startswith(dirpath):
                 response = HttpResponse(content_type=mimetype)
                 response['Content-Disposition'] = 'attachment; filename={0}'.format(os.path.basename(filepath))
                 response['X-Accel-Redirect'] = alias_url + filepath
                 break
-        else:
-            # noinspection PyTypeChecker
-            fileobj = open(filepath, 'rb')
-            response = StreamingHttpResponse(read_file_in_chunks(fileobj), content_type=mimetype)
-            response['Content-Length'] = os.path.getsize(filepath)
+    if response is None:
+        # noinspection PyTypeChecker
+        fileobj = open(filepath, 'rb')
+        response = StreamingHttpResponse(read_file_in_chunks(fileobj), content_type=mimetype)
+        response['Content-Length'] = os.path.getsize(filepath)
     if force_download or not (mimetype.startswith('text') or mimetype.startswith('image')):
         response['Content-Disposition'] = 'attachment; filename={0}'.format(os.path.basename(filepath))
     return response

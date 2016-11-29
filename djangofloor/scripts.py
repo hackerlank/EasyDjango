@@ -208,8 +208,6 @@ def gunicorn():
     logging.config.dictConfig(settings.LOGGING)
     parser = ArgumentParser(usage="%(prog)s subcommand [options] [args]", add_help=False)
     parser.add_argument('-b', '--bind', default=settings.LISTEN_ADDRESS)
-    parser.add_argument('-w', '--workers', default=str(settings.SERVER_PROCESSES))
-    parser.add_argument('-t', '--timeout', default=str(settings.SERVER_TIMEOUT))
     parser.add_argument('--reload', default=False, action='store_true')
     # parser.add_argument('-k', '--worker-class', default='gunicorn.workers.gthread.ThreadWorker')
     if use_gevent:
@@ -269,12 +267,6 @@ def uwsgi():
                         help='do not automatically detect websockets connections and put the session in raw mode')
     parser.add_argument('--no-enable-threads', default=False, action='store_true',
                         help='do not run each worker in prethreaded mode with the specified number of threads')
-    parser.add_argument('-p', '--processes', default=settings.SERVER_PROCESSES, type=int,
-                        help='spawn the specified number of workers/processes')
-    parser.add_argument('--workers', default=None, type=int,
-                        help='spawn the specified number of workers/processes')
-    parser.add_argument('--threads', default=settings.SERVER_THREADS, type=int,
-                        help='run each worker in prethreaded mode with the specified number of threads')
     parser.add_argument('--http-socket', default=settings.LISTEN_ADDRESS,
                         help='bind to the specified UNIX/TCP socket using HTTP protocol')
     parser.add_argument('--reload-mercy', default=5, type=int,
@@ -291,10 +283,6 @@ def uwsgi():
         cmd += ['--http-websockets']
     if not options.no_enable_threads:
         cmd += ['--enable-threads']
-    if options.workers:
-        cmd += ['--workers', text_type(options.workers)]
-    elif options.processes:
-        cmd += ['--processes', text_type(options.processes)]
     # cmd += ['--threads', text_type(options.threads)]
     cmd += ['--http-socket', options.http_socket, '--reload-mercy', text_type(options.reload_mercy),
             '--worker-reload-mercy', text_type(options.worker_reload_mercy),

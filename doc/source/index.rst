@@ -21,7 +21,7 @@ DjangoFloor assumes that some requirements are available:
 
   * Python 3.4+,
   * Django 1.8+,
-  * Redis for caching, sessions and celery broker,
+  * Redis for caching, sessions, websocket management and celery broker,
   * a reverse proxy like nginx.
 
 DjangoFloor in a nutshell
@@ -39,7 +39,7 @@ DjangoFloor in a nutshell
   python setup.py develop
   myproject-django migrate
   myproject-django collectstatic --noinput
-  myproject-aiohttp
+  myproject-django runserver
   # open a new terminal window
   myproject-celery worker
 
@@ -53,13 +53,13 @@ Overview:
     Create a new DjangoFloor-based project
 
 :doc:`settings`
-    Settings system
+    Settings configuration and inheritance
+
+:doc:`provided-settings`
+    Settings specific to DjangoFloor
 
 :doc:`signals`
     Working with signals
-
-:doc:`websockets`
-    Using websockets and shortcut functions
 
 :doc:`monitoring`
     Default monitoring view
@@ -83,7 +83,9 @@ Full table of contents
    installation
    newproject
    settings
+   provided-settings
    features
+   signals
    api/index
 
 Indices and tables

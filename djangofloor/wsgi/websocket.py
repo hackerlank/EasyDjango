@@ -214,7 +214,6 @@ class WebSocket(object):
             logger.exception(e)
             self.close(1007)
         except WebSocketError as e:
-            logger.exception(e)
             self.close(1002)
         except Exception as e:
             logger.exception(e)

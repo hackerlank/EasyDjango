@@ -53,8 +53,13 @@ if USE_DJANGO_REDIS:
 else:
     CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'unique-snowflake'}}
 CSRF_COOKIE_DOMAIN = '{SERVER_NAME}'
+_default_engines = {'mysql': 'django.db.backends.mysql',
+                    'oracle': 'django.db.backends.oracle',
+                    'postgresql': 'django.db.backends.postgresql_psycopg2',
+                    'sqlite3': 'django.db.backends.sqlite3', }
 DATABASES = {'default': {
-    'ENGINE': '{DATABASE_ENGINE}', 'NAME': '{DATABASE_NAME}', 'USER': '{DATABASE_USER}',
+    'ENGINE': CallableSetting(lambda x: _default_engines.get(x['DATABASE_ENGINE'].lower(), x['DATABASE_ENGINE']),
+                              'DATABASE_ENGINE'), 'NAME': '{DATABASE_NAME}', 'USER': '{DATABASE_USER}',
     'OPTIONS': SettingReference('DATABASE_OPTIONS'),
     'PASSWORD': '{DATABASE_PASSWORD}', 'HOST': '{DATABASE_HOST}', 'PORT': '{DATABASE_PORT}'},
 }
@@ -82,7 +87,6 @@ if USE_PIPELINE:
 if USE_REST_FRAMEWORK:
     INSTALLED_APPS.append('rest_framework')
 INSTALLED_APPS.append('djangofloor')
-LOG_REMOTE_URL = None
 LOGGING = CallableSetting(lambda x:
                           generate_log_configuration(log_directory=x['LOG_DIRECTORY'], project_name=x['PROJECT_NAME'],
                                                      script_name=x['SCRIPT_NAME'], debug=x['DEBUG'],
@@ -111,9 +115,10 @@ if USE_DEBUG_TOOLBAR:
 
 ROOT_URLCONF = 'djangofloor.root_urls'
 SERVER_EMAIL = 'root@{SERVER_NAME}'
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # X-Forwarded-Proto or None
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_HSTS_SECONDS = 0
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # X-Forwarded-Proto or None
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -316,7 +321,7 @@ if USE_SCSS:
     PIPELINE_COMPILERS = ('djangofloor.middleware.PyScssCompiler',)
 
 # Django-Debug-Toolbar
-DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js',}
+DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js', }
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
 INTERNAL_IPS = ('127.0.0.1', '::1',)
 
@@ -372,7 +377,7 @@ NPM_FILE_PATTERNS = {
 #
 # ######################################################################################################################
 ADMIN_EMAIL = 'admin@{SERVER_NAME}'
-DATABASE_ENGINE = 'django.db.backends.sqlite3'
+DATABASE_ENGINE = 'sqlite3'
 DATABASE_NAME = Path('{DATA_PATH}/database.sqlite3')
 DATABASE_USER = ''
 DATABASE_PASSWORD = ''
@@ -390,8 +395,8 @@ EMAIL_SSL_CERTFILE = None
 EMAIL_SSL_KEYFILE = None
 LANGUAGE_CODE = 'fr-fr'
 SECRET_KEY = 'secret_key'
-SECURE_HSTS_SECONDS = 0
 TIME_ZONE = 'Europe/Paris'
+LOG_REMOTE_URL = None
 
 # djangofloor
 LISTEN_ADDRESS = 'localhost:9000'
@@ -429,10 +434,6 @@ CELERY_HOST = 'localhost'
 CELERY_PORT = 6379
 CELERY_PASSWORD = ''
 
-SERVER_PROCESSES = 3
-SERVER_THREADS = 20
-SERVER_TIMEOUT = 300
-
 # ######################################################################################################################
 #
 # deprecated settings
@@ -469,7 +470,7 @@ REVERSE_PROXY_PORT = None  #
 REVERSE_PROXY_SSL_KEY_FILE = None
 REVERSE_PROXY_SSL_CRT_FILE = None
 REVERSE_PROXY_TIMEOUT = 300
-THREADS = SettingReference('SERVER_THREADS')
+THREADS = 20
 USE_SCSS = False
 WORKERS = 1
 WEBSOCKET_REDIS_EMULATION_INTERVAL = 0

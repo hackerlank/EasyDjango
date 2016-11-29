@@ -59,7 +59,7 @@ _deprecated_settings = {
     'REVERSE_PROXY_SSL_KEY_FILE': None,
     'REVERSE_PROXY_SSL_CRT_FILE': None,
     'REVERSE_PROXY_PORT': 'Use the port component of "SERVER_BASE_URL" instead.',
-    'THREADS': 'Replaced by "SERVER_THREADS".',
+    'THREADS': None,
     'USE_SCSS': None,
     'WORKERS': None,
     'WEBSOCKET_REDIS_EMULATION_INTERVAL': None,

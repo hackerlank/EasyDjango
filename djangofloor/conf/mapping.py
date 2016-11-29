@@ -12,8 +12,6 @@ INI_MAPPING = [
     CharConfigField('global.listen_address', 'LISTEN_ADDRESS'),
     CharConfigField('global.secret_key', 'SECRET_KEY'),
     CharConfigField('global.server_url', 'SERVER_BASE_URL'),
-    CharConfigField('global.server_processes', 'SERVER_PROCESSES'),
-    CharConfigField('global.server_timeout', 'SERVER_TIMEOUT'),
     CharConfigField('global.time_zone', 'TIME_ZONE'),
     CharConfigField('global.log_remote_url', 'LOG_REMOTE_URL',
                     help_str='Examples: syslog+tcp://localhost:514/user, syslog:///local7,'
