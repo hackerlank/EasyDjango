@@ -20,7 +20,7 @@ from django.urls import reverse
 from django.utils.lru_cache import lru_cache
 from django.utils.six import binary_type
 from django.views.decorators.cache import never_cache
-from djangofloor.decorators import REGISTERED_SIGNALS, REGISTERED_FUNCTIONS
+from djangofloor.decorators import REGISTERED_SIGNALS, REGISTERED_FUNCTIONS, everyone
 from djangofloor.wsgi.window_info import WindowInfo
 # noinspection PyProtectedMember
 from djangofloor.tasks import _call_signal
@@ -75,11 +75,12 @@ def signals(request):
     else:
         valid_signal_names = []
         for signal_name, list_of_connections in REGISTERED_SIGNALS.items():
-            if any(x.is_allowed_to(x, signal_request) for x in list_of_connections):
+            if any(x.is_allowed_to is everyone or x.is_allowed_to(x, signal_request, None)
+                   for x in list_of_connections):
                 valid_signal_names.append(signal_name)
         valid_function_names = []
         for function_name, connection in REGISTERED_FUNCTIONS.items():
-            if connection.is_allowed_to(connection, signal_request):
+            if connection.is_allowed_to is everyone or connection.is_allowed_to(connection, signal_request, None):
                 valid_function_names.append(function_name)
 
     function_names_dict = {}

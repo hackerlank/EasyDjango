@@ -144,7 +144,7 @@ class WebsocketWSGIServer(object):
                 import_signals_and_functions()
                 if function_name in REGISTERED_FUNCTIONS:
                     fn = REGISTERED_FUNCTIONS[function_name]
-                    queue = fn.get_queue(function_name, window_info, kwargs)
+                    queue = fn.get_queue(window_info, kwargs)
                     _server_function_call.apply_async([function_name, window_info.to_dict(), result_id, kwargs],
                                                       queue=queue)
                 else:

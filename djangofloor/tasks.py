@@ -119,7 +119,7 @@ def _call_signal(window_info, signal_name, to=None, kwargs=None, countdown=None,
     if countdown:
         celery_kwargs['countdown'] = countdown
     import_signals_and_functions()
-    queues = {x.get_queue(signal_name, window_info, kwargs) for x in REGISTERED_SIGNALS.get(signal_name, [])}
+    queues = {x.get_queue(window_info, kwargs) for x in REGISTERED_SIGNALS.get(signal_name, [])}
     window_info_as_dict = None
     if window_info:
         window_info_as_dict = window_info.to_dict()
@@ -190,7 +190,7 @@ def import_signals_and_functions():
             logger.exception(e)
         try:
             import_module('%s.functions' % app)
-        except ImportError:
+        except ImportError as e:
             if filename and os.path.isfile(os.path.join(os.path.dirname(filename), 'functions.py')):
                 logger.exception(e)
         except Exception as e:
@@ -215,13 +215,13 @@ def _server_signal_call(signal_name, window_info_dict, kwargs=None, from_client=
             return
         for connection in REGISTERED_SIGNALS[signal_name]:
             assert isinstance(connection, SignalConnection)
-            if connection.get_queue(signal_name, window_info, kwargs) != queue or \
-                    (from_client and not connection.is_allowed_to(connection, window_info)):
+            if connection.get_queue(window_info, kwargs) != queue or \
+                    (from_client and not connection.is_allowed_to(connection, window_info, kwargs)):
                 continue
-            kwargs = connection.check(kwargs)
-            if kwargs is None:
+            new_kwargs = connection.check(kwargs)
+            if new_kwargs is None:
                 continue
-            connection(window_info, **kwargs)
+            connection(window_info, **new_kwargs)
     except Exception as e:
         logger.exception(e)
 
@@ -237,7 +237,7 @@ def _server_function_call(function_name, window_info_dict, result_id, kwargs=Non
         import_signals_and_functions()
         connection = REGISTERED_FUNCTIONS[function_name]
         assert isinstance(connection, FunctionConnection)
-        if not connection.is_allowed_to(connection, window_info):
+        if not connection.is_allowed_to(connection, window_info, kwargs):
             raise ValueError('Unauthorized function call %s' % connection.path)
         kwargs = connection.check(kwargs)
         if kwargs is not None:

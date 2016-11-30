@@ -26,6 +26,12 @@ class Command(BaseCommand):
                                   '"ini": display the current config as .ini file'))
 
     def handle(self, *args, **options):
+        try:
+            self.handle_head(*args, **options)
+        except BrokenPipeError:
+            pass
+
+    def handle_head(self, *args, **options):
         action = options['action']
         verbosity = options['verbosity']
         if action == 'python':

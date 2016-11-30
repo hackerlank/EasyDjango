@@ -84,8 +84,8 @@ Full table of contents
    newproject
    settings
    provided-settings
-   features
    signals
+   features
    api/index
 
 Indices and tables

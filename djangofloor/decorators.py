@@ -25,7 +25,7 @@ REGISTERED_FUNCTIONS = {}
 
 
 # noinspection PyUnusedLocal
-def server_side(connection, window_info):
+def server_side(connection, window_info, kwargs):
     """does not allow a signal to be called from WebSockets
 
     >>> @signal(is_allowed_to=server_side)
@@ -36,7 +36,7 @@ def server_side(connection, window_info):
 
 
 # noinspection PyUnusedLocal
-def everyone(connection, window_info):
+def everyone(connection, window_info, kwargs):
     """allow everyone to call a WS signal or function
 
     >>> @signal(is_allowed_to=everyone)
@@ -47,7 +47,7 @@ def everyone(connection, window_info):
 
 
 # noinspection PyUnusedLocal
-def is_authenticated(connection, window_info):
+def is_authenticated(connection, window_info, kwargs):
     """restrict a WS signal or a WS function to authenticated users
 
     >>> @signal(is_allowed_to=is_authenticated)
@@ -58,7 +58,7 @@ def is_authenticated(connection, window_info):
 
 
 # noinspection PyUnusedLocal
-def is_anonymous(connection, window_info):
+def is_anonymous(connection, window_info, kwargs):
     """restrict a WS signal or a WS function to anonymous users
 
     >>> @signal(is_allowed_to=is_anonymous)
@@ -69,12 +69,12 @@ def is_anonymous(connection, window_info):
 
 
 # noinspection PyUnusedLocal
-def is_staff(connection, window_info):
+def is_staff(connection, window_info, kwargs):
     return window_info and window_info.is_staff
 
 
 # noinspection PyUnusedLocal
-def is_superuser(connection, window_info):
+def is_superuser(connection, window_info, kwargs):
     return window_info and window_info.is_superuser
 
 
@@ -89,7 +89,7 @@ class has_perm(object):
     def __init__(self, perm):
         self.perm = perm
 
-    def __call__(self, connection, window_info):
+    def __call__(self, connection, window_info, kwargs):
         return window_info and window_info.has_perm(self.perm)
 
 
@@ -163,9 +163,9 @@ class Connection(object):
     def register(self):
         raise NotImplementedError
 
-    def get_queue(self, path, window_info, original_kwargs):
+    def get_queue(self, window_info, original_kwargs):
         if callable(self.queue):
-            return self.queue(path, window_info, original_kwargs)
+            return self.queue(self, window_info, original_kwargs)
         return text_type(self.queue) or settings.CELERY_DEFAULT_QUEUE
 
 
