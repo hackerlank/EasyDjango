@@ -138,4 +138,20 @@
         return true;
     };
 
+    $.df.connect('html.content', function (opts) { console.log(opts.selector); console.log(opts.content); $(opts.selector).html(opts.content); });
+    $.df.connect('html.add', function (opts) { $(opts.selector).add(opts.content); });
+    $.df.connect('html.add_class', function (opts) { $(opts.selector).addClass(opts.class_name); });
+    $.df.connect('html.append', function (opts) { $(opts.selector).append(opts.content); });
+    $.df.connect('html.before', function (opts) { $(opts.selector).before(opts.content); });
+    $.df.connect('html.empty', function (opts) { $(opts.selector).empty(); });
+    $.df.connect('html.hide', function (opts) { $(opts.selector).hide({duration: opts.duration, easing: opts.easing, queue: opts.queue}); });
+    $.df.connect('html.prepend', function (opts) { $(opts.selector).prepend(opts.content); });
+    $.df.connect('html.remove', function (opts) { $(opts.selector).remove(); });
+    $.df.connect('html.remove_class', function (opts) { $(opts.selector).removeClass(opts.class_name); });
+    $.df.connect('html.replace_width', function (opts) { $(opts.selector).replaceWith(opts.content); });
+    $.df.connect('html.show', function (opts) { $(opts.selector).show({duration: opts.duration, easing: opts.easing, queue: opts.queue}); });
+    $.df.connect('html.toggle', function (opts) { $(opts.selector).toggle({duration: opts.duration, easing: opts.easing, queue: opts.queue}); });
+    $.df.connect('html.text', function (opts) { $(opts.selector).text(opts.content); });
+    $.df.connect('html.trigger', function (opts) { $(opts.selector).trigger(opts.event); });
+
 }(jQuery));
