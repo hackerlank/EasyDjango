@@ -19,8 +19,8 @@ Of course, you can attach multiple functions to the same signal. All codes will 
 
 .. code-block:: python
 
-   from djangofloor.decorators import signal, everyone
-   @signal(is_allowed_to=everyone, path='demo.signal', queue='slow')
+    from djangofloor.decorators import signal, everyone
+    @signal(is_allowed_to=everyone, path='demo.signal', queue='slow')
     def slow_signal(window_info, content=''):
        [perform a (clever) thing]
 
@@ -31,9 +31,10 @@ In this example:
     Given `queue(signal, window_info, kwargs)`, it should return a string (corresponding to the Celery queue).
   * `is_allowed_to` must be a `callable` that determine whether if a signal call is allowed to a JS client. Given `is_allowed_to(signal, window_info, kwargs)`, it must return `True` or `False`. When the list of signals allowed to a client is built, kwargs is `None`.
 
-The last two arguments may be different for each Python code connected to the same signal. If all Python functions does not accept the same keyword arguments, then an exception will be raised, so they should accept **kwargs.
 
+The last two arguments may be different for each Python code connected to the same signal. If all Python functions does not accept the same keyword arguments, then an exception will be raised, so they should accept **kwargs.
 In the following example, both functions will be executed. The first one will always be executed by the 'celery' queue, the second one will use a Celery queue dedicated to the user. When called from the JavaScript, the second code will only be executed if the client is authenticated.
+
 
 .. code-block:: python
 
@@ -75,8 +76,9 @@ For using signals with JavaScript, you need to
 
   * add '/static/js/djangofloor-base.js' to the list of loaded scripts,
   * use the `df_init_websocket` (for the djangofloor template library) tag anywhere in your HTML template,
-  * use the `set_websocket_topics(request, *topics)` in the Django view [USER, WINDOW and BROADCAST are always added],
+  * use the `set_websocket_topics(request, *topics)` in the Django view -- USER, WINDOW and BROADCAST are always added,
   * define some JS signal with `$.df.connect('signal.name', function(opts))`.
+
 
 .. code-block:: python
 

@@ -29,6 +29,7 @@ def context_base(request):
     return {
         'df_has_index_view': bool(settings.DF_INDEX_VIEW),
         'df_has_login_view': bool(settings.DF_LOGIN_VIEW),
+        'df_has_monitoring_view': bool(settings.DF_SYSTEM_CHECKS),
         'df_has_site_search_view': bool(settings.DF_SITE_SEARCH_VIEW),
         'df_project_name': settings.PROJECT_NAME,
         'df_remote_username': getattr(request, 'remote_username', None),

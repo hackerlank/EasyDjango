@@ -77,6 +77,7 @@ Overview:
 Full table of contents
 ======================
 
+
 .. toctree::
    :maxdepth: 4
 
@@ -87,6 +88,7 @@ Full table of contents
    signals
    features
    api/index
+
 
 Indices and tables
 ==================
