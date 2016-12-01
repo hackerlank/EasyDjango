@@ -19,7 +19,8 @@ Of course, you can attach multiple functions to the same signal. All codes will 
 
 .. code-block:: python
 
-    @signal(is_allowed_to=everyone, path='demo.slow_signal', queue='slow')
+   from djangofloor.decorators import signal, everyone
+   @signal(is_allowed_to=everyone, path='demo.signal', queue='slow')
     def slow_signal(window_info, content=''):
        [perform a (clever) thing]
 
@@ -41,7 +42,7 @@ In the following example, both functions will be executed. The first one will al
     def slow_signal(window_info, kwarg1="demo", kwarg2: int=32):
        [perform a (clever) thing]
 
-    @signal(is_allowed_to=is_authenticated, path='demo.signal.name', queue=lambda connection, window_info, kwargs: return window_info and str(window_info.username)) or 'celery'
+    @signal(is_allowed_to=is_authenticated, path='demo.signal.name', queue=lambda connection, window_info, kwargs: getattr(window_info, 'username', 'celery')
     def slow_signal(window_info, kwarg1='demo', kwarg3: bool=True, **kwargs):
        [perform a (clever) thing]
 
@@ -70,6 +71,51 @@ All JS clients featuring the corresponding values will execute the signal (if th
 Defining JS signals
 -------------------
 
+For using signals with JavaScript, you need to
+
+  * add '/static/js/djangofloor-base.js' to the list of loaded scripts,
+  * use the `df_init_websocket` (for the djangofloor template library) tag anywhere in your HTML template,
+  * use the `set_websocket_topics(request, *topics)` in the Django view [USER, WINDOW and BROADCAST are always added],
+  * define some JS signal with `$.df.connect('signal.name', function(opts))`.
+
+.. code-block:: python
+
+    # in your Django view
+    from djangofloor.tasks import set_websocket_topics
+    def my_view(request):
+        [...]
+        context = {...}
+        set_websocket_topics(request, topic1, topic2)
+        return TemplateResponse(request, template='template_name', context=context)
+
+
+.. code-block:: html
+
+    /* in your template */
+    {% load djangofloor staticfiles %}
+    {% static 'vendor/jquery/dist/jquery.min.js' %}
+    {% static 'js/djangofloor-base.js' %}
+    <script type="application/javascript">
+        /* can be in a JS file */
+        window.onload = function () {
+            $.df.connect('signal.name', function (opts) {
+                // opts is the JS equivalent of the Pythonic `**kwargs`
+            });
+        };
+    </script>
+    {% df_init_websocket %}
+
+
+The first two steps are handled by the default template. A topic can be any Python value, serialized to a `string` by `settings.WEBSOCKET_TOPIC_SERIALIZER` (by default `djangofloor.wsgi.topics.serialize_topic`). When a signal is sent to a given topic, all JS clients featuring this topics receive this signal.
+
+Under the hood, each HTTP request has a unique ID, which is associated to the list of topics stored in Redis via `set_websocket_topics`. The HTTP response is sent to the client and the actual websocket connection can be made with this unique ID and subscribed to its topic list (via Redis pub/sub).
+
+
 Using signals from JS
 ---------------------
 
+Calling signals is simpler that creating a new one. Once the steps enumerated before are made, you just have to call it with `$.df.call` and to provide its name and its arguments. JS and allowed Python codes are all executed.
+
+.. code-block:: javascript
+
+    $.df.call('signal.name', {kwarg1: "value1", kwarg2: "value2"});

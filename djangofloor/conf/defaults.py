@@ -220,30 +220,6 @@ WINDOW_INFO_MIDDLEWARES = ['djangofloor.middleware.WindowKeyMiddleware',
                            'djangofloor.middleware.DjangoAuthMiddleware',
                            'djangofloor.middleware.Djangoi18nMiddleware',
                            'djangofloor.middleware.BrowserMiddleware', ]
-COMMON_COMMANDS = {
-    'queue-events': ('celery', 'events'),
-    'purge-queue': ('celery', 'purge'),
-    'queue-status': ('celery', 'status'),
-    'worker': ('celery', 'worker'),
-    'staticfiles': ('django', 'collectstatic'),
-    'changepassword': ('django', 'changepassword'),
-    'check': ('django', 'check'),
-    'config': ('django', 'config'),
-    'createsuperuser': ('django', 'createsuperuser'),
-    'dbshell': ('django', 'dbshell'),
-    'dumpdata': ('django', 'dumpdata'),
-    'loaddata': ('django', 'loaddata'),
-    'migrate': ('django', 'migrate'),
-    'server-dev': ('django', 'runserver'),
-    'sendtestemail': ('django', 'sendtestemail'),
-    'shell': ('django', 'shell'),
-    'django': ('django', ''),
-    'celery': ('celery', ''),
-    'server-gunicorn': ('gunicorn', ''),
-    'server-uwsgi': ('uwsgi', ''),
-}
-# COMMON_COMMANDS["command_name"] = ("django", "command")
-# COMMON_COMMANDS["other_command_name"] = ("celery", "other_command")
 
 WEBSOCKET_URL = '/ws/'
 WEBSOCKET_REDIS_CONNECTION = {'host': '{WEBSOCKET_REDIS_HOST}', 'port': SettingReference('WEBSOCKET_REDIS_PORT'),
@@ -263,6 +239,8 @@ PIPELINE = {
     'CSS_COMPRESSOR': SettingReference('PIPELINE_CSS_COMPRESSOR'),
     'JS_COMPRESSOR': SettingReference('PIPELINE_JS_COMPRESSOR'),
 }
+if USE_SCSS:
+    PIPELINE_COMPILERS = ('djangofloor.middleware.PyScssCompiler',)
 PIPELINE_CSS = {
     'default': {
         'source_filenames': SettingReference('DF_CSS'),
@@ -288,11 +266,8 @@ PIPELINE_CSS = {
         'output_filename': 'css/ie9.css', 'extra_context': {'media': 'all'},
     },
 }
-PIPELINE_MIMETYPES = ((b'text/coffeescript', '.coffee'),
-                      (b'text/less', '.less'),
-                      (b'text/javascript', '.js'),
-                      (b'text/x-sass', '.sass'),
-                      (b'text/x-scss', '.scss'))
+PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
+PIPELINE_ENABLED = True
 PIPELINE_JS = {
     'default': {
         'source_filenames': ['vendor/jquery/dist/jquery.min.js', 'js/djangofloor-base.js', ExpandIterable('DF_JS')],
@@ -314,11 +289,12 @@ PIPELINE_JS = {
         'output_filename': 'js/ie9.js',
     }
 }
-PIPELINE_ENABLED = True
+PIPELINE_MIMETYPES = ((b'text/coffeescript', '.coffee'),
+                      (b'text/less', '.less'),
+                      (b'text/javascript', '.js'),
+                      (b'text/x-sass', '.sass'),
+                      (b'text/x-scss', '.scss'))
 PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
-PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yuglify.YuglifyCompressor'
-if USE_SCSS:
-    PIPELINE_COMPILERS = ('djangofloor.middleware.PyScssCompiler',)
 
 # Django-Debug-Toolbar
 DEBUG_TOOLBAR_CONFIG = {'JQUERY_URL': '{STATIC_URL}vendor/jquery/dist/jquery.min.js', }
